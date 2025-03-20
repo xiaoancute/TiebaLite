@@ -299,7 +299,7 @@ internal fun ReplyPageContent(
             waitUploadSuccessToSend = false
             val imageContent = it.resultList
                 .joinToString("\n") { image ->
-                    "#(pic,${image.picId},${image.picInfo.originPic.width},${image.picInfo.originPic.height})"
+                    "#(pic,${image.picId?},${image.picInfo?.originPic.width},${image.picInfo?.originPic.height})"
                 }
             viewModel.send(
                 ReplyUiIntent.Send(
