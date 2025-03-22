@@ -1531,9 +1531,9 @@ interface ITiebaApi {
      * @param threadContent 帖子内容
      * @param kw 吧名
      * @param fid 吧id
-     * @param title 标题
-     * @param isHide 主页显示
-     * @param isTitle 是否有标题
+     * @param title 标题(无标题是留空)
+     * @param isHide 个人主页显示(0,显示 1,仅自己可见)
+     * @param isTitle 是否有标题(0,有标题 1,无标题)
      */
     fun addThread(
         threadContent: String,
