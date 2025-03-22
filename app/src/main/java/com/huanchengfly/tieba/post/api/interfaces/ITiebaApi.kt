@@ -1525,4 +1525,22 @@ interface ITiebaApi {
     fun getHistoryForumFlow(
         history: String,
     ): Flow<GetHistoryForumResponse>
+
+    /**
+     * 发帖
+     * @param threadContent 帖子内容
+     * @param kw 吧名
+     * @param fid 吧id
+     * @param title 标题
+     * @param isHide 主页显示
+     * @param isTitle 是否有标题
+     */
+    fun addThread(
+        threadContent: String,
+        kw: String,
+        fid: String,
+        title: String,
+        isHide: Int,
+        isTitle: Int,
+    ): Call<CommonResponse> 
 }
