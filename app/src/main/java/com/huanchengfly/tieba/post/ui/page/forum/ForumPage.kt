@@ -99,6 +99,7 @@ import com.huanchengfly.tieba.post.ui.common.theme.compose.ExtendedTheme
 import com.huanchengfly.tieba.post.ui.page.LocalNavigator
 import com.huanchengfly.tieba.post.ui.page.ProvideNavigator
 import com.huanchengfly.tieba.post.ui.page.destinations.ForumDetailPageDestination
+import com.huanchengfly.tieba.post.ui.page.destinations.ReplyPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.ForumSearchPostPageDestination
 import com.huanchengfly.tieba.post.ui.page.forum.threadlist.ForumThreadListPage
 import com.huanchengfly.tieba.post.ui.page.forum.threadlist.ForumThreadListUiEvent
