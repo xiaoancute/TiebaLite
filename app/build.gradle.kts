@@ -50,8 +50,10 @@ android {
         }
         manifestPlaceholders["is_self_build"] = "$isSelfBuild"
     }
+
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     signingConfigs {
         if (property.keystore.file.isNotBlank()) {
@@ -73,6 +75,13 @@ android {
                 if (signingConfigs.any { it.name == "config" })
                     signingConfigs.getByName("config")
                 else signingConfigs.getByName("debug")
+        }
+        debug {
+            isMinifyEnabled = false
+            isShrinkResources = false
+            isDebuggable = true
+            isJniDebuggable = true
+            multiDexEnabled = true
         }
         release {
             isMinifyEnabled = true

@@ -231,6 +231,12 @@ internal fun ReplyPageContent(
         initial = false
     )
 
+    val replyType by viewModel.uiState.collectPartialAsState(
+        prop1 = ReplyUiState::replyType,
+        initial = NONE
+    )
+    //threadId为0时切换为发主题帖
+    if (forumId != 0L && threadId == 0L) viewModel.send(ReplyUiIntent.SwitchReplyType(ReplyType.TOPIC_THREAD))
     val keyboardController = LocalSoftwareKeyboardController.current
     var initialText by remember { mutableStateOf("") }
     var waitEditTextToSet by remember { mutableStateOf(false) }
@@ -283,10 +289,19 @@ internal fun ReplyPageContent(
     }
     val textLength by remember { derivedStateOf { curText.length } }
     val isTextEmpty by remember { derivedStateOf { curText.isEmpty() } }
-
+    var topTitle = when (replyType) {
+        ReplyType.TOPIC_THREAD -> context.getString(R.string.title_thread)
+        else -> context.getString(R.string.title_reply)
+    }
+    LaunchedEffect(replyType) {
+        topTitle = when (replyType) {
+            ReplyType.TOPIC_THREAD -> context.getString(R.string.title_thread)
+            else -> context.getString(R.string.title_reply)
+        }
+    }
     viewModel.onEvent<ReplyUiEvent.ReplySuccess> {
         if (it.expInc.isEmpty()) {
-            context.toastShort(R.string.toast_reply_success_default)
+            context.toastShort(R.string.toast_add_thread_success_default)
         } else {
             context.toastShort(R.string.toast_reply_success, it.expInc)
         }
@@ -299,7 +314,7 @@ internal fun ReplyPageContent(
             waitUploadSuccessToSend = false
             val imageContent = it.resultList
                 .joinToString("\n") { image ->
-                    "#(pic,${image.picId?: 0},${image.picInfo?.originPic?.width?: 0},${image.picInfo?.originPic?.height?: 0})"
+                    "#(pic,${image.picId ?: 0},${image.picInfo?.originPic?.width ?: 0},${image.picInfo?.originPic?.height ?: 0})"
                 }
             viewModel.send(
                 ReplyUiIntent.Send(
@@ -348,6 +363,7 @@ internal fun ReplyPageContent(
             viewModel.send(ReplyUiIntent.SwitchPanel(type))
         }
     }
+
 
     MyBackHandler(
         enabled = curKeyboardType != NONE,
@@ -440,7 +456,7 @@ internal fun ReplyPageContent(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = stringResource(id = R.string.title_reply),
+                text = "$topTitle",
                 modifier = Modifier.weight(1f),
                 fontWeight = FontWeight.Bold
             )

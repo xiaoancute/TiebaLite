@@ -3,8 +3,11 @@ package com.huanchengfly.tieba.post.ui.page.reply
 import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import com.huanchengfly.tieba.post.App
 import com.huanchengfly.tieba.post.R
+import com.huanchengfly.tieba.post.api.models.AddThreadBean
 import com.huanchengfly.tieba.post.api.models.UploadPictureResultBean
 import com.huanchengfly.tieba.post.api.models.protos.addPost.AddPostResponse
 import com.huanchengfly.tieba.post.api.retrofit.exception.TiebaUnknownException
@@ -42,6 +45,12 @@ enum class ReplyPanelType {
     VOICE
 }
 
+enum class ReplyType {
+    NONE, //回贴
+    TOPIC_THREAD, //发主题贴
+}
+
+
 @Stable
 @HiltViewModel
 class ReplyViewModel @Inject constructor() :
@@ -52,7 +61,7 @@ class ReplyViewModel @Inject constructor() :
         ReplyPartialChangeProducer
 
     override fun dispatchEvent(partialChange: ReplyPartialChange): UiEvent? = when (partialChange) {
-        is ReplyPartialChange.Send.Success -> ReplyUiEvent.ReplySuccess(
+        is ReplyPartialChange.Send.Success  -> ReplyUiEvent.ReplySuccess(
             partialChange.threadId,
             partialChange.postId,
             partialChange.expInc
@@ -95,9 +104,41 @@ class ReplyViewModel @Inject constructor() :
                     .flatMapConcat { it.producePartialChange() },
                 intentFlow.filterIsInstance<ReplyUiIntent.ToggleIsOriginImage>()
                     .flatMapConcat { it.producePartialChange() },
+                intentFlow.filterIsInstance<ReplyUiIntent.SwitchReplyType>()
+                    .flatMapConcat { it.producePartialChange() },
             )
 
         private fun ReplyUiIntent.Send.producePartialChange(): Flow<ReplyPartialChange.Send> {
+            if (forumId != 0L && threadId == 0L ) {
+                return AddPostRepository
+                    .addThread(
+                        content,
+                        forumId,
+                        forumName,
+                        title = "",//这三个后面再做
+                        isHide = 1,
+                        isTitle = 1,
+                    )
+                    .map<AddThreadBean, ReplyPartialChange.Send> {
+                        if (it.tid == null) throw TiebaUnknownException
+                        ReplyPartialChange.Send.Success(
+                            threadId = it.tid!!,
+                            postId = it.pid.orEmpty(),
+                            expInc = ""
+                        )
+                    }
+                    .onStart { emit(ReplyPartialChange.Send.Start) }
+                    .catch {
+                        Log.i("ReplyViewModel", "failure: ${it.message}")
+                        it.printStackTrace()
+                        emit(
+                            ReplyPartialChange.Send.Failure(
+                                it.getErrorCode(),
+                                it.getErrorMessage()
+                            )
+                        )
+                    }
+            }
             return AddPostRepository
                 .addPost(
                     content,
@@ -153,6 +194,10 @@ class ReplyViewModel @Inject constructor() :
         private fun ReplyUiIntent.SwitchPanel.producePartialChange() =
             flowOf(ReplyPartialChange.SwitchPanel(panelType))
 
+
+        private fun ReplyUiIntent.SwitchReplyType.producePartialChange() =
+            flowOf(ReplyPartialChange.SwitchReplyType(replyType))
+
         private fun ReplyUiIntent.AddImage.producePartialChange() =
             flowOf(ReplyPartialChange.AddImage(imageUris))
 
@@ -182,7 +227,10 @@ sealed interface ReplyUiIntent : UiIntent {
         val replyUserId: Long? = null,
     ) : ReplyUiIntent
 
+
     data class SwitchPanel(val panelType: ReplyPanelType) : ReplyUiIntent
+
+    data class SwitchReplyType(val replyType: ReplyType) : ReplyUiIntent
 
     data class AddImage(val imageUris: List<String>) : ReplyUiIntent
 
@@ -241,6 +289,11 @@ sealed interface ReplyPartialChange : PartialChange<ReplyUiState> {
             oldState.copy(replyPanelType = panelType)
     }
 
+    data class SwitchReplyType(val replyType: ReplyType) : ReplyPartialChange {
+        override fun reduce(oldState: ReplyUiState): ReplyUiState =
+            oldState.copy(replyType = replyType)
+    }
+
     data class AddImage(val imageUris: List<String>) : ReplyPartialChange {
         override fun reduce(oldState: ReplyUiState): ReplyUiState =
             oldState.copy(selectedImageList = (oldState.selectedImageList + imageUris).toImmutableList())
@@ -261,7 +314,7 @@ data class ReplyUiState(
     val isSending: Boolean = false,
     val replySuccess: Boolean = false,
     val replyPanelType: ReplyPanelType = ReplyPanelType.NONE,
-
+    val replyType: ReplyType = ReplyType.NONE,
     val isUploading: Boolean = false,
     val isOriginImage: Boolean = false,
     val selectedImageList: ImmutableList<String> = persistentListOf(),

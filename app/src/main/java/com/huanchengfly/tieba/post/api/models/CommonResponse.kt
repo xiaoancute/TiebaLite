@@ -9,6 +9,6 @@ data class CommonResponse(
     @SerializedName("error_code", alternate = ["errno", "no"])
     val errorCode: Int = 0,
     @JsonAdapter(ErrorMsgAdapter::class)
-    @SerializedName("error_msg", alternate = ["errmsg", "error", "msg"])
+    @SerializedName("error_msg", alternate = ["errmsg", "error"])
     val errorMsg: String = ""
 ) : BaseBean()

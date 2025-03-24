@@ -1535,12 +1535,12 @@ interface ITiebaApi {
      * @param isHide 个人主页显示(0,显示 1,仅自己可见)
      * @param isTitle 是否有标题(0,有标题 1,无标题)
      */
-    fun addThread(
+    fun addThreadFlow(
         threadContent: String,
         kw: String,
         fid: String,
         title: String,
         isHide: Int,
         isTitle: Int,
-    ): Call<CommonResponse> 
+    ): Flow<AddThreadBean>
 }

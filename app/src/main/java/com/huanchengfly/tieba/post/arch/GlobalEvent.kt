@@ -43,6 +43,12 @@ sealed interface GlobalEvent : UiEvent {
         val newSubPostId: Long? = null,
     ) : GlobalEvent
 
+    data class AddThreadSuccess(
+        val newThreadId: Long,
+        val newPostId: Long,
+        val msg: String?,
+    ) : GlobalEvent
+
     data class StartActivityForResult(
         val requesterId: String,
         val intent: Intent,

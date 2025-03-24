@@ -84,11 +84,13 @@ import com.google.accompanist.placeholder.material.fade
 import com.google.accompanist.placeholder.material.placeholder
 import com.huanchengfly.tieba.post.R
 import com.huanchengfly.tieba.post.api.models.protos.frsPage.ForumInfo
+import com.huanchengfly.tieba.post.arch.GlobalEvent
 import com.huanchengfly.tieba.post.arch.ImmutableHolder
 import com.huanchengfly.tieba.post.arch.collectPartialAsState
 import com.huanchengfly.tieba.post.arch.emitGlobalEvent
 import com.huanchengfly.tieba.post.arch.emitGlobalEventSuspend
 import com.huanchengfly.tieba.post.arch.onEvent
+import com.huanchengfly.tieba.post.arch.onGlobalEvent
 import com.huanchengfly.tieba.post.arch.pageViewModel
 import com.huanchengfly.tieba.post.dataStore
 import com.huanchengfly.tieba.post.getInt
@@ -100,8 +102,11 @@ import com.huanchengfly.tieba.post.ui.page.LocalNavigator
 import com.huanchengfly.tieba.post.ui.page.ProvideNavigator
 import com.huanchengfly.tieba.post.ui.page.destinations.ForumDetailPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.ForumSearchPostPageDestination
+import com.huanchengfly.tieba.post.ui.page.destinations.ReplyPageDestination
 import com.huanchengfly.tieba.post.ui.page.forum.threadlist.ForumThreadListPage
 import com.huanchengfly.tieba.post.ui.page.forum.threadlist.ForumThreadListUiEvent
+import com.huanchengfly.tieba.post.ui.page.thread.ThreadSortType
+import com.huanchengfly.tieba.post.ui.page.thread.ThreadUiIntent
 import com.huanchengfly.tieba.post.ui.widgets.compose.Avatar
 import com.huanchengfly.tieba.post.ui.widgets.compose.AvatarPlaceholder
 import com.huanchengfly.tieba.post.ui.widgets.compose.BackNavigationIcon
@@ -131,6 +136,7 @@ import com.huanchengfly.tieba.post.utils.requestPinShortcut
 import com.ramcosta.composedestinations.annotation.DeepLink
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import com.squareup.wire.internal.equals
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -504,6 +510,41 @@ fun ForumPage(
         )
     }
 
+    onGlobalEvent<GlobalEvent.AddThreadSuccess>() {
+        coroutineScope.launch {
+            emitGlobalEventSuspend(
+                ForumThreadListUiEvent.BackToTop(
+                    currentPage == 1
+                )
+            )
+            emitGlobalEventSuspend(
+                ForumThreadListUiEvent.Refresh(
+                    currentPage == 1,
+                    getSortType(
+                        context,
+                        forumName
+                    )
+                )
+            )
+        }
+    }
+
+    onGlobalEvent<ForumThreadListUiEvent.AddThread>(
+        filter = { it.forumName == forumName },
+    ) {
+        if (account == null) {
+            context.toastShort(R.string.title_not_logged_in)
+        } else if (forumInfo != null) {
+            navigator.navigate(
+                ReplyPageDestination(
+                    forumId = forumInfo!!.get { id },
+                    forumName = forumName,
+                    threadId = 0L,
+                )
+            )
+        } else context.toastShort(R.string.toast_add_thread_failed)
+    }
+
     ProvideNavigator(navigator = navigator) {
         StateScreen(
             modifier = Modifier.fillMaxSize(),
@@ -621,7 +662,11 @@ fun ForumPage(
                                     }
 
                                     else -> {
-                                        context.toastShort(R.string.toast_feature_unavailable)
+                                        coroutineScope.launch {
+                                            emitGlobalEvent(
+                                                ForumThreadListUiEvent.AddThread(forumName)
+                                            )
+                                        }
                                     }
                                 }
                             },
@@ -642,7 +687,6 @@ fun ForumPage(
                 }
             ) { contentPadding ->
                 var isFakeLoading by remember { mutableStateOf(false) }
-
                 LaunchedEffect(isFakeLoading) {
                     if (isFakeLoading) {
                         delay(1000)
@@ -984,7 +1028,12 @@ private fun ForumToolbar(
                 )
             )
         },
-        navigationIcon = { BackNavigationIcon(onBackPressed = { navigator.navigateUp() }) },
+        navigationIcon = {
+            BackNavigationIcon(onBackPressed = {
+                val navigateUp =
+                    navigator.navigateUp()
+            })
+        },
         actions = {
             if (forumId != null) {
                 IconButton(

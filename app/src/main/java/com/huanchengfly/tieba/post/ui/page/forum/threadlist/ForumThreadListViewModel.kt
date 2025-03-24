@@ -428,4 +428,8 @@ sealed interface ForumThreadListUiEvent : UiEvent {
     data class BackToTop(
         val isGood: Boolean
     ) : ForumThreadListUiEvent
+
+    data class AddThread(
+        val forumName: String,
+    ):ForumThreadListUiEvent
 }
