@@ -1,7 +1,14 @@
 name: Build, Deploy
 
 # on: [ push, pull_request ]
-on: [ workflow_dispatch ]
+on: 
+  workflow_dispatch:
+  pull_request:
+    tags:
+      - 'v*'
+  push:
+    tags:
+      - 'v*'
 
 jobs:
   build:
@@ -61,6 +68,12 @@ jobs:
         with:
           name: "release-${{ env.version_name }}(${{ env.version_code }})"
           path: ./app/build/outputs/apk/release
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: ./app/build/outputs/apk/release/*.apk
 
 #      - name: Upload Mapping
 #        uses: actions/upload-artifact@v4
