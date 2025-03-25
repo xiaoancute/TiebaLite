@@ -65,11 +65,12 @@ jobs:
           version_code: ${{ fromJSON(steps.read_output_metadata.outputs.content).elements[0].versionCode }}
           version_name: ${{ fromJSON(steps.read_output_metadata.outputs.content).elements[0].versionName }}
         uses: actions/upload-artifact@v4
+        if: ${{ ! startsWith(github.ref, 'refs/tags/') }}
         with:
           name: "release-${{ env.version_name }}(${{ env.version_code }})"
           path: ./app/build/outputs/apk/release
 
-      - name: Release
+      - name: Upload Release Package to public
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
