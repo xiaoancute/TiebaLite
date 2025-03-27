@@ -300,6 +300,7 @@ fun ForumSearchPostPage(
             ForumSearchPostFilterType.ONLY_THREAD to context.getString(R.string.title_search_filter_only_thread),
         )
     }
+    var expanded by remember { mutableStateOf(false) }
 
     MyScaffold(
         topBar = {
@@ -601,6 +602,8 @@ fun ForumSearchPostPage(
                                 )
                             )
                         },
+                        expanded = expanded,
+                        onToggleExpand = { expanded = !expanded },
                         onDelete = {
                             viewModel.send(ForumSearchPostUiIntent.DeleteHistory(it.id))
                         },

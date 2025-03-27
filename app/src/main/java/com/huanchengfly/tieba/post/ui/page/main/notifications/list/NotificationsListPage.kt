@@ -125,6 +125,7 @@ fun NotificationsListPage(
                                             navigator.navigate(
                                                 SubPostsPageDestination(
                                                     threadId = info.threadId!!.toLong(),
+                                                    postId = if (info.quotePid != null) info.quotePid.toLong() else 0,
                                                     subPostId = info.postId!!.toLong(),
                                                     loadFromSubPost = true
                                                 )
@@ -189,18 +190,20 @@ fun NotificationsListPage(
                                             .fillMaxWidth()
                                             .clip(RoundedCornerShape(6.dp))
                                             .clickable {
-                                                if ("1" == info.isFloor && info.quotePid != null) {
+                                                if (info.isFloor == "1") {
                                                     navigator.navigate(
                                                         SubPostsPageDestination(
                                                             threadId = info.threadId!!.toLong(),
-                                                            postId = info.quotePid.toLong(),
-                                                            loadFromSubPost = true,
+                                                            postId = if (info.quotePid != null) info.quotePid.toLong() else 0,
+                                                            subPostId = info.postId!!.toLong(),
+                                                            loadFromSubPost = true
                                                         )
                                                     )
                                                 } else {
                                                     navigator.navigate(
                                                         ThreadPageDestination(
                                                             threadId = info.threadId!!.toLong(),
+                                                            postId = info.postId!!.toLong()
                                                         )
                                                     )
                                                 }

@@ -164,6 +164,7 @@ import com.huanchengfly.tieba.post.ui.widgets.compose.buildChipInlineContent
 import com.huanchengfly.tieba.post.ui.widgets.compose.rememberDialogState
 import com.huanchengfly.tieba.post.ui.widgets.compose.rememberMenuState
 import com.huanchengfly.tieba.post.ui.widgets.compose.states.StateScreen
+import com.huanchengfly.tieba.post.utils.AccountUtil.LocalAccount
 import com.huanchengfly.tieba.post.utils.DateTimeUtils.getRelativeTimeString
 import com.huanchengfly.tieba.post.utils.HistoryUtil
 import com.huanchengfly.tieba.post.utils.StringUtil
@@ -1749,7 +1750,9 @@ fun PostCard(
 ) {
     val context = LocalContext.current
     val navigator = LocalNavigator.current
+    val account = LocalAccount.current
     val coroutineScope = rememberCoroutineScope()
+    val threadAuthorId = remember { threadAuthorId }
     val post = remember(postHolder) { postHolder.get() }
     val hasPadding = remember(key1 = postHolder, key2 = immersiveMode) {
         postHolder.get { floor > 1 } && !immersiveMode
@@ -1831,7 +1834,7 @@ fun PostCard(
                         }
                     }
                 }
-                if (canDelete(post) && onMenuDeleteClick != null) {
+                if ((canDelete(post) || threadAuthorId == account?.uid?.toLong()) && onMenuDeleteClick != null) {
                     DropdownMenuItem(
                         onClick = {
                             onMenuDeleteClick(post)

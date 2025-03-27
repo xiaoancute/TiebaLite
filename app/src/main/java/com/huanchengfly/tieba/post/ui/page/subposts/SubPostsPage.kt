@@ -227,7 +227,8 @@ internal fun SubPostsContent(
         dialogState = confirmDeleteDialogState,
         onConfirm = {
             if (deleteSubPost == null) {
-                val isSelfPost = post?.get { author_id } == account?.uid?.toLongOrNull()
+                val isSelfPost =
+                    if (post?.get { author_id } == 0L) post?.get { author?.id } == account?.uid?.toLongOrNull() else post?.get { author_id } == account?.uid?.toLongOrNull()
                 viewModel.send(
                     SubPostsUiIntent.DeletePost(
                         forumId = forumId,
@@ -235,12 +236,13 @@ internal fun SubPostsContent(
                         threadId = threadId,
                         postId = postId,
                         deleteMyPost = isSelfPost,
-                        tbs = anti?.get { tbs },
+                        tbs = anti?.get { tbs }?:account?.tbs,
                     )
                 )
             } else {
                 val isSelfSubPost =
-                    deleteSubPost!!.get { author_id } == account?.uid?.toLongOrNull()
+                    if (deleteSubPost!!.get { author_id } == 0L) deleteSubPost!!.get { author?.id } == account?.uid?.toLongOrNull() else
+                        deleteSubPost!!.get { author_id } == account?.uid?.toLongOrNull()
                 viewModel.send(
                     SubPostsUiIntent.DeletePost(
                         forumId = forumId,
@@ -249,7 +251,7 @@ internal fun SubPostsContent(
                         postId = postId,
                         subPostId = deleteSubPost!!.get { id },
                         deleteMyPost = isSelfSubPost,
-                        tbs = anti?.get { tbs },
+                        tbs = anti?.get { tbs }?:account?.tbs,
                     )
                 )
             }
@@ -421,7 +423,7 @@ internal fun SubPostsContent(
                                 PostCard(
                                     postHolder = it,
                                     contentRenders = postContentRenders,
-                                    canDelete = { it.author_id == account?.uid?.toLongOrNull() },
+                                    canDelete = { it.author_id == account?.uid?.toLongOrNull() || it.author?.id == account?.uid?.toLongOrNull() },
                                     showSubPosts = false,
                                     onUserClick = {
                                         navigator.navigate(UserProfilePageDestination(it.id))
@@ -483,10 +485,10 @@ internal fun SubPostsContent(
                     itemsIndexed(
                         items = subPosts,
                         key = { _, subPost -> subPost.id }
-                    ) { index, item ->
+                    ) { _, item ->
                         SubPostItem(
                             item = item,
-                            canDelete = { it.author_id == account?.uid?.toLongOrNull() },
+                            canDelete = { it.author_id == account?.uid?.toLongOrNull() || it.author?.id == account?.uid?.toLongOrNull() },
                             threadAuthorId = thread?.get { author?.id },
                             onUserClick = {
                                 navigator.navigate(UserProfilePageDestination(it.id))
