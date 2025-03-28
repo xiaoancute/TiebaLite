@@ -1,11 +1,8 @@
 name: Build, Deploy
 
 # on: [ push, pull_request ]
-on: 
+on:
   workflow_dispatch:
-  pull_request:
-    tags:
-      - 'v*'
   push:
     tags:
       - 'v*'
