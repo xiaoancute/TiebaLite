@@ -106,6 +106,7 @@ import com.huanchengfly.tieba.post.ui.widgets.compose.DialogPositiveButton
 import com.huanchengfly.tieba.post.ui.widgets.compose.DialogState
 import com.huanchengfly.tieba.post.ui.widgets.compose.MyBackHandler
 import com.huanchengfly.tieba.post.ui.widgets.compose.VerticalDivider
+import com.huanchengfly.tieba.post.ui.widgets.compose.debounceClickable
 import com.huanchengfly.tieba.post.ui.widgets.compose.rememberDialogState
 import com.huanchengfly.tieba.post.ui.widgets.edittext.widget.UndoableEditText
 import com.huanchengfly.tieba.post.utils.AccountUtil
@@ -595,37 +596,67 @@ internal fun ReplyPageContent(
             } else {
                 IconButton(
                     onClick = {
-                        val replyContent = if (subPostId == null || subPostId == 0L) {
-                            getText()
-                        } else {
-                            "回复 #(reply, ${replyUserPortrait}, ${replyUserName}) :${getText()}"
-                        }
-                        if (selectedImageList.isEmpty()) {
-                            viewModel.send(
-                                ReplyUiIntent.Send(
-                                    content = replyContent,
-                                    forumId = forumId,
-                                    forumName = forumName,
-                                    threadId = threadId,
-                                    tbs = curTbs,
-                                    postId = postId,
-                                    subPostId = subPostId,
-                                    replyUserId = replyUserId
-                                )
-                            )
-                        } else {
-                            waitUploadSuccessToSend = true
-                            viewModel.send(
-                                ReplyUiIntent.UploadImages(
-                                    forumName,
-                                    selectedImageList,
-                                    isOriginImage
-                                )
-                            )
-                        }
+//                        val replyContent = if (subPostId == null || subPostId == 0L) {
+//                            getText()
+//                        } else {
+//                            "回复 #(reply, ${replyUserPortrait}, ${replyUserName}) :${getText()}"
+//                        }
+//                        if (selectedImageList.isEmpty()) {
+//                            viewModel.send(
+//                                ReplyUiIntent.Send(
+//                                    content = replyContent,
+//                                    forumId = forumId,
+//                                    forumName = forumName,
+//                                    threadId = threadId,
+//                                    tbs = curTbs,
+//                                    postId = postId,
+//                                    subPostId = subPostId,
+//                                    replyUserId = replyUserId
+//                                )
+//                            )
+//                        } else {
+//                            waitUploadSuccessToSend = true
+//                            viewModel.send(
+//                                ReplyUiIntent.UploadImages(
+//                                    forumName,
+//                                    selectedImageList,
+//                                    isOriginImage
+//                                )
+//                            )
+//                        }
                     },
                     enabled = canSend,
                     modifier = Modifier.size(24.dp)
+                        .debounceClickable(onClick = {
+                            val replyContent = if (subPostId == null || subPostId == 0L) {
+                                getText()
+                            } else {
+                                "回复 #(reply, ${replyUserPortrait}, ${replyUserName}) :${getText()}"
+                            }
+                            if (selectedImageList.isEmpty()) {
+                                viewModel.send(
+                                    ReplyUiIntent.Send(
+                                        content = replyContent,
+                                        forumId = forumId,
+                                        forumName = forumName,
+                                        threadId = threadId,
+                                        tbs = curTbs,
+                                        postId = postId,
+                                        subPostId = subPostId,
+                                        replyUserId = replyUserId
+                                    )
+                                )
+                            } else {
+                                waitUploadSuccessToSend = true
+                                viewModel.send(
+                                    ReplyUiIntent.UploadImages(
+                                        forumName,
+                                        selectedImageList,
+                                        isOriginImage
+                                    )
+                                )
+                            }
+                        })
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Rounded.Send,
