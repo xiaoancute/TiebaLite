@@ -584,6 +584,7 @@ private fun SubPostItem(
     val (subPost, contentRenders, blocked) = item
     val context = LocalContext.current
     val navigator = LocalNavigator.current
+    val account = LocalAccount.current
     val coroutineScope = rememberCoroutineScope()
     val author = remember(subPost) { subPost.get { author }?.wrapImmutable() }
     val hasAgreed = remember(subPost) {
@@ -604,16 +605,6 @@ private fun SubPostItem(
             menuState = menuState,
             indication = null,
             menuContent = {
-                if (!context.appPreferences.hideReply) {
-                    DropdownMenuItem(
-                        onClick = {
-                            onReplyClick(subPost.get())
-                            menuState.expanded = false
-                        }
-                    ) {
-                        Text(text = stringResource(id = R.string.btn_reply))
-                    }
-                }
                 if (onMenuCopyClick != null) {
                     DropdownMenuItem(
                         onClick = {
@@ -624,15 +615,31 @@ private fun SubPostItem(
                         Text(text = stringResource(id = R.string.menu_copy))
                     }
                 }
-                DropdownMenuItem(
-                    onClick = {
-                        coroutineScope.launch {
-                            TiebaUtil.reportPost(context, navigator, subPost.get { id }.toString())
+                if (account != null) {
+                    if (!context.appPreferences.hideReply) {
+                        DropdownMenuItem(
+                            onClick = {
+                                onReplyClick(subPost.get())
+                                menuState.expanded = false
+                            }
+                        ) {
+                            Text(text = stringResource(id = R.string.btn_reply))
                         }
-                        menuState.expanded = false
                     }
-                ) {
-                    Text(text = stringResource(id = R.string.title_report))
+                    DropdownMenuItem(
+                        onClick = {
+                            coroutineScope.launch {
+                                TiebaUtil.reportPost(
+                                    context,
+                                    navigator,
+                                    subPost.get { id }.toString()
+                                )
+                            }
+                            menuState.expanded = false
+                        }
+                    ) {
+                        Text(text = stringResource(id = R.string.title_report))
+                    }
                 }
                 if (canDelete(subPost.get()) && onMenuDeleteClick != null) {
                     DropdownMenuItem(
@@ -645,7 +652,7 @@ private fun SubPostItem(
                     }
                 }
             },
-            onClick = { onReplyClick(subPost.get()) }.takeUnless { context.appPreferences.hideReply }
+            onClick = { onReplyClick(subPost.get()) }.takeUnless { context.appPreferences.hideReply || account == null }
         ) {
             Card(
                 header = {

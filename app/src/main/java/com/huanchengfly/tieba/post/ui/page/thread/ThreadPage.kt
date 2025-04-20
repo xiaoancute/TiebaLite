@@ -1754,7 +1754,6 @@ fun PostCard(
     val navigator = LocalNavigator.current
     val account = LocalAccount.current
     val coroutineScope = rememberCoroutineScope()
-    val threadAuthorId = remember { threadAuthorId }
     val post = remember(postHolder) { postHolder.get() }
     val hasPadding = remember(key1 = postHolder, key2 = immersiveMode) {
         postHolder.get { floor > 1 } && !immersiveMode
@@ -1790,18 +1789,8 @@ fun PostCard(
             indication = null,
             onClick = {
                 onReplyClick(post)
-            }.takeIf { !context.appPreferences.hideReply },
+            }.takeIf { !context.appPreferences.hideReply && account != null },
             menuContent = {
-                if (!context.appPreferences.hideReply) {
-                    DropdownMenuItem(
-                        onClick = {
-                            onReplyClick(post)
-                            menuState.expanded = false
-                        }
-                    ) {
-                        Text(text = stringResource(id = R.string.btn_reply))
-                    }
-                }
                 if (onMenuCopyClick != null) {
                     DropdownMenuItem(
                         onClick = {
@@ -1812,38 +1801,50 @@ fun PostCard(
                         Text(text = stringResource(id = R.string.menu_copy))
                     }
                 }
-                DropdownMenuItem(
-                    onClick = {
-                        coroutineScope.launch {
-                            TiebaUtil.reportPost(context, navigator, post.id.toString())
+                if (account != null) {
+                    if (!context.appPreferences.hideReply) {
+                        DropdownMenuItem(
+                            onClick = {
+                                onReplyClick(post)
+                                menuState.expanded = false
+                            }
+                        ) {
+                            Text(text = stringResource(id = R.string.btn_reply))
                         }
-                        menuState.expanded = false
                     }
-                ) {
-                    Text(text = stringResource(id = R.string.title_report))
-                }
-                if (onMenuFavoriteClick != null) {
                     DropdownMenuItem(
                         onClick = {
-                            onMenuFavoriteClick(post)
+                            coroutineScope.launch {
+                                TiebaUtil.reportPost(context, navigator, post.id.toString())
+                            }
                             menuState.expanded = false
                         }
                     ) {
-                        if (isCollected(post)) {
-                            Text(text = stringResource(id = R.string.title_collect_on))
-                        } else {
-                            Text(text = stringResource(id = R.string.title_collect_floor))
+                        Text(text = stringResource(id = R.string.title_report))
+                    }
+                    if (onMenuFavoriteClick != null) {
+                        DropdownMenuItem(
+                            onClick = {
+                                onMenuFavoriteClick(post)
+                                menuState.expanded = false
+                            }
+                        ) {
+                            if (isCollected(post)) {
+                                Text(text = stringResource(id = R.string.title_collect_on))
+                            } else {
+                                Text(text = stringResource(id = R.string.title_collect_floor))
+                            }
                         }
                     }
-                }
-                if ((canDelete(post) || threadAuthorId == account?.uid?.toLong()) && onMenuDeleteClick != null) {
-                    DropdownMenuItem(
-                        onClick = {
-                            onMenuDeleteClick(post)
-                            menuState.expanded = false
+                    if ((canDelete(post) || threadAuthorId == account.uid.toLong()) && onMenuDeleteClick != null) {
+                        DropdownMenuItem(
+                            onClick = {
+                                onMenuDeleteClick(post)
+                                menuState.expanded = false
+                            }
+                        ) {
+                            Text(text = stringResource(id = R.string.title_delete))
                         }
-                    ) {
-                        Text(text = stringResource(id = R.string.title_delete))
                     }
                 }
             }
@@ -2006,16 +2007,6 @@ private fun SubPostItem(
     LongClickMenu(
         menuState = menuState,
         menuContent = {
-            if (!context.appPreferences.hideReply) {
-                DropdownMenuItem(
-                    onClick = {
-                        onReplyClick?.invoke(subPostList.get())
-                        menuState.expanded = false
-                    }
-                ) {
-                    Text(text = stringResource(id = R.string.title_reply))
-                }
-            }
             if (onMenuCopyClick != null) {
                 DropdownMenuItem(
                     onClick = {
@@ -2026,15 +2017,31 @@ private fun SubPostItem(
                     Text(text = stringResource(id = R.string.menu_copy))
                 }
             }
-            DropdownMenuItem(
-                onClick = {
-                    coroutineScope.launch {
-                        TiebaUtil.reportPost(context, navigator, subPostList.get { id }.toString())
+            if (LocalAccount.current != null) {
+                if (!context.appPreferences.hideReply) {
+                    DropdownMenuItem(
+                        onClick = {
+                            onReplyClick?.invoke(subPostList.get())
+                            menuState.expanded = false
+                        }
+                    ) {
+                        Text(text = stringResource(id = R.string.title_reply))
                     }
-                    menuState.expanded = false
                 }
-            ) {
-                Text(text = stringResource(id = R.string.title_report))
+                DropdownMenuItem(
+                    onClick = {
+                        coroutineScope.launch {
+                            TiebaUtil.reportPost(
+                                context,
+                                navigator,
+                                subPostList.get { id }.toString()
+                            )
+                        }
+                        menuState.expanded = false
+                    }
+                ) {
+                    Text(text = stringResource(id = R.string.title_report))
+                }
             }
         },
         shape = RoundedCornerShape(0),
@@ -2246,13 +2253,15 @@ private fun ThreadMenu(
                 onClick = onCopyLinkClick,
                 modifier = Modifier.fillMaxWidth(),
             )
-            ListMenuItem(
-                icon = Icons.Rounded.Report,
-                text = stringResource(id = R.string.title_report),
-                iconColor = ExtendedTheme.colors.text,
-                onClick = onReportClick,
-                modifier = Modifier.fillMaxWidth(),
-            )
+            if (LocalAccount.current != null) {
+                ListMenuItem(
+                    icon = Icons.Rounded.Report,
+                    text = stringResource(id = R.string.title_report),
+                    iconColor = ExtendedTheme.colors.text,
+                    onClick = onReportClick,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
             if (canDelete()) {
                 ListMenuItem(
                     icon = Icons.Rounded.Delete,
