@@ -939,7 +939,7 @@ fun ThreadPage(
             }
         }
 
-        if (!savedHistory || lastVisibilityPostId != 0L) {
+        if ((!savedHistory || lastVisibilityPostId != 0L) && !context.appPreferences.incognitoMode) {
             saveHistory()
         }
     }
