@@ -460,19 +460,19 @@ class MainActivityV2 : BaseComposeActivity() {
             if (appPreferences.autoSign && !isIgnoringBatteryOptimizations() && !appPreferences.ignoreBatteryOptimizationsDialog) {
                 okSignAlertDialogState.show()
             }
-        }
-        onGlobalEvent<GlobalEvent.StartSelectImages> {
-            pickMediasLauncher.launch(
-                PickMediasRequest(it.id, it.maxCount, it.mediaType)
-            )
-        }
-        onGlobalEvent<GlobalEvent.StartActivityForResult> {
-            mLaunchActivityForResultLauncher.launch(
-                LaunchActivityRequest(
-                    it.requesterId,
-                    it.intent
+            onGlobalEvent<GlobalEvent.StartSelectImages> {
+                pickMediasLauncher.launch(
+                    PickMediasRequest(it.id, it.maxCount, it.mediaType)
                 )
-            )
+            }
+            onGlobalEvent<GlobalEvent.StartActivityForResult> {
+                mLaunchActivityForResultLauncher.launch(
+                    LaunchActivityRequest(
+                        it.requesterId,
+                        it.intent
+                    )
+                )
+            }
         }
         TiebaLiteLocalProvider {
             TranslucentThemeBackground {
