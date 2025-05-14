@@ -473,7 +473,7 @@ fun ForumPage(
     val unlikeDialogState = rememberDialogState()
 
     LaunchedEffect(forumInfo) {
-        if (forumInfo != null) {
+        if (forumInfo != null && !context.appPreferences.incognitoMode) {
             val (forum) = forumInfo as ImmutableHolder<ForumInfo>
             HistoryUtil.saveHistory(
                 History(

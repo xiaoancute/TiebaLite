@@ -252,10 +252,9 @@ class PhotoViewActivity : BaseComposeActivityWithParcelable<PhotoViewData>() {
         }
     }
 
-    override fun onCreateContent(systemUiController: SystemUiController) {
-        systemUiController.isSystemBarsVisible = false
-    }
-
+  /*override fun onCreateContent(systemUiController: SystemUiController) {
+        systemUiController.isSystemBarsVisible = true
+    }*/
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         return try {
             super.dispatchTouchEvent(ev)

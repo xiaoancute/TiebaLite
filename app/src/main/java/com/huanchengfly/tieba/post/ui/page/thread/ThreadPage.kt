@@ -891,7 +891,7 @@ fun ThreadPage(
             }
         }
 
-        if (!savedHistory || lastVisibilityPostId != 0L) {
+        if ((!savedHistory || lastVisibilityPostId != 0L) && !context.appPreferences.incognitoMode) {
             saveHistory()
         }
     }
@@ -1434,6 +1434,62 @@ fun ThreadPage(
                                                 color = ExtendedTheme.colors.text,
                                                 modifier = Modifier.padding(horizontal = 8.dp),
                                             )
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                modifier = Modifier.height(IntrinsicSize.Min)
+                                            ) {
+                                                Text(
+                                                    text = stringResource(R.string.title_asc),
+                                                    modifier = Modifier
+                                                        .padding(horizontal = 8.dp)
+                                                        .debounceClickable(
+                                                            interactionSource = remember { MutableInteractionSource() },
+                                                            enabled = (curSortType == 1),
+                                                            indication = null,
+                                                            onClick =
+                                                                {
+                                                                    if (curSortType == 1) {
+                                                                        viewModel.send(
+                                                                            ThreadUiIntent.LoadFirstPage(
+                                                                                threadId = threadId,
+                                                                                forumId = forumId,
+                                                                                seeLz = isSeeLz,
+                                                                                sortType = 0
+                                                                            )
+                                                                        )
+                                                                    }
+                                                                }),
+                                                    fontSize = 13.sp,
+                                                    fontWeight = if (curSortType == 0) FontWeight.SemiBold else FontWeight.Normal,
+                                                    color = if (curSortType == 0) ExtendedTheme.colors.text else ExtendedTheme.colors.textSecondary,
+                                                )
+                                                HorizontalDivider()
+                                                Text(
+                                                    text = stringResource(R.string.title_desc),
+                                                    modifier = Modifier
+                                                        .padding(horizontal = 8.dp)
+                                                        .debounceClickable(
+                                                            interactionSource = remember { MutableInteractionSource() },
+                                                            enabled = (curSortType == 0),
+                                                            indication = null,
+                                                            onClick =
+                                                                {
+                                                                    if (curSortType == 0) {
+                                                                        viewModel.send(
+                                                                            ThreadUiIntent.LoadFirstPage(
+                                                                                threadId = threadId,
+                                                                                forumId = forumId,
+                                                                                seeLz = isSeeLz,
+                                                                                sortType = 1
+                                                                            )
+                                                                        )
+                                                                    }
+                                                                }),
+                                                    fontSize = 13.sp,
+                                                    fontWeight = if (curSortType == 1) FontWeight.SemiBold else FontWeight.Normal,
+                                                    color = if (curSortType == 1) ExtendedTheme.colors.text else ExtendedTheme.colors.textSecondary,
+                                                )
+                                            }
                                             Spacer(modifier = Modifier.weight(1f))
                                             Row(
                                                 verticalAlignment = Alignment.CenterVertically,

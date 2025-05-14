@@ -10,6 +10,7 @@ import androidx.compose.material.icons.automirrored.outlined.BrandingWatermark
 import androidx.compose.material.icons.automirrored.outlined.ExitToApp
 import androidx.compose.material.icons.automirrored.rounded.Sort
 import androidx.compose.material.icons.filled.TabletAndroid
+import androidx.compose.material.icons.outlined.AddModerator
 import androidx.compose.material.icons.outlined.CalendarViewDay
 import androidx.compose.material.icons.outlined.ImageSearch
 import androidx.compose.material.icons.outlined.NightsStay
@@ -200,6 +201,21 @@ fun HabitSettingsPage(
                         2 to stringResource(id = R.string.title_notifications)
                     )
                 )
+            }
+            prefsItem {
+                SwitchPref(
+                    key = "incognitoMode",
+                    title = stringResource(id = R.string.settings_incognito_mode),
+                    defaultChecked = false
+                ) {
+                    LeadingIcon {
+                        AvatarIcon(
+                            icon = Icons.Outlined.AddModerator,
+                            size = Sizes.Small,
+                            contentDescription = null,
+                        )
+                    }
+                }
             }
             prefsItem {
                 SwitchPref(
