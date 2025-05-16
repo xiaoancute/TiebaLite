@@ -1425,15 +1425,71 @@ fun ThreadPage(
                                                 .padding(8.dp),
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            Text(
-                                                text = stringResource(
-                                                    R.string.title_thread_header,
-                                                    "${thread?.get { replyNum - 1 } ?: 0}"),
-                                                fontSize = 13.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = ExtendedTheme.colors.text,
-                                                modifier = Modifier.padding(horizontal = 8.dp),
-                                            )
+//                                            Text(
+//                                                text = stringResource(
+//                                                    R.string.title_thread_header,
+//                                                    "${thread?.get { replyNum - 1 } ?: 0}"),
+//                                                fontSize = 13.sp,
+//                                                fontWeight = FontWeight.Bold,
+//                                                color = ExtendedTheme.colors.text,
+//                                                modifier = Modifier.padding(horizontal = 8.dp),
+//                                            )
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                modifier = Modifier.height(IntrinsicSize.Min)
+                                            ) {
+                                                Text(
+                                                    text = stringResource(R.string.title_thread_header,"${thread?.get { replyNum - 1 } ?: 0}"),
+                                                    modifier = Modifier
+                                                        .padding(horizontal = 8.dp)
+                                                        .debounceClickable(
+                                                            interactionSource = remember { MutableInteractionSource() },
+                                                            indication = null,
+                                                            enabled = isSeeLz,
+                                                            onClick = {
+                                                                if (isSeeLz) {
+                                                                    viewModel.send(
+                                                                        ThreadUiIntent.LoadFirstPage(
+                                                                            threadId = threadId,
+                                                                            forumId = forumId,
+                                                                            seeLz = false,
+                                                                            sortType = curSortType
+                                                                        )
+                                                                    )
+                                                                }
+                                                            }),
+                                                    fontSize = 13.sp,
+                                                    fontWeight = if (!isSeeLz) FontWeight.SemiBold else FontWeight.Normal,
+                                                    color = if (!isSeeLz) ExtendedTheme.colors.text else ExtendedTheme.colors.textSecondary,
+                                                )
+                                                HorizontalDivider()
+                                                Text(
+                                                    text = stringResource(R.string.title_see_lz),
+                                                    modifier = Modifier
+                                                        .padding(horizontal = 8.dp)
+                                                        .debounceClickable(
+                                                            interactionSource = remember { MutableInteractionSource() },
+                                                            enabled = !isSeeLz,
+                                                            indication = null,
+                                                            onClick =
+                                                                {
+                                                                    if (!isSeeLz) {
+                                                                        viewModel.send(
+                                                                            ThreadUiIntent.LoadFirstPage(
+                                                                                threadId = threadId,
+                                                                                forumId = forumId,
+                                                                                seeLz = true,
+                                                                                sortType = curSortType
+                                                                            )
+                                                                        )
+                                                                    }
+                                                                }),
+                                                    fontSize = 13.sp,
+                                                    fontWeight = if (isSeeLz) FontWeight.SemiBold else FontWeight.Normal,
+                                                    color = if (isSeeLz) ExtendedTheme.colors.text else ExtendedTheme.colors.textSecondary,
+                                                )
+                                            }
+                                            Spacer(modifier = Modifier.weight(1f))
                                             Row(
                                                 verticalAlignment = Alignment.CenterVertically,
                                                 modifier = Modifier.height(IntrinsicSize.Min)
@@ -1488,62 +1544,6 @@ fun ThreadPage(
                                                     fontSize = 13.sp,
                                                     fontWeight = if (curSortType == 1) FontWeight.SemiBold else FontWeight.Normal,
                                                     color = if (curSortType == 1) ExtendedTheme.colors.text else ExtendedTheme.colors.textSecondary,
-                                                )
-                                            }
-                                            Spacer(modifier = Modifier.weight(1f))
-                                            Row(
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                modifier = Modifier.height(IntrinsicSize.Min)
-                                            ) {
-                                                Text(
-                                                    text = stringResource(R.string.text_all),
-                                                    modifier = Modifier
-                                                        .padding(horizontal = 8.dp)
-                                                        .debounceClickable(
-                                                            interactionSource = remember { MutableInteractionSource() },
-                                                            indication = null,
-                                                            enabled = isSeeLz,
-                                                            onClick = {
-                                                                if (isSeeLz) {
-                                                                    viewModel.send(
-                                                                        ThreadUiIntent.LoadFirstPage(
-                                                                            threadId = threadId,
-                                                                            forumId = forumId,
-                                                                            seeLz = false,
-                                                                            sortType = curSortType
-                                                                        )
-                                                                    )
-                                                                }
-                                                            }),
-                                                    fontSize = 13.sp,
-                                                    fontWeight = if (!isSeeLz) FontWeight.SemiBold else FontWeight.Normal,
-                                                    color = if (!isSeeLz) ExtendedTheme.colors.text else ExtendedTheme.colors.textSecondary,
-                                                )
-                                                HorizontalDivider()
-                                                Text(
-                                                    text = stringResource(R.string.title_see_lz),
-                                                    modifier = Modifier
-                                                        .padding(horizontal = 8.dp)
-                                                        .debounceClickable(
-                                                            interactionSource = remember { MutableInteractionSource() },
-                                                            enabled = !isSeeLz,
-                                                            indication = null,
-                                                            onClick =
-                                                                {
-                                                                    if (!isSeeLz) {
-                                                                        viewModel.send(
-                                                                            ThreadUiIntent.LoadFirstPage(
-                                                                                threadId = threadId,
-                                                                                forumId = forumId,
-                                                                                seeLz = true,
-                                                                                sortType = curSortType
-                                                                            )
-                                                                        )
-                                                                    }
-                                                                }),
-                                                    fontSize = 13.sp,
-                                                    fontWeight = if (isSeeLz) FontWeight.SemiBold else FontWeight.Normal,
-                                                    color = if (isSeeLz) ExtendedTheme.colors.text else ExtendedTheme.colors.textSecondary,
                                                 )
                                             }
                                         }
@@ -1856,7 +1856,9 @@ fun PostCard(
                 if (onMenuCopyClick != null) {
                     DropdownMenuItem(
                         onClick = {
-                            onMenuCopyClick(post.content.plainText)
+                            val copyText =
+                                if (post.floor == 1) post.title + "\n" + post.content.plainText else post.content.plainText
+                            onMenuCopyClick(copyText)
                             menuState.expanded = false
                         }
                     ) {
