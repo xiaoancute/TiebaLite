@@ -51,7 +51,10 @@ class BlockListViewModel :
         private fun BlockListUiIntent.Add.producePartialChange(): Flow<BlockListPartialChange.Add> =
             flow<BlockListPartialChange.Add> {
                 val block = Block(
-                    category = category, type = Block.TYPE_KEYWORD, keywords = keywords.toJson()
+                    category = category,
+                    type = Block.TYPE_KEYWORD,
+                    keywords = keywords.toJson(),
+                    isRegex = isRegex
                 )
                 BlockManager.addBlock(block)
                 emit(BlockListPartialChange.Add.Success(block))
@@ -70,7 +73,8 @@ sealed interface BlockListUiIntent : UiIntent {
 
     data class Add(
         val category: Int,
-        val keywords: List<String>
+        val keywords: List<String>,
+        val isRegex: Boolean = false
     ) : BlockListUiIntent
 
     data class Delete(

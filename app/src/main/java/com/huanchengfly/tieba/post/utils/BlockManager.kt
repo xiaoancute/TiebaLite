@@ -11,6 +11,7 @@ import com.huanchengfly.tieba.post.models.database.Block.Companion.getKeywords
 import org.litepal.LitePal
 import org.litepal.extension.delete
 import org.litepal.extension.findAllAsync
+import java.util.regex.Pattern
 
 object BlockManager {
     private val blockList: MutableList<Block> = mutableListOf()
@@ -49,13 +50,34 @@ object BlockManager {
     }
 
     fun shouldBlock(content: String): Boolean {
-        return blackList.any { block ->
-            block.type == Block.TYPE_KEYWORD
-                    && block.getKeywords().all { content.contains(it) }
-        } && whiteList.none { block ->
-            block.type == Block.TYPE_KEYWORD
-                    && block.getKeywords().all { content.contains(it) }
+        // 支持正则表达式的屏蔽判断
+        val isBlack = blackList.any { block ->
+            block.type == Block.TYPE_KEYWORD && block.getKeywords().all { keyword ->
+                if (block.isRegex) {
+                    try {
+                        Pattern.compile(keyword).matcher(content).find()
+                    } catch (e: Exception) {
+                        false // 如果正则表达式非法则忽略
+                    }
+                } else {
+                    content.contains(keyword)
+                }
+            }
         }
+        val isWhite = whiteList.any { block ->
+            block.type == Block.TYPE_KEYWORD && block.getKeywords().all { keyword ->
+                if (block.isRegex) {
+                    try {
+                        Pattern.compile(keyword).matcher(content).find()
+                    } catch (e: Exception) {
+                        false
+                    }
+                } else {
+                    content.contains(keyword)
+                }
+            }
+        }
+        return isBlack && !isWhite
     }
 
     fun shouldBlock(userId: Long = 0L, userName: String? = null): Boolean {

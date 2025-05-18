@@ -1,6 +1,7 @@
 package com.huanchengfly.tieba.post.ui.page.settings.block.blocklist
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -15,6 +17,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Checkbox
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
@@ -77,14 +81,17 @@ fun BlockListPage(
 ) {
     var addBlockCategory by remember { mutableStateOf(Block.CATEGORY_BLACK_LIST) }
     val dialogState = rememberDialogState()
+    var isRegex by remember { mutableStateOf(false) } // 记录是否为正则
     PromptDialog(
         onConfirm = {
             viewModel.send(
                 BlockListUiIntent.Add(
                     category = addBlockCategory,
-                    keywords = it.split(" ")
+                    keywords = it.split(" "),
+                    isRegex = isRegex // 传递正则状态
                 )
             )
+            isRegex = false // 重置
         },
         dialogState = dialogState,
         title = {
@@ -94,7 +101,17 @@ fun BlockListPage(
             )
         }
     ) {
-        Text(text = stringResource(id = R.string.tip_add_block))
+        Column {
+            Text(text = stringResource(id = R.string.tip_add_block))
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(
+                    checked = isRegex,
+                    onCheckedChange = { isRegex = it }
+                )
+                Text(text = "作为正则表达式")
+            }
+        }
     }
 
     val context = LocalContext.current
@@ -213,9 +230,9 @@ fun BlockListPage(
             }
         }
     ) { paddingValues ->
-        val snackbarHostState = LocalSnackbarHostState.current
+        val snackBarHostState = LocalSnackbarHostState.current
         viewModel.onEvent<BlockListUiEvent.Success> {
-            snackbarHostState.showSnackbar(
+            snackBarHostState.showSnackbar(
                 when (it) {
                     is BlockListUiEvent.Success.Add -> context.getString(R.string.toast_add_success)
                     is BlockListUiEvent.Success.Delete -> context.getString(R.string.toast_delete_success)
@@ -304,7 +321,11 @@ private fun BlockItem(
                 id = R.string.block_type_user
             ) else stringResource(
                 id = R.string.block_type_keywords
-            )
+            ),
+            tint = if (item.isRegex)
+                MaterialTheme.colors.secondary
+            else
+                MaterialTheme.colors.onSurface
         )
         Spacer(modifier = Modifier.width(16.dp))
         Column(
@@ -328,10 +349,30 @@ private fun BlockItem(
                             object : TypeToken<List<String>>() {}.type
                         )
                 }.getOrDefault(emptyList())
-                Text(
-                    text = keywordsList.joinToString(" "),
-                    style = MaterialTheme.typography.subtitle1
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = keywordsList.joinToString(" "),
+                        style = MaterialTheme.typography.subtitle1,
+                        color = if (item.isRegex)
+                            MaterialTheme.colors.secondary
+                        else
+                            MaterialTheme.colors.onSurface
+                    )
+                    if (item.isRegex) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "正则",
+                            color = MaterialTheme.colors.secondary,
+                            fontSize = 12.sp,
+                            modifier = Modifier
+                                .background(
+                                    color = MaterialTheme.colors.secondary.copy(alpha = 0.13f),
+                                    shape = RoundedCornerShape(8.dp)
+                                )
+                                .padding(horizontal = 8.dp, vertical = 2.dp)
+                        )
+                    }
+                }
             }
         }
     }
