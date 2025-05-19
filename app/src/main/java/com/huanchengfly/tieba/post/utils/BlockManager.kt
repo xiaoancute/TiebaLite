@@ -52,7 +52,7 @@ object BlockManager {
     fun shouldBlock(content: String): Boolean {
         // 支持正则表达式的屏蔽判断
         val isWhite = whiteList.any { block ->
-            block.type == Block.TYPE_KEYWORD && block.getKeywords().all { keyword ->
+            block.type == Block.TYPE_KEYWORD && block.getKeywords().any { keyword ->
                 if (block.isRegex) {
                     try {
                         Pattern.compile(keyword).matcher(content).find()
@@ -67,7 +67,7 @@ object BlockManager {
         if (isWhite)
             return false
         val isBlack = blackList.any { block ->
-            block.type == Block.TYPE_KEYWORD && block.getKeywords().all { keyword ->
+            block.type == Block.TYPE_KEYWORD && block.getKeywords().any { keyword ->
                 if (block.isRegex) {
                     try {
                         Pattern.compile(keyword).matcher(content).find()
@@ -84,20 +84,16 @@ object BlockManager {
 
     fun shouldBlock(userId: Long = 0L, userName: String? = null): Boolean {
         val isWhite = whiteList.any { block ->
-            if (block.isRegex) {
-                return false
-            }
-            block.type == Block.TYPE_USER
-                    && (block.uid == userId.toString() || block.username == userName)
+            !block.isRegex &&
+                    block.type == Block.TYPE_USER &&
+                    (block.uid == userId.toString() || block.username == userName)
         }
-        if (isWhite)
-            return false
+        if (isWhite) return false
+
         val isBlack = blackList.any { block ->
-            if (block.isRegex) {
-                return false
-            }
-            block.type == Block.TYPE_USER
-                    && (block.uid == userId.toString() || block.username == userName)
+            !block.isRegex &&
+                    block.type == Block.TYPE_USER &&
+                    (block.uid == userId.toString() || block.username == userName)
         }
         return isBlack
     }
