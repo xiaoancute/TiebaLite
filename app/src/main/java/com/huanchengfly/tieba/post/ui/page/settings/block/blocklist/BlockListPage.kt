@@ -1,10 +1,13 @@
 package com.huanchengfly.tieba.post.ui.page.settings.block.blocklist
 
+import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -39,10 +42,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.gson.reflect.TypeToken
@@ -87,7 +93,7 @@ fun BlockListPage(
             viewModel.send(
                 BlockListUiIntent.Add(
                     category = addBlockCategory,
-                    keywords = it.split(" "),
+                    keywords =  if (isRegex) listOf(it) else it.split(" "), // 避免正则中的空格导致正则失效
                     isRegex = isRegex // 传递正则状态
                 )
             )
@@ -264,20 +270,38 @@ fun BlockListPage(
                 },
                 modifier = Modifier.fillMaxSize()
             ) {
+                val clipboardManager = LocalClipboardManager.current
+                val context = LocalContext.current
                 MyLazyColumn(Modifier.fillMaxSize()) {
-                    items(items, key = { it.id }) {
+                    items(items, key = { it.id }) { item ->
                         LongClickMenu(menuContent = {
+
+                            // 复制功能
+                            DropdownMenuItem(onClick = {
+                                val keywordsList: List<String> = GsonUtil.getGson().fromJson(
+                                    item.keywords ?: "[]",
+                                    object : TypeToken<List<String>>() {}.type
+                                )
+                                val merged = if (item.isRegex) {
+                                    keywordsList.joinToString(separator = "")
+                                } else {
+                                    keywordsList.joinToString(separator = " ")
+                                }
+
+                                clipboardManager.setText(AnnotatedString(merged))
+                                Toast.makeText(context, R.string.toast_copy_success, Toast.LENGTH_SHORT).show()
+                            }) {
+                                Text(text = stringResource(id = R.string.title_copy))
+                            }
                             DropdownMenuItem(onClick = {
                                 viewModel.send(
-                                    BlockListUiIntent.Delete(
-                                        it.id
-                                    )
+                                    BlockListUiIntent.Delete(item.id)
                                 )
                             }) {
                                 Text(text = stringResource(id = R.string.title_delete))
                             }
                         }) {
-                            BlockItem(item = it)
+                            BlockItem(item = item)
                         }
                     }
                 }
@@ -305,6 +329,7 @@ private fun BlockItemPlaceholder() {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun BlockItem(
     item: Block,
@@ -349,17 +374,22 @@ private fun BlockItem(
                             object : TypeToken<List<String>>() {}.type
                         )
                 }.getOrDefault(emptyList())
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(0.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Text(
                         text = keywordsList.joinToString(" "),
                         style = MaterialTheme.typography.subtitle1,
                         color = if (item.isRegex)
                             MaterialTheme.colors.secondary
                         else
-                            MaterialTheme.colors.onSurface
+                            MaterialTheme.colors.onSurface,
+                        maxLines = Int.MAX_VALUE, // 支持多行
+                        overflow = TextOverflow.Visible
                     )
                     if (item.isRegex) {
-                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "正则",
                             color = MaterialTheme.colors.secondary,

@@ -51,25 +51,12 @@ object BlockManager {
 
     fun shouldBlock(content: String): Boolean {
         // 支持正则表达式的屏蔽判断
-        val isBlack = blackList.any { block ->
-            block.type == Block.TYPE_KEYWORD && block.getKeywords().all { keyword ->
-                if (block.isRegex) {
-                    try {
-                        Pattern.compile(keyword).matcher(content).find()
-                    } catch (e: Exception) {
-                        false // 如果正则表达式非法则忽略
-                    }
-                } else {
-                    content.contains(keyword)
-                }
-            }
-        }
         val isWhite = whiteList.any { block ->
             block.type == Block.TYPE_KEYWORD && block.getKeywords().all { keyword ->
                 if (block.isRegex) {
                     try {
                         Pattern.compile(keyword).matcher(content).find()
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
                         false
                     }
                 } else {
@@ -77,17 +64,42 @@ object BlockManager {
                 }
             }
         }
-        return isBlack && !isWhite
+        if (isWhite)
+            return false
+        val isBlack = blackList.any { block ->
+            block.type == Block.TYPE_KEYWORD && block.getKeywords().all { keyword ->
+                if (block.isRegex) {
+                    try {
+                        Pattern.compile(keyword).matcher(content).find()
+                    } catch (_: Exception) {
+                        false // 如果正则表达式非法则忽略
+                    }
+                } else {
+                    content.contains(keyword)
+                }
+            }
+        }
+        return isBlack
     }
 
     fun shouldBlock(userId: Long = 0L, userName: String? = null): Boolean {
-        return blackList.any { block ->
-            block.type == Block.TYPE_USER
-                    && (block.uid == userId.toString() || block.username == userName)
-        } && whiteList.none { block ->
+        val isWhite = whiteList.any { block ->
+            if (block.isRegex) {
+                return false
+            }
             block.type == Block.TYPE_USER
                     && (block.uid == userId.toString() || block.username == userName)
         }
+        if (isWhite)
+            return false
+        val isBlack = blackList.any { block ->
+            if (block.isRegex) {
+                return false
+            }
+            block.type == Block.TYPE_USER
+                    && (block.uid == userId.toString() || block.username == userName)
+        }
+        return isBlack
     }
 
     fun ThreadInfo.shouldBlock(): Boolean =
