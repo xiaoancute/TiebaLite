@@ -1439,7 +1439,9 @@ fun ThreadPage(
                                                 modifier = Modifier.height(IntrinsicSize.Min)
                                             ) {
                                                 Text(
-                                                    text = stringResource(R.string.title_thread_header,"${thread?.get { replyNum - 1 } ?: 0}"),
+                                                    text = stringResource(
+                                                        R.string.title_thread_header,
+                                                        "${thread?.get { replyNum - 1 } ?: 0}"),
                                                     modifier = Modifier
                                                         .padding(horizontal = 8.dp)
                                                         .debounceClickable(
@@ -2192,6 +2194,7 @@ private fun ThreadMenu(
     onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val account =  LocalAccount.current
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -2231,26 +2234,28 @@ private fun ThreadMenu(
                     modifier = Modifier.fillMaxSize()
                 )
             }
-            item {
-                ToggleButton(
-                    text = {
-                        TextWithMinWidth(
-                            text = stringResource(
-                                id = if (isCollected) R.string.title_collected else R.string.title_uncollected
-                            ),
-                            minLength = 4
-                        )
-                    },
-                    checked = isCollected,
-                    onClick = onCollectClick,
-                    icon = {
-                        Icon(
-                            imageVector = if (isCollected) Icons.Rounded.Star else Icons.Rounded.StarBorder,
-                            contentDescription = null
-                        )
-                    },
-                    modifier = Modifier.fillMaxSize()
-                )
+            if (account != null) {
+                item {
+                    ToggleButton(
+                        text = {
+                            TextWithMinWidth(
+                                text = stringResource(
+                                    id = if (isCollected) R.string.title_collected else R.string.title_uncollected
+                                ),
+                                minLength = 4
+                            )
+                        },
+                        checked = isCollected,
+                        onClick = onCollectClick,
+                        icon = {
+                            Icon(
+                                imageVector = if (isCollected) Icons.Rounded.Star else Icons.Rounded.StarBorder,
+                                contentDescription = null
+                            )
+                        },
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
             }
             item {
                 ToggleButton(
@@ -2317,7 +2322,7 @@ private fun ThreadMenu(
                 onClick = onCopyLinkClick,
                 modifier = Modifier.fillMaxWidth(),
             )
-            if (LocalAccount.current != null) {
+            if (account != null) {
                 ListMenuItem(
                     icon = Icons.Rounded.Report,
                     text = stringResource(id = R.string.title_report),
