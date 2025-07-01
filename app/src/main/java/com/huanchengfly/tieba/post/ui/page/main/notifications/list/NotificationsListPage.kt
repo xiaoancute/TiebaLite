@@ -125,7 +125,8 @@ fun NotificationsListPage(
                                             navigator.navigate(
                                                 SubPostsPageDestination(
                                                     threadId = info.threadId!!.toLong(),
-                                                    postId = if (info.quotePid != null) info.quotePid.toLong() else 0,
+                                                    //postId = if (info.quotePid != null) info.quotePid.toLong() else 0,
+                                                    postId =  0,
                                                     subPostId = info.postId!!.toLong(),
                                                     loadFromSubPost = true
                                                 )
