@@ -126,7 +126,9 @@ fun NotificationsListPage(
                                                 SubPostsPageDestination(
                                                     threadId = info.threadId!!.toLong(),
                                                     //postId = if (info.quotePid != null) info.quotePid.toLong() else 0,
-                                                    postId =  0,
+                                                    //quotePid引用不确定，可能为postId，也可能未subPostId,导致子楼加载失败或者子回复异常
+                                                    //先传0，在子楼页面获取正确的postId
+                                                    postId = 0,
                                                     subPostId = info.postId!!.toLong(),
                                                     loadFromSubPost = true
                                                 )
