@@ -384,7 +384,7 @@ internal fun SubPostsContent(
                                                     forumId = fid,
                                                     forumName = forumName.toString(),
                                                     threadId = threadId,
-                                                    postId = postId,
+                                                    postId = post?.get { id } ?: postId,
                                                 )
                                             )
                                         }
