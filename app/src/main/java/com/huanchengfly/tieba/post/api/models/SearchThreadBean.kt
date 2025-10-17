@@ -141,7 +141,7 @@ data class SearchThreadBean(
         val showNickname: String?,
         @SerialName("user_id")
         @SerializedName("user_id")
-        val userId: String?,
+        val userId: String,
         val portrait: String?,
     )
 }

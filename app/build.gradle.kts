@@ -86,16 +86,13 @@ android {
     }
     buildTypes {
         debug {
-            // Debug 版本使用不同的包名，可以和 Release 版本共存
-            applicationIdSuffix = ".debug"
-            // Debug 版本的应用名称加上 (Debug) 标识
-            resValue("string", "app_name", "贴吧Lite (Debug)")
+            isMinifyEnabled = false
+            isShrinkResources = false
+            isDebuggable = true
+            isJniDebuggable = true
+            multiDexEnabled = true
         }
         release {
-            // Release 自编译版本使用不同的包名，可以和应用商店版本共存
-            applicationIdSuffix = ".self"
-            // Release 版本的应用名称加上 (Self) 标识
-            resValue("string", "app_name", "贴吧Lite (Self)")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
