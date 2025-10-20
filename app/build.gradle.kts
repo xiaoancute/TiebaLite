@@ -279,8 +279,4 @@ dependencies {
 
     implementation(libs.com.jakewharton.butterknife)
     kapt(libs.com.jakewharton.butterknife.compiler)
-
-    implementation(libs.appcenter.analytics)
-    implementation(libs.appcenter.crashes)
-    implementation(libs.appcenter.distribute)
 }

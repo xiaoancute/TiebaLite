@@ -16,7 +16,6 @@ dependency-analysis = { id = "com.autonomousapps.dependency-analysis", version =
 [versions]
 
 accompanist = "0.37.3"
-appcenter = "5.0.6"
 hilt = "2.57.2"
 kotlin = "2.2.20"
 sketch = "3.3.2"
@@ -195,8 +194,3 @@ com-github-yalantis-ucrop = { group = "com.github.yalantis", name = "ucrop", ver
 # ButterKnife
 com-jakewharton-butterknife = { group = "com.jakewharton", name = "butterknife", version = "10.2.3" }
 com-jakewharton-butterknife-compiler = { group = "com.jakewharton", name = "butterknife-compiler", version = "10.2.3" }
-
-# AppCenter
-appcenter-analytics = { group = "com.microsoft.appcenter", name = "appcenter-analytics", version.ref = "appcenter" }
-appcenter-crashes = { group = "com.microsoft.appcenter", name = "appcenter-crashes", version.ref = "appcenter" }
-appcenter-distribute = { group = "com.microsoft.appcenter", name = "appcenter-distribute", version.ref = "appcenter" }
