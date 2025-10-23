@@ -5,6 +5,7 @@ import com.huanchengfly.tieba.post.api.SearchThreadFilter
 import com.huanchengfly.tieba.post.api.SearchThreadOrder
 import com.huanchengfly.tieba.post.api.models.*
 import com.huanchengfly.tieba.post.api.models.protos.addPost.AddPostResponse
+import com.huanchengfly.tieba.post.api.models.protos.forumGuide.ForumGuideResponse
 import com.huanchengfly.tieba.post.api.models.protos.forumRecommend.ForumRecommendResponse
 import com.huanchengfly.tieba.post.api.models.protos.forumRuleDetail.ForumRuleDetailResponse
 import com.huanchengfly.tieba.post.api.models.protos.frsPage.FrsPageResponse
@@ -1339,6 +1340,18 @@ interface ITiebaApi {
     fun forumRecommendNewFlow(
         sortType: Int = 1
     ): Flow<ForumRecommendResponse>
+
+    /**
+     * 关注吧列表_V12版本
+     *
+     * **需登录**
+     *
+     * @param sortType 排序（0=更新排序 1=等级排序）
+     */
+    fun forumGuideNewFlow(
+        sortType: Int = 2
+    ): Flow<ForumGuideResponse>
+
 
     /**
      * 吧页面
