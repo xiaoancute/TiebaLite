@@ -73,7 +73,7 @@ class HomeViewModel : BaseViewModel<HomeUiIntent, HomePartialChange, HomeUiState
         private fun produceRefreshPartialChangeFlow(): Flow<HomePartialChange.Refresh> =
             HistoryUtil.getFlow(HistoryUtil.TYPE_FORUM, 0)
                 .zip(
-                    TiebaApi.getInstance().forumRecommendNewFlow()
+                    TiebaApi.getInstance().forumGuideNewFlow()
                 ) { historyForums, forumRecommend ->
                     val forums = forumRecommend.data_?.like_forum?.map {
                         HomeUiState.Forum(
@@ -81,7 +81,8 @@ class HomeViewModel : BaseViewModel<HomeUiIntent, HomePartialChange, HomeUiState
                             it.forum_id.toString(),
                             it.forum_name,
                             it.is_sign == 1,
-                            it.level_id.toString()
+                            it.level_id.toString(),
+                            it.hot_num
                         )
                     } ?: emptyList()
 
@@ -283,6 +284,7 @@ data class HomeUiState(
         val forumName: String,
         val isSign: Boolean,
         val levelId: String,
+        val hotNum: Int,
     )
 }
 

@@ -52,6 +52,9 @@ import com.huanchengfly.tieba.post.api.models.WebUploadPicBean
 import com.huanchengfly.tieba.post.api.models.protos.addPost.AddPostRequest
 import com.huanchengfly.tieba.post.api.models.protos.addPost.AddPostRequestData
 import com.huanchengfly.tieba.post.api.models.protos.addPost.AddPostResponse
+import com.huanchengfly.tieba.post.api.models.protos.forumGuide.ForumGuideRequest
+import com.huanchengfly.tieba.post.api.models.protos.forumGuide.ForumGuideRequestData
+import com.huanchengfly.tieba.post.api.models.protos.forumGuide.ForumGuideResponse
 import com.huanchengfly.tieba.post.api.models.protos.forumRecommend.ForumRecommendRequest
 import com.huanchengfly.tieba.post.api.models.protos.forumRecommend.ForumRecommendRequestData
 import com.huanchengfly.tieba.post.api.models.protos.forumRecommend.ForumRecommendResponse
@@ -1043,6 +1046,22 @@ object MixedTiebaApiImpl : ITiebaApi {
                     )
                 )
             )
+        )
+    }
+
+    override fun forumGuideNewFlow(
+        sortType: Int,
+    ): Flow<ForumGuideResponse> {
+        return RetrofitTiebaApi.OFFICIAL_PROTOBUF_TIEBA_API.forumGuideFlow(
+            buildProtobufRequestBody(
+                ForumGuideRequest(
+                    ForumGuideRequestData(
+                        sort_type = sortType,
+                        call_from = 0
+                    )
+                ),
+                clientVersion = ClientVersion.TIEBA_V12
+            ),
         )
     }
 
