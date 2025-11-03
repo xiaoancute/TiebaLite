@@ -1923,7 +1923,7 @@ fun PostCard(
                                 Avatar(
                                     data = StringUtil.getAvatarUrl(author.portrait),
                                     size = Sizes.Small,
-                                    contentDescription = null
+                                    contentDescription = stringResource(id = R.string.user_portrait)
                                 )
                             },
                             name = {

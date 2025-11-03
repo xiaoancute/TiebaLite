@@ -345,6 +345,8 @@
     <string name="profile_sex_male">男</string>
     <string name="profile_sex_unset" />
     <string name="upload_portrait">上传头像</string>
+    <string name="user_portrait">用户头像</string>
+    <string name="forum_portrait">吧头像</string>
     <string name="title_intro">简介</string>
     <string name="toast_intro_length_beyond_restrict">你输入的字数超出限制</string>
     <string name="title_modify_sex">选择性别</string>

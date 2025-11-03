@@ -78,7 +78,7 @@ private fun ViewPhoto(
         }
         SketchZoomAsyncImage(
             imageUri = imageUri,
-            contentDescription = null,
+            contentDescription = stringResource(id = R.string.desc_image),
             modifier = Modifier.fillMaxSize(),
             onTap = onTap,
             imageState = state,

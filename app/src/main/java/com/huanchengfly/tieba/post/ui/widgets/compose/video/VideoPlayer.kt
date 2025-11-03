@@ -170,7 +170,7 @@ fun VideoPlayer(
                     if (thumbnailUrl != null) {
                         AsyncImage(
                             imageUri = thumbnailUrl,
-                            contentDescription = null,
+                            contentDescription = stringResource(id = R.string.desc_video),
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop
                         )

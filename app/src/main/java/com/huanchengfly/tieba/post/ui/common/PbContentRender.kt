@@ -1,6 +1,7 @@
 package com.huanchengfly.tieba.post.ui.common
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
@@ -137,8 +138,9 @@ data class PicContentRender(
 
         NetworkImage(
             imageUri = picUrl,
-            contentDescription = null,
+            contentDescription = stringResource(id = R.string.desc_image),
             modifier = Modifier
+                .focusable()
                 .clip(RoundedCornerShape(context.appPreferences.radius.dp))
                 .fillMaxWidth(widthFraction)
                 .aspectRatio(width * 1f / height),

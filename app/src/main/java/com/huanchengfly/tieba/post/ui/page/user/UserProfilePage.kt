@@ -5,6 +5,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -802,8 +803,10 @@ private fun UserProfileDetail(
                 val imageUri = StringUtil.getBigAvatarUrl(user.get { portrait })
                 NetworkImage(
                     imageUri = imageUri,
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
+                    contentDescription = stringResource(id = R.string.user_portrait),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .focusable(),
                     //构造PhotoViewData复用NetworkImage，实现头像查看和下载
                     photoViewData = PhotoViewData(
                         picItems = listOf(

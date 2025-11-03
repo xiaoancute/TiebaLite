@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -128,7 +129,7 @@ private fun UserHeader(
             Avatar(
                 data = user.get { StringUtil.getAvatarUrl(portrait) },
                 size = Sizes.Small,
-                contentDescription = null
+                contentDescription = stringResource(id = R.string.user_portrait)
             )
         },
         name = {
@@ -176,7 +177,7 @@ fun UserHeader(
             Avatar(
                 data = StringUtil.getAvatarUrl(portrait),
                 size = Sizes.Small,
-                contentDescription = null
+                contentDescription = stringResource(id = R.string.user_portrait)
             )
         },
         name = {
@@ -384,7 +385,7 @@ fun ForumInfoChip(
         imageUri?.let {
             Avatar(
                 data = imageUri,
-                contentDescription = null,
+                contentDescription = stringResource(id = R.string.forum_portrait),
                 modifier = Modifier
                     .fillMaxHeight()
                     .aspectRatio(1f),
@@ -569,8 +570,9 @@ private fun ThreadMedia(
                                 }
                                 NetworkImage(
                                     imageUri = remember(media) { media.url },
-                                    contentDescription = null,
+                                    contentDescription = stringResource(id = R.string.desc_photo),
                                     modifier = Modifier
+                                        .focusable()
                                         .fillMaxHeight()
                                         .weight(1f),
                                     photoViewData = photoViewData,
