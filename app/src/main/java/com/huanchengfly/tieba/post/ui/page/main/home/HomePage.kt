@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -102,6 +103,7 @@ import com.huanchengfly.tieba.post.ui.widgets.compose.rememberMenuState
 import com.huanchengfly.tieba.post.ui.widgets.compose.states.StateScreen
 import com.huanchengfly.tieba.post.utils.AccountUtil.LocalAccount
 import com.huanchengfly.tieba.post.utils.ImageUtil
+import com.huanchengfly.tieba.post.utils.StringUtil.getShortNumString
 import com.huanchengfly.tieba.post.utils.TiebaUtil
 import com.huanchengfly.tieba.post.utils.appPreferences
 import kotlinx.collections.immutable.persistentListOf
@@ -297,54 +299,86 @@ private fun ForumItemContent(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = CenterVertically
     ) {
+        // 头像在左
         AnimatedVisibility(visible = showAvatar) {
             Row {
-                Avatar(data = item.avatar, size = 40.dp, contentDescription = null)
+                Avatar(
+                    data = item.avatar,
+                    size = 40.dp,
+                    contentDescription = stringResource(R.string.forum_portrait)
+                )
                 Spacer(modifier = Modifier.width(14.dp))
             }
         }
-        Text(
-            color = ExtendedTheme.colors.text,
-            text = item.forumName,
+        Column(
             modifier = Modifier
-                .weight(1f)
-                .align(CenterVertically),
-            fontSize = 15.sp,
-            fontWeight = FontWeight.Bold,
-            maxLines = 1,
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Box(
-            modifier = Modifier
-                .width(54.dp)
-                .background(
-                    color = ExtendedTheme.colors.chip,
-                    shape = RoundedCornerShape(3.dp)
-                )
-                .padding(vertical = 4.dp)
-                .align(CenterVertically)
+                .fillMaxHeight()
+                .weight(1f),
+            horizontalAlignment = Alignment.Start,
+            verticalArrangement = Arrangement.Center
         ) {
-            Row(
-                modifier = Modifier.align(Center),
-            ) {
+            // 第二列：贴吧名称
+            Text(
+                color = ExtendedTheme.colors.text,
+                text = item.forumName,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+            )
+            AnimatedVisibility(visible = showAvatar) {
+                Spacer(modifier = Modifier.height(2.dp))
+                // 热度值显示
                 Text(
-                    text = "Lv.${item.levelId}",
+                    text = stringResource(
+                        R.string.hot_num,
+                        item.hotNum.getShortNumString()
+                    ),
                     color = ExtendedTheme.colors.onChip,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.align(CenterVertically)
+                    fontSize = 10.sp
                 )
-                if (item.isSign) {
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Icon(
-                        imageVector = Icons.Rounded.Check,
-                        contentDescription = stringResource(id = R.string.tip_signed),
-                        modifier = Modifier
-                            .size(12.dp)
-                            .align(CenterVertically),
-                        tint = ExtendedTheme.colors.onChip
+            }
+        }
+
+        Spacer(modifier = Modifier.width(8.dp))
+        // 第三列：等级
+        Column(
+            modifier = Modifier
+                .fillMaxHeight(),
+            verticalArrangement = Arrangement.Center
+        ) {
+            // 等级显示
+            Box(
+                modifier = Modifier
+                    .width(54.dp)
+                    .background(
+                        color = ExtendedTheme.colors.chip,
+                        shape = RoundedCornerShape(3.dp)
                     )
+                    .padding(vertical = 4.dp)
+            ) {
+                Row(
+                    modifier = Modifier.align(Center),
+                ) {
+                    Text(
+                        text = "Lv.${item.levelId}",
+                        color = ExtendedTheme.colors.onChip,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.align(CenterVertically)
+                    )
+                    if (item.isSign) {
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(
+                            imageVector = Icons.Rounded.Check,
+                            contentDescription = stringResource(id = R.string.tip_signed),
+                            modifier = Modifier
+                                .size(12.dp)
+                                .align(CenterVertically),
+                            tint = ExtendedTheme.colors.onChip
+                        )
+                    }
                 }
             }
         }
