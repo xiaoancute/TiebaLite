@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -103,29 +104,10 @@ import com.huanchengfly.tieba.post.ui.widgets.compose.rememberMenuState
 import com.huanchengfly.tieba.post.ui.widgets.compose.states.StateScreen
 import com.huanchengfly.tieba.post.utils.AccountUtil.LocalAccount
 import com.huanchengfly.tieba.post.utils.ImageUtil
+import com.huanchengfly.tieba.post.utils.StringUtil.getShortNumString
 import com.huanchengfly.tieba.post.utils.TiebaUtil
 import com.huanchengfly.tieba.post.utils.appPreferences
 import kotlinx.collections.immutable.persistentListOf
-
-// 辅助函数：格式化热度值，将大数值转换为简洁格式（如1231000 -> 123.1w）
-private fun formatHotNum(num: Int): String {
-    return when {
-        num >= 10000 -> {
-            val value = num / 10000.0
-            String.format("%.1fw", value)
-        }
-        else -> num.toString()
-    }
-}
-
-// 辅助函数：截断字符串，超过指定长度时显示省略号
-private fun truncateString(text: String, maxLength: Int = 5): String {
-    return if (text.length > maxLength) {
-        text.substring(0, maxLength) + "..."
-    } else {
-        text
-    }
-}
 
 private fun getGridCells(
     context: Context,
@@ -144,7 +126,7 @@ fun SearchBoxPreview() {
     SearchBox(
         backgroundColor = Color(0xFFF8F8F8),
         contentColor = Color(0xFFBFBFBF),
-        onClick =  {}
+        onClick = {}
     )
 }
 
@@ -317,82 +299,85 @@ private fun ForumItemContent(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 10.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = CenterVertically
     ) {
         // 头像在左
-        AnimatedVisibility(visible = true) {
+        AnimatedVisibility(visible = showAvatar) {
             Row {
-                Avatar(data = item.avatar, size = 40.dp, contentDescription = null)
-                Spacer(modifier = Modifier.width(10.dp))
+                Avatar(
+                    data = item.avatar,
+                    size = 40.dp,
+                    contentDescription = stringResource(R.string.forum_portrait)
+                )
+                Spacer(modifier = Modifier.width(14.dp))
+            }
+        }
+        Column(
+            modifier = Modifier
+                .fillMaxHeight()
+                .weight(1f),
+            horizontalAlignment = Alignment.Start,
+            verticalArrangement = Arrangement.Center
+        ) {
+            // 第二列：贴吧名称
+            Text(
+                color = ExtendedTheme.colors.text,
+                text = item.forumName,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+            )
+            AnimatedVisibility(visible = showAvatar) {
+                Spacer(modifier = Modifier.height(2.dp))
+                // 热度值显示
+                Text(
+                    text = stringResource(
+                        R.string.hot_num,
+                        item.hotNum.getShortNumString()
+                    ),
+                    color = ExtendedTheme.colors.onChip,
+                    fontSize = 10.sp
+                )
             }
         }
 
-        // 右侧内容分两行显示
+        Spacer(modifier = Modifier.width(8.dp))
+        // 第三列：等级
         Column(
             modifier = Modifier
-                .weight(1f)
-                .align(CenterVertically)
+                .fillMaxHeight(),
+            verticalArrangement = Arrangement.Center
         ) {
-            // 第一行：贴吧名称和等级
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = CenterVertically
+            // 等级显示
+            Box(
+                modifier = Modifier
+                    .width(54.dp)
+                    .background(
+                        color = ExtendedTheme.colors.chip,
+                        shape = RoundedCornerShape(3.dp)
+                    )
+                    .padding(vertical = 4.dp)
             ) {
-                Text(
-                    color = ExtendedTheme.colors.text,
-                    text = if (showAvatar) item.forumName else truncateString(item.forumName),
-                    fontSize = 12.sp, // 减小贴吧名称字体
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1
-                )
-                // 等级显示
-                Box(
-                    modifier = Modifier
-                        .background(
-                            color = ExtendedTheme.colors.chip,
-                            shape = RoundedCornerShape(3.dp)
-                        )
-                        .padding(vertical = 2.dp, horizontal = 4.dp)
+                Row(
+                    modifier = Modifier.align(Center),
                 ) {
                     Text(
                         text = "Lv.${item.levelId}",
                         color = ExtendedTheme.colors.onChip,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.align(CenterVertically)
                     )
-                }
-            }
-
-            // 第二行：热度和签到状态
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 4.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = CenterVertically
-            ) {
-                // 热度值显示
-                Text(
-                    text = "热度:${formatHotNum(item.hotNum)}",
-                    color = ExtendedTheme.colors.onChip,
-                    fontSize = 10.sp
-                )
-
-                // 签到状态
-                if (item.isSign) {
-                    Row() {
+                    if (item.isSign) {
+                        Spacer(modifier = Modifier.width(4.dp))
                         Icon(
                             imageVector = Icons.Rounded.Check,
                             contentDescription = stringResource(id = R.string.tip_signed),
-                            modifier = Modifier.size(10.dp),
+                            modifier = Modifier
+                                .size(12.dp)
+                                .align(CenterVertically),
                             tint = ExtendedTheme.colors.onChip
-                        )
-                        Text(
-                            text = stringResource(id = R.string.tip_signed),
-                            color = ExtendedTheme.colors.onChip,
-                            fontSize = 10.sp,
-                            modifier = Modifier.padding(start = 2.dp)
                         )
                     }
                 }
