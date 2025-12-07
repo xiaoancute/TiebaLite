@@ -70,6 +70,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onVisibilityChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -441,6 +442,7 @@ internal fun ReplyPageContent(
         Modifier
             .fillMaxWidth()
             .navigationBarsPadding()
+            .consumeWindowInsets(WindowInsets.ime)
     } else {
         Modifier
             .fillMaxWidth()
@@ -449,7 +451,23 @@ internal fun ReplyPageContent(
     }
 
     Column(
-        modifier = parentModifier,
+        modifier = parentModifier
+//            .onFirstVisible() {
+//                if (editTextView != null) {
+//                    showKeyboard()
+//                }
+//            }
+            .onVisibilityChanged { visibility ->
+                if (imeAnimationEnd && (visibility && imeAnimationTargetHeight == 0)) {
+                    showKeyboard()
+                }
+                if (imeAnimationEnd && (!visibility && imeAnimationTargetHeight > 10)) {
+                    hideKeyboard()
+                }
+            }
+            .padding(bottom = with(density) {
+                imeAnimationTargetHeight.toDp()
+            }),
         verticalArrangement = Arrangement.Bottom
     ) {
         Row(
@@ -686,17 +704,17 @@ internal fun ReplyPageContent(
         }
     }
 
-    DisposableEffect(editTextView) {
-        if (editTextView != null) {
-            showKeyboard()
-        }
-
-        onDispose {
-            if (editTextView != null) {
-                hideKeyboard()
-            }
-        }
-    }
+//    DisposableEffect(Unit) {
+//        if (editTextView != null) {
+//            showKeyboard()
+//        }
+//
+//        onDispose {
+//            if (editTextView != null) {
+//                hideKeyboard()
+//            }
+//        }
+//    }
 
     fun getDispatchUri(): Uri {
         return if (postId != null) {
