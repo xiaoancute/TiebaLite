@@ -108,6 +108,24 @@ fun BlockSettingsPage(
                     }
                 )
             }
+
+            prefsItem {
+                SwitchPref(
+                    key = "showFollowedOnly",
+                    title = stringResource(id = R.string.settings_show_followed_only),
+                    summary = stringResource(id = R.string.settings_show_followed_only_summary),
+                    defaultChecked = false,
+                    leadingIcon = {
+                        LeadingIcon {
+                            AvatarIcon(
+                                icon = Icons.Outlined.Block,
+                                size = Sizes.Small,
+                                contentDescription = null,
+                            )
+                        }
+                    }
+                )
+            }
         }
     }
 }
