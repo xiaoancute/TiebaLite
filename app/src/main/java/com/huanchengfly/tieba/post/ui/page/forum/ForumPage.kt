@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -445,12 +446,16 @@ fun ForumPage(
 
     val account = LocalAccount.current
     val pagerState = rememberPagerState { 2 }
+    val latestListState = rememberLazyListState()
+    val goodListState = rememberLazyListState()
 
     val currentPage by remember {
         derivedStateOf {
             pagerState.currentPage
         }
     }
+
+    val currentListState = if (currentPage == 0) latestListState else goodListState
 
     val coroutineScope = rememberCoroutineScope()
 
@@ -463,6 +468,20 @@ fun ForumPage(
                 (Sizes.Large + 16.dp * 2).toPx()
             }
         )
+    }
+
+    val isListAtTop by remember {
+        derivedStateOf {
+            currentListState.firstVisibleItemIndex == 0 && currentListState.firstVisibleItemScrollOffset == 0
+        }
+    }
+
+    val isHeaderExpanded by remember {
+        derivedStateOf { heightOffset == 0f }
+    }
+
+    val enablePullToRefresh by remember {
+        derivedStateOf { isListAtTop && isHeaderExpanded }
     }
 
     val isShowTopBarArea by remember {
@@ -695,6 +714,7 @@ fun ForumPage(
 
                 PullToRefreshLayout(
                     refreshing = isFakeLoading,
+                    enabled = enablePullToRefresh,
                     onRefresh = {
                         coroutineScope.emitGlobalEvent(
                             ForumThreadListUiEvent.Refresh(
@@ -919,6 +939,7 @@ fun ForumPage(
                                         forumId = forumInfo!!.get { id },
                                         forumName = forumInfo!!.get { name },
                                         isGood = it == 1,
+                                        lazyListState = if (it == 0) latestListState else goodListState
                                     )
                                 }
                             }

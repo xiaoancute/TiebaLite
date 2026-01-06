@@ -53,6 +53,7 @@ fun PullToRefreshLayout(
     refreshDistance: Dp = PullToRefreshDefaults.RefreshDistance,
     refreshingOffset: Dp = PullToRefreshDefaults.RefreshingOffset,
     threshold: Float = 0.75f,
+    enabled: Boolean = true,
     content: @Composable () -> Unit,
 ) {
     val density = LocalDensity.current
@@ -92,6 +93,7 @@ fun PullToRefreshLayout(
                     ),
                     thresholds = { _, _ -> FractionalThreshold(curThreshold) },
                     orientation = Orientation.Vertical,
+                    enabled = enabled,
                 ),
         ) {
             Box(

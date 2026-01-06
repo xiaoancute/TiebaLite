@@ -261,13 +261,12 @@ fun ForumThreadListPage(
     forumId: Long,
     forumName: String,
     isGood: Boolean = false,
-    viewModel: ForumThreadListViewModel = if (isGood) pageViewModel<GoodThreadListViewModel>() else pageViewModel<LatestThreadListViewModel>()
+    viewModel: ForumThreadListViewModel = if (isGood) pageViewModel<GoodThreadListViewModel>() else pageViewModel<LatestThreadListViewModel>(),
+    lazyListState: LazyListState = rememberLazyListState()
 ) {
     val context = LocalContext.current
     val navigator = LocalNavigator.current
     val snackbarHostState = LocalSnackbarHostState.current
-
-    val lazyListState = rememberLazyListState()
 
     LazyLoad(loaded = viewModel.initialized) {
         viewModel.send(getFirstLoadIntent(context, forumName, isGood))
