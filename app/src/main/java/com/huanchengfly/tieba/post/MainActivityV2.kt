@@ -120,6 +120,7 @@ import com.ramcosta.composedestinations.utils.toDestinationsNavigator
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -319,9 +320,6 @@ class MainActivityV2 : BaseComposeActivity() {
             val jobScheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
             jobScheduler.schedule(builder.build())
         }
-        handler.postDelayed({
-            requestNotificationPermission()
-        }, 100)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -333,6 +331,10 @@ class MainActivityV2 : BaseComposeActivity() {
             ClientUtils.setActiveTimestamp()
         }
         intent?.let { checkIntent(it) }
+        launch {
+            delay(100)
+            requestNotificationPermission()
+        }
     }
 
     override fun onCreateContent(systemUiController: SystemUIBarsTweaker) {
