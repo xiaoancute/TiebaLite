@@ -87,7 +87,7 @@ class HomeViewModel : BaseViewModel<HomeUiIntent, HomePartialChange, HomeUiState
                     } ?: emptyList()
 
                     // 添加关注列表到全局缓存
-                    FollowedForumsCache.update(forums.map { it.forumName })
+                    FollowedForumsCache.update(forums.map { it.forumId.toLong() })
 
                     val topForums = mutableListOf<HomeUiState.Forum>()
                     val topForumsDB = LitePal.findAll(TopForum::class.java).map { it.forumId }

@@ -80,7 +80,7 @@ class PersonalizedViewModel @Inject constructor() :
                         // 过滤未关注的吧
                         .filter {
                             val showFollowedOnly = App.INSTANCE.appPreferences.showFollowedOnly
-                            !showFollowedOnly || FollowedForumsCache.isFollowed(it.get { forumName })
+                            !showFollowedOnly || FollowedForumsCache.isFollowed(it.get { forumId })
                         }
                     val threadPersonalizedData = response.data_?.thread_personalized ?: emptyList()
                     PersonalizedPartialChange.Refresh.Success(
@@ -107,7 +107,7 @@ class PersonalizedViewModel @Inject constructor() :
                         // 过滤未关注的吧
                         .filter {
                             val showFollowedOnly = App.INSTANCE.appPreferences.showFollowedOnly
-                            !showFollowedOnly || FollowedForumsCache.isFollowed(it.get { forumName })
+                            !showFollowedOnly || FollowedForumsCache.isFollowed(it.get { forumId })
                         }
                     val threadPersonalizedData = response.data_?.thread_personalized ?: emptyList()
                     PersonalizedPartialChange.LoadMore.Success(
