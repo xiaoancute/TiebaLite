@@ -68,6 +68,8 @@ open class AppPreferencesUtils private constructor(ctx: Context) {
 
     var blockVideo by DataStoreDelegates.boolean(defaultValue = false)
 
+    var showFollowedOnly by DataStoreDelegates.boolean(defaultValue = false)
+
     var checkCIUpdate by DataStoreDelegates.boolean(
         defaultValue = false
     )

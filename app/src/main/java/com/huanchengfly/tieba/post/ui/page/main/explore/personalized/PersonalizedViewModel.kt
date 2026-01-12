@@ -23,6 +23,7 @@ import com.huanchengfly.tieba.post.repository.PersonalizedRepository
 import com.huanchengfly.tieba.post.ui.models.ThreadItemData
 import com.huanchengfly.tieba.post.ui.models.distinctById
 import com.huanchengfly.tieba.post.utils.appPreferences
+import com.huanchengfly.tieba.post.utils.FollowedForumsCache
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -76,6 +77,11 @@ class PersonalizedViewModel @Inject constructor() :
                             !App.INSTANCE.appPreferences.blockVideo || it.get { videoInfo } == null
                         }
                         .filter { it.get { ala_info } == null }
+                        // 过滤未关注的吧
+                        .filter {
+                            val showFollowedOnly = App.INSTANCE.appPreferences.showFollowedOnly
+                            !showFollowedOnly || FollowedForumsCache.isFollowed(it.get { forumId })
+                        }
                     val threadPersonalizedData = response.data_?.thread_personalized ?: emptyList()
                     PersonalizedPartialChange.Refresh.Success(
                         data = data.map { thread ->
@@ -98,6 +104,11 @@ class PersonalizedViewModel @Inject constructor() :
                             !App.INSTANCE.appPreferences.blockVideo || it.get { videoInfo } == null
                         }
                         .filter { it.get { ala_info } == null }
+                        // 过滤未关注的吧
+                        .filter {
+                            val showFollowedOnly = App.INSTANCE.appPreferences.showFollowedOnly
+                            !showFollowedOnly || FollowedForumsCache.isFollowed(it.get { forumId })
+                        }
                     val threadPersonalizedData = response.data_?.thread_personalized ?: emptyList()
                     PersonalizedPartialChange.LoadMore.Success(
                         currentPage = page,
