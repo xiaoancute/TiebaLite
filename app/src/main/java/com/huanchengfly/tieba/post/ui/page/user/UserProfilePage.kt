@@ -1,5 +1,6 @@
 package com.huanchengfly.tieba.post.ui.page.user
 
+import android.Manifest
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -25,14 +26,19 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.AlertDialog
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Icon
 import androidx.compose.material.LocalContentColor
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ProvideTextStyle
+import androidx.compose.material.Switch
+import androidx.compose.material.SwitchDefaults
 import androidx.compose.material.Tab
 import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.rounded.Add
@@ -64,10 +70,12 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastForEachIndexed
 import com.huanchengfly.tieba.post.R
+import com.huanchengfly.tieba.post.api.models.PermissionListBean
 import com.huanchengfly.tieba.post.api.models.protos.User
 import com.huanchengfly.tieba.post.arch.BaseComposeActivity.Companion.LocalWindowSizeClass
 import com.huanchengfly.tieba.post.arch.GlobalEvent
@@ -80,6 +88,7 @@ import com.huanchengfly.tieba.post.goToActivity
 import com.huanchengfly.tieba.post.models.database.Block
 import com.huanchengfly.tieba.post.toastShort
 import com.huanchengfly.tieba.post.ui.common.theme.compose.ExtendedTheme
+import com.huanchengfly.tieba.post.ui.common.theme.compose.TiebaLiteTheme
 import com.huanchengfly.tieba.post.ui.common.windowsizeclass.WindowWidthSizeClass
 import com.huanchengfly.tieba.post.ui.page.ProvideNavigator
 import com.huanchengfly.tieba.post.ui.page.user.edit.EditProfileActivity
@@ -132,6 +141,7 @@ fun UserProfilePage(
 
     LazyLoad(loaded = viewModel.initialized) {
         viewModel.send(UserProfileUiIntent.Refresh(uid))
+        viewModel.send(UserProfileUiIntent.GetUserBlackInfo(uid))
         viewModel.initialized = true
     }
 
@@ -152,11 +162,28 @@ fun UserProfilePage(
         initial = false
     )
 
+    val permList by viewModel.uiState.collectPartialAsState(
+        prop1 = UserProfileUiState::permList,
+        initial = null
+    )
+
     val isError by remember {
         derivedStateOf { error != null }
     }
     val isEmpty by remember {
         derivedStateOf { user == null }
+    }
+
+    var showPermissionSettingDialogDialog by remember { mutableStateOf(false) }
+
+    if (showPermissionSettingDialogDialog) {
+        PermissionSettingDialogM2(
+            initialPermissionList = permList?.item ?: PermissionListBean(),
+            onDismissRequest = { showPermissionSettingDialogDialog = false },
+            onConfirm = { updatedBean ->
+                viewModel.send(UserProfileUiIntent.SetUserBlack(uid, account!!.tbs, updatedBean))
+            }
+        )
     }
 
     ProvideNavigator(navigator = navigator) {
@@ -190,10 +217,108 @@ fun UserProfilePage(
                                 account!!.tbs,
                             )
                         )
-                    }
+                    },
+                    onSetUserBlack = { showPermissionSettingDialogDialog = true },
                 )
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewPermissionDialog() {
+    TiebaLiteTheme {
+        PermissionSettingDialogM2(
+            initialPermissionList = PermissionListBean(1, 1, 1),
+            onDismissRequest = {},
+            onConfirm = {}
+        )
+    }
+}
+
+@Composable
+fun PermissionSettingDialogM2(
+    initialPermissionList: PermissionListBean,
+    onDismissRequest: () -> Unit,
+    onConfirm: (PermissionListBean) -> Unit
+) {
+    var currentBean by remember { mutableStateOf(initialPermissionList.copy()) }
+
+    AlertDialog(
+        modifier = Modifier.wrapContentHeight(),
+        onDismissRequest = onDismissRequest,
+        shape = RoundedCornerShape(16.dp), // 增加圆角显得更现代
+        title = {
+            // 使用 Box 或 Row 配合 fillMaxWidth 实现文字居中
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Text(
+                    text = "拉黑范围",
+                    color = MaterialTheme.colors.primary,
+                    style = MaterialTheme.typography.h6.copy(fontWeight = FontWeight.Bold)
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth(), // 增加垂直间距使分布更均匀
+                verticalArrangement = Arrangement.spacedBy(12.dp) // 每个设置项之间的间距
+            ) {
+                PermissionRowM2("禁止TA关注我", currentBean.follow == 1) {
+                    currentBean = currentBean.copy(follow = if (it) 1 else 0)
+                }
+                PermissionRowM2("禁止TA互动(转,评,赞踩,@)", currentBean.interact == 1) {
+                    currentBean = currentBean.copy(interact = if (it) 1 else 0)
+                }
+                PermissionRowM2("禁止TA私信", currentBean.chat == 1) {
+                    currentBean = currentBean.copy(chat = if (it) 1 else 0)
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                onConfirm(currentBean)
+                onDismissRequest()
+            }) {
+                Text("确定", fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text("取消")
+            }
+        }
+    )
+}
+
+@Composable
+private fun PermissionRowM2(
+    label: String,
+    isChecked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(48.dp), // 固定高度保证视觉上的均匀感
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.body1,
+            modifier = Modifier.padding(start = 4.dp)
+        )
+        Switch(
+            checked = isChecked,
+            onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = MaterialTheme.colors.primary,
+                checkedTrackColor = MaterialTheme.colors.primary.copy(alpha = 0.5f)
+            )
+        )
     }
 }
 
@@ -206,6 +331,7 @@ private fun UserProfileContent(
     onBack: () -> Unit,
     onFollow: () -> Unit,
     onUnfollow: () -> Unit,
+    onSetUserBlack: () -> Unit,
 ) {
     when (LocalWindowSizeClass.current.widthSizeClass) {
         WindowWidthSizeClass.Expanded -> {
@@ -216,7 +342,8 @@ private fun UserProfileContent(
                 isSelf = isSelf,
                 onBack = onBack,
                 onFollow = onFollow,
-                onUnfollow = onUnfollow
+                onUnfollow = onUnfollow,
+                onSetUserBlack = onSetUserBlack,
             )
         }
 
@@ -228,7 +355,8 @@ private fun UserProfileContent(
                 isSelf = isSelf,
                 onBack = onBack,
                 onFollow = onFollow,
-                onUnfollow = onUnfollow
+                onUnfollow = onUnfollow,
+                onSetUserBlack = onSetUserBlack,
             )
         }
     }
@@ -239,9 +367,11 @@ private fun UserProfileToolbar(
     user: ImmutableHolder<User>,
     isSelf: Boolean,
     showTitle: Boolean,
+    onSetUserBlack: () -> Unit,
     onBack: () -> Unit,
 ) {
     val context = LocalContext.current
+    val account = LocalAccount.current
 
     Toolbar(
         title = {
@@ -292,6 +422,13 @@ private fun UserProfileToolbar(
                         ) {
                             Text(text = stringResource(id = R.string.menu_add_user_to_white_list))
                         }
+                        if (account != null) {
+                            DropdownMenuItem(
+                                onClick = onSetUserBlack
+                            ) {
+                                Text(text = stringResource(id = R.string.ban_interact))
+                            }
+                        }
                     },
                     triggerShape = CircleShape
                 ) {
@@ -320,6 +457,7 @@ private fun UserProfileContentNormal(
     onBack: () -> Unit,
     onFollow: () -> Unit,
     onUnfollow: () -> Unit,
+    onSetUserBlack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -347,7 +485,8 @@ private fun UserProfileContentNormal(
                 user = user,
                 isSelf = isSelf,
                 showTitle = !isShowHeaderArea,
-                onBack = onBack
+                onBack = onBack,
+                onSetUserBlack = onSetUserBlack,
             )
         }
     ) { paddingValues ->
@@ -545,6 +684,7 @@ private fun UserProfileContentExpanded(
     onBack: () -> Unit,
     onFollow: () -> Unit,
     onUnfollow: () -> Unit,
+    onSetUserBlack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -555,6 +695,7 @@ private fun UserProfileContentExpanded(
                 user = user,
                 isSelf = isSelf,
                 showTitle = false,
+                onSetUserBlack = onSetUserBlack,
                 onBack = onBack
             )
         }
