@@ -1,17 +1,27 @@
 package com.huanchengfly.tieba.post.ui.page.hottopic.detail
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.ProvideTextStyle
+import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
@@ -36,6 +46,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.huanchengfly.tieba.post.R
 import com.huanchengfly.tieba.post.api.models.TopicInfoBean
 import com.huanchengfly.tieba.post.api.models.protos.hasAgree
@@ -45,11 +56,11 @@ import com.huanchengfly.tieba.post.arch.pageViewModel
 import com.huanchengfly.tieba.post.arch.wrapImmutable
 import com.huanchengfly.tieba.post.ui.page.LocalNavigator
 import com.huanchengfly.tieba.post.ui.page.ProvideNavigator
-import com.huanchengfly.tieba.post.api.models.ThreadInfoBean
+import com.huanchengfly.tieba.post.ui.common.theme.compose.ExtendedTheme
+import com.huanchengfly.tieba.post.ui.common.theme.compose.loadMoreIndicator
 import com.huanchengfly.tieba.post.ui.page.destinations.ForumPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.ThreadPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.UserProfilePageDestination
-import com.huanchengfly.tieba.post.ui.page.main.explore.concern.ConcernUiIntent
 import com.huanchengfly.tieba.post.ui.widgets.compose.Avatar
 import com.huanchengfly.tieba.post.ui.widgets.compose.BackNavigationIcon
 import com.huanchengfly.tieba.post.ui.widgets.compose.Container
@@ -73,6 +84,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 
+@OptIn(ExperimentalMaterialApi::class)
 @Destination
 @Composable
 fun TopicDetailPage(
@@ -133,6 +145,12 @@ fun TopicDetailPage(
     val isShowTopBarArea by remember {
         derivedStateOf {
             heightOffset.absoluteValue < headerHeight
+        }
+    }
+
+    val loadMoreEnd by remember {
+        derivedStateOf {
+            !hasMore
         }
     }
 
@@ -273,7 +291,16 @@ fun TopicDetailPage(
                                         )
                                     )
                                 },
+                                indicator = { isLoading, loadMoreEnd, willLoad ->
+                                    TopicLoadMoreIndicator(
+                                        isLoading,
+                                        !hasMore,
+                                        willLoad,
+                                        hasMore
+                                    )
+                                },
                                 lazyListState = lazyListState,
+                                loadEnd = loadMoreEnd,
                             ) {
                                 MyLazyColumn(
                                     state = lazyListState,
@@ -367,6 +394,71 @@ private fun TopicToolbar(
             })
         }
     )
+}
+
+@Composable
+private fun TopicLoadMoreIndicator(
+    isLoading: Boolean,
+    loadMoreEnd: Boolean,
+    willLoad: Boolean,
+    hasMore: Boolean,
+) {
+    Surface(
+        elevation = 8.dp,
+        shape = RoundedCornerShape(100),
+        color = ExtendedTheme.colors.loadMoreIndicator,
+        contentColor = ExtendedTheme.colors.text
+    ) {
+        Row(
+            modifier = Modifier
+                .height(IntrinsicSize.Min)
+                .padding(10.dp)
+                .animateContentSize(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            ProvideTextStyle(value = MaterialTheme.typography.body2.copy(fontSize = 13.sp)) {
+                when {
+                    isLoading -> {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 3.dp,
+                            color = ExtendedTheme.colors.primary
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(id = R.string.text_loading),
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        )
+                    }
+
+                    loadMoreEnd -> {
+                        Text(
+                            text = stringResource(id = R.string.no_more),
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        )
+                    }
+
+                    hasMore -> {
+                        Text(
+                            text = if (willLoad) stringResource(id = R.string.release_to_load) else stringResource(
+                                id = R.string.pull_to_load
+                            ),
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        )
+                    }
+
+                    else -> {
+                        Text(
+                            text = if (willLoad) stringResource(id = R.string.release_to_load_latest_posts) else stringResource(
+                                id = R.string.pull_to_load_latest_posts
+                            ),
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable

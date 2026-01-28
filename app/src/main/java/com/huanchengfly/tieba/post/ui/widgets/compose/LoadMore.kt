@@ -73,7 +73,7 @@ fun LoadMoreLayout(
     },
     lazyListState: LazyListState? = null,
     isEmpty: Boolean = lazyListState?.layoutInfo?.totalItemsCount == 0,
-    preloadCount: Int = 1,
+    preloadCount: Int = 3,
     content: @Composable () -> Unit,
 ) {
     val loadDistance = with(LocalDensity.current) { LoadDistance.toPx() }

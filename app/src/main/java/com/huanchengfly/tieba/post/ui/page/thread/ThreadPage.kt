@@ -621,7 +621,7 @@ fun ThreadPage(
     val loadMorePreloadCount by remember {
         derivedStateOf {
             if (hasMore) {
-                1
+                3
             } else {
                 0
             }
