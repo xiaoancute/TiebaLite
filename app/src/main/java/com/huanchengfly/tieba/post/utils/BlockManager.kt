@@ -69,17 +69,23 @@ object BlockManager {
     }
 
     fun ThreadInfo.shouldBlock(): Boolean =
-        shouldBlock(title) || shouldBlock(abstractText) || shouldBlock(authorId, author?.name)
+        shouldBlock(title) || shouldBlock(abstractText) || shouldBlock(
+            authorId.takeIf { it != 0L } ?: (author?.id ?: -1),
+            author?.name?.ifEmpty { author.nameShow })
 
     fun Post.shouldBlock(): Boolean =
-        shouldBlock(content.plainText) || shouldBlock(author_id, author?.name)
+        shouldBlock(content.plainText) || shouldBlock(
+            author_id.takeIf { it != 0L } ?: (author?.id ?: -1),
+            author?.name?.ifEmpty { author.nameShow })
 
     fun SubPostList.shouldBlock(): Boolean =
-        shouldBlock(content.plainText) || shouldBlock(author_id, author?.name)
+        shouldBlock(content.plainText) || shouldBlock(
+            author_id.takeIf { it != 0L } ?: (author?.id ?: -1),
+            author?.name?.ifEmpty { author.nameShow })
 
     fun MessageListBean.MessageInfoBean.shouldBlock(): Boolean =
         shouldBlock(content.orEmpty()) || shouldBlock(
             this.replyer?.id?.toLongOrNull() ?: -1,
-            this.replyer?.name.orEmpty()
+            this.replyer?.name?.ifEmpty { this.replyer.nameShow }
         )
 }
