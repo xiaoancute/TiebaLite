@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.res.Configuration
 import android.content.res.Resources
 import android.graphics.Color
+import android.graphics.ImageDecoder
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Process
@@ -19,13 +20,21 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.ui.graphics.toArgb
 import com.github.panpf.sketch.Sketch
 import com.github.panpf.sketch.SketchFactory
+import com.github.panpf.sketch.datasource.AssetDataSource
+import com.github.panpf.sketch.datasource.BasedFileDataSource
+import com.github.panpf.sketch.datasource.ByteArrayDataSource
+import com.github.panpf.sketch.datasource.ContentDataSource
+import com.github.panpf.sketch.datasource.ResourceDataSource
+import com.github.panpf.sketch.decode.DrawableDecodeResult
+import com.github.panpf.sketch.decode.DrawableDecoder
 import com.github.panpf.sketch.decode.GifAnimatedDrawableDecoder
 import com.github.panpf.sketch.decode.GifMovieDrawableDecoder
 import com.github.panpf.sketch.decode.HeifAnimatedDrawableDecoder
 import com.github.panpf.sketch.decode.WebpAnimatedDrawableDecoder
+import com.github.panpf.sketch.fetch.FetchResult
 import com.github.panpf.sketch.http.OkHttpStack
 import com.github.panpf.sketch.request.PauseLoadWhenScrollingDrawableDecodeInterceptor
-import com.huanchengfly.tieba.post.activities.BaseActivity
+import com.github.panpf.sketch.request.internal.RequestContext
 import com.huanchengfly.tieba.post.components.ClipBoardLinkDetector
 import com.huanchengfly.tieba.post.ui.common.theme.compose.dynamicTonalPalette
 import com.huanchengfly.tieba.post.ui.common.theme.interfaces.ThemeSwitcher
@@ -42,6 +51,7 @@ import com.huanchengfly.tieba.post.utils.appPreferences
 import com.huanchengfly.tieba.post.utils.packageInfo
 import dagger.hilt.android.HiltAndroidApp
 import org.litepal.LitePal
+import java.nio.ByteBuffer
 import kotlin.concurrent.thread
 
 
@@ -316,6 +326,7 @@ class App : Application(), SketchFactory {
                         )
                     }
                 }
+
                 R.attr.colorOnAccent -> {
                     return if (ThemeUtil.isNightMode(theme) || ThemeUtil.isTranslucentTheme(theme)) {
                         context.getColorCompat(
@@ -327,6 +338,7 @@ class App : Application(), SketchFactory {
                         )
                     } else context.getColorCompat(R.color.theme_color_on_accent_light)
                 }
+
                 R.attr.colorToolbar -> {
                     return if (ThemeUtil.isNightMode(theme) || ThemeUtil.isTranslucentTheme(theme)) {
                         context.getColorCompat(
@@ -345,6 +357,7 @@ class App : Application(), SketchFactory {
                         }
                     }
                 }
+
                 R.attr.colorText -> {
                     return if (ThemeUtil.isTranslucentTheme(theme)) {
                         context.getColorCompat(
@@ -356,6 +369,7 @@ class App : Application(), SketchFactory {
                         )
                     } else context.getColorCompat(if (ThemeUtil.isNightMode(theme)) R.color.color_text_night else R.color.color_text)
                 }
+
                 R.attr.color_text_disabled -> {
                     return if (ThemeUtil.isTranslucentTheme(theme)) {
                         context.getColorCompat(
@@ -367,6 +381,7 @@ class App : Application(), SketchFactory {
                         )
                     } else context.getColorCompat(if (ThemeUtil.isNightMode(theme)) R.color.color_text_disabled_night else R.color.color_text_disabled)
                 }
+
                 R.attr.colorTextSecondary -> {
                     return if (ThemeUtil.isTranslucentTheme(theme)) {
                         context.getColorCompat(
@@ -399,6 +414,7 @@ class App : Application(), SketchFactory {
                         )
                     } else context.getColorCompat(R.color.theme_color_background_light)
                 }
+
                 R.attr.colorWindowBackground -> {
                     return if (ThemeUtil.isTranslucentTheme(theme)) {
                         context.getColorCompat(
@@ -420,6 +436,7 @@ class App : Application(), SketchFactory {
                         context.getColorCompat(R.color.theme_color_background_light)
                     }
                 }
+
                 R.attr.colorChip -> {
                     return if (ThemeUtil.isNightMode(theme) || ThemeUtil.isTranslucentTheme(theme)) {
                         context.getColorCompat(
@@ -431,6 +448,7 @@ class App : Application(), SketchFactory {
                         )
                     } else context.getColorCompat(R.color.theme_color_chip_light)
                 }
+
                 R.attr.colorOnChip -> {
                     return if (ThemeUtil.isNightMode(theme) || ThemeUtil.isTranslucentTheme(theme)) {
                         context.getColorCompat(
@@ -442,6 +460,7 @@ class App : Application(), SketchFactory {
                         )
                     } else context.getColorCompat(R.color.theme_color_on_chip_light)
                 }
+
                 R.attr.colorUnselected -> {
                     return context.getColorCompat(
                         if (ThemeUtil.isNightMode(theme)) resources.getIdentifier(
@@ -451,6 +470,7 @@ class App : Application(), SketchFactory {
                         ) else R.color.theme_color_unselected_day
                     )
                 }
+
                 R.attr.colorNavBar -> {
                     if (ThemeUtil.isTranslucentTheme(theme)) {
                         return context.getColorCompat(R.color.transparent)
@@ -467,6 +487,7 @@ class App : Application(), SketchFactory {
                         context.getColorCompat(R.color.theme_color_nav_light)
                     }
                 }
+
                 R.attr.colorFloorCard -> {
                     return if (ThemeUtil.isNightMode(theme) || ThemeUtil.isTranslucentTheme(theme)) {
                         context.getColorCompat(
@@ -478,6 +499,7 @@ class App : Application(), SketchFactory {
                         )
                     } else context.getColorCompat(R.color.theme_color_floor_card_light)
                 }
+
                 R.attr.colorCard -> {
                     return if (ThemeUtil.isNightMode(theme) || ThemeUtil.isTranslucentTheme(theme)) {
                         context.getColorCompat(
@@ -489,6 +511,7 @@ class App : Application(), SketchFactory {
                         )
                     } else context.getColorCompat(R.color.theme_color_card_light)
                 }
+
                 R.attr.colorDivider -> {
                     return if (ThemeUtil.isNightMode(theme) || ThemeUtil.isTranslucentTheme(theme)) {
                         context.getColorCompat(
@@ -500,11 +523,13 @@ class App : Application(), SketchFactory {
                         )
                     } else context.getColorCompat(R.color.theme_color_divider_light)
                 }
+
                 R.attr.shadow_color -> {
                     return if (ThemeUtil.isTranslucentTheme(theme)) {
                         context.getColorCompat(R.color.transparent)
                     } else context.getColorCompat(if (ThemeUtil.isNightMode(theme)) R.color.theme_color_shadow_night else R.color.theme_color_shadow_day)
                 }
+
                 R.attr.colorToolbarItem -> {
                     if (ThemeUtil.isTranslucentTheme(theme)) {
                         return context.getColorCompat(
@@ -519,6 +544,7 @@ class App : Application(), SketchFactory {
                         context.getColorCompat(R.color.theme_color_toolbar_item_night)
                     } else context.getColorCompat(if (ThemeUtil.isStatusBarFontDark()) R.color.theme_color_toolbar_item_light else R.color.theme_color_toolbar_item_dark)
                 }
+
                 R.attr.colorToolbarItemActive -> {
                     if (ThemeUtil.isTranslucentTheme(theme)) {
                         return context.getColorCompat(
@@ -588,6 +614,7 @@ class App : Application(), SketchFactory {
                         context.getColorCompat(R.color.theme_color_on_toolbar_surface_light)
                     }
                 }
+
                 R.attr.colorNavBarSurface -> {
                     return if (ThemeUtil.isNightMode(theme)) {
                         context.getColorCompat(
@@ -674,50 +701,61 @@ class App : Application(), SketchFactory {
                     context,
                     R.attr.colorToolbarItemActive
                 )
+
                 R.color.default_color_toolbar_item_secondary -> return getColorByAttr(
                     context,
                     R.attr.colorToolbarItemSecondary
                 )
+
                 R.color.default_color_toolbar_bar -> return getColorByAttr(
                     context,
                     R.attr.colorToolbarSurface
                 )
+
                 R.color.default_color_on_toolbar_bar -> return getColorByAttr(
                     context,
                     R.attr.colorOnToolbarSurface
                 )
+
                 R.color.default_color_nav_bar_surface -> return getColorByAttr(
                     context,
                     R.attr.colorNavBarSurface
                 )
+
                 R.color.default_color_on_nav_bar_surface -> return getColorByAttr(
                     context,
                     R.attr.colorOnNavBarSurface
                 )
+
                 R.color.default_color_card -> return getColorByAttr(context, R.attr.colorCard)
                 R.color.default_color_floor_card -> return getColorByAttr(
                     context,
                     R.attr.colorFloorCard
                 )
+
                 R.color.default_color_nav -> return getColorByAttr(context, R.attr.colorNavBar)
                 R.color.default_color_shadow -> return getColorByAttr(context, R.attr.shadow_color)
                 R.color.default_color_unselected -> return getColorByAttr(
                     context,
                     R.attr.colorUnselected
                 )
+
                 R.color.default_color_text -> return getColorByAttr(context, R.attr.colorText)
                 R.color.default_color_text_on_primary -> return getColorByAttr(
                     context,
                     R.attr.colorTextOnPrimary
                 )
+
                 R.color.default_color_text_secondary -> return getColorByAttr(
                     context,
                     R.attr.colorTextSecondary
                 )
+
                 R.color.default_color_text_disabled -> return getColorByAttr(
                     context,
                     R.attr.color_text_disabled
                 )
+
                 R.color.default_color_divider -> return getColorByAttr(context, R.attr.colorDivider)
                 R.color.default_color_swipe_refresh_view_background -> return getColorByAttr(
                     context,
@@ -728,24 +766,89 @@ class App : Application(), SketchFactory {
         }
     }
 
+    @SuppressLint("NewApi")
     override fun createSketch(): Sketch = Sketch.Builder(this).apply {
         httpStack(OkHttpStack.Builder().apply {
             userAgent(System.getProperty("http.agent"))
         }.build())
         components {
             addDrawableDecodeInterceptor(PauseLoadWhenScrollingDrawableDecodeInterceptor())
-            addDrawableDecoder(
-                when {
-                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.P -> GifAnimatedDrawableDecoder.Factory()
-                    else -> GifMovieDrawableDecoder.Factory()
+
+            val gifAnimatedFactory = GifAnimatedDrawableDecoder.Factory()
+            val webpAnimatedFactory = WebpAnimatedDrawableDecoder.Factory()
+            val heifAnimatedFactory = HeifAnimatedDrawableDecoder.Factory()
+            //兼容单帧动图
+            fun wrapDecoder(factory: DrawableDecoder.Factory) = object : DrawableDecoder.Factory {
+                override fun create(
+                    sketch: Sketch,
+                    requestContext: RequestContext,
+                    fetchResult: FetchResult
+                ): DrawableDecoder? {
+                    val animatedMimeTypes = setOf("image/gif", "image/webp", "image/heif")
+                    if (fetchResult.mimeType !in animatedMimeTypes) return factory.create(
+                        sketch,
+                        requestContext,
+                        fetchResult
+                    )
+
+                    val dataSource = fetchResult.dataSource
+
+                    val isActuallyAnimated = try {
+                        val source = when (dataSource) {
+                            is AssetDataSource -> ImageDecoder.createSource(
+                                sketch.context.assets,
+                                dataSource.assetFileName
+                            )
+
+                            is ResourceDataSource -> ImageDecoder.createSource(
+                                dataSource.resources,
+                                dataSource.resId
+                            )
+
+                            is ContentDataSource -> ImageDecoder.createSource(
+                                sketch.context.contentResolver,
+                                dataSource.contentUri
+                            )
+
+                            is ByteArrayDataSource -> {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                    ImageDecoder.createSource(dataSource.data)
+                                } else {
+                                    ImageDecoder.createSource(ByteBuffer.wrap(dataSource.data))
+                                }
+                            }
+
+                            is BasedFileDataSource -> ImageDecoder.createSource(dataSource.getFile())
+
+                            else -> null
+                        }
+
+                        if (source != null) {
+                            var animated = false
+                            ImageDecoder.decodeDrawable(source) { _, info, _ ->
+                                animated = info.isAnimated
+                            }
+                            animated
+                        } else {
+                            false
+                        }
+                    } catch (e: Throwable) {
+                        false
+                    }
+
+                    if (!isActuallyAnimated) {
+                        return null
+                    }
+
+                    return factory.create(sketch, requestContext, fetchResult)
                 }
-            )
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                addDrawableDecoder(WebpAnimatedDrawableDecoder.Factory())
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                addDrawableDecoder(HeifAnimatedDrawableDecoder.Factory())
-            }
+
+            addDrawableDecoder(wrapDecoder(gifAnimatedFactory))
+            addDrawableDecoder(wrapDecoder(webpAnimatedFactory))
+            addDrawableDecoder(wrapDecoder(heifAnimatedFactory))
+
+            addDrawableDecoder(GifMovieDrawableDecoder.Factory())
         }
     }.build()
 }
