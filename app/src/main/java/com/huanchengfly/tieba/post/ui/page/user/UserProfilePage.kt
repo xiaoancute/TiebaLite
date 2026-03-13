@@ -129,6 +129,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 import kotlin.math.max
 import kotlin.math.min
+
 @ExperimentalMaterialApi
 @Destination
 @Composable
@@ -438,7 +439,7 @@ private fun UserProfileToolbar(
                                     Block(
                                         category = Block.CATEGORY_BLACK_LIST,
                                         type = Block.TYPE_USER,
-                                        username = it.get { name },
+                                        username = it.get { name }.ifEmpty { it.get { nameShow } },
                                         uid = it.get { id }.toString()
                                     )
                                 ) {
@@ -454,7 +455,7 @@ private fun UserProfileToolbar(
                                     Block(
                                         category = Block.CATEGORY_WHITE_LIST,
                                         type = Block.TYPE_USER,
-                                        username = it.get { name },
+                                        username = it.get { name }.ifEmpty { it.get { nameShow } },
                                         uid = it.get { id }.toString()
                                     )
                                 ) {
