@@ -1,5 +1,4 @@
 import com.android.build.gradle.internal.api.BaseVariantOutputImpl
-import com.android.build.gradle.internal.tasks.CheckAarMetadataTask
 
 plugins {
     autowire(libs.plugins.com.android.application)
@@ -252,12 +251,4 @@ dependencies {
 
     implementation(com.github.yalantis.ucrop)
 
-}
-
-afterEvaluate {
-    tasks.withType<CheckAarMetadataTask>().configureEach {
-        // AGP 8.2 can surface an empty SDK provider here on this branch's fixed SDK 34 baseline.
-        platformSdkApiLevel.set(34)
-        platformSdkExtension.set(0)
-    }
 }
