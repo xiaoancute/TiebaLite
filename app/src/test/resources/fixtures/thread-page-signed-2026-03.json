@@ -1,0 +1,87 @@
+{
+  "error_code": 0,
+  "error_msg": "",
+  "forum": {
+    "id": 3193775,
+    "name": "原神",
+    "avatar": "https://tiebapic.baidu.com/forum/w%3D120%3Bh%3D120/sign=c6e39812d6ef76c6d0d2ff29ad2d95c7/9f510fb30f2442a7fa0db7969743ad4bd1130285.jpg?tbpicau=2026-04-02-05_941f5cc2f592fa6f4cc9cfd7b5c7b680",
+    "first_class": "游戏",
+    "second_class": "手机游戏"
+  },
+  "anti": {
+    "tbs": "99373d601b5a119f1774141263"
+  },
+  "page": {
+    "current_page": 1,
+    "total_page": 1,
+    "has_more": 0,
+    "has_prev": 0,
+    "page_size": 30,
+    "offset": 0
+  },
+  "thread": {
+    "id": 10547324883,
+    "title": "原神版本预言家内容征集大赛——第一届",
+    "reply_num": 28,
+    "agree_num": 29,
+    "post_id": 153281204597,
+    "author": {
+      "id": 887207872,
+      "name": "贴吧游戏",
+      "name_show": "贴吧游戏",
+      "portrait": "tb.1.ac2fb35f.6EcKrMSIQS2QxF4dbxxrcA?t=1774141263",
+      "ip_address": "北京"
+    }
+  },
+  "user_list": [
+    {
+      "id": 887207872,
+      "name": "贴吧游戏",
+      "name_show": "贴吧游戏",
+      "portrait": "tb.1.ac2fb35f.6EcKrMSIQS2QxF4dbxxrcA?t=1774141263",
+      "ip_address": "北京",
+      "type": null
+    },
+    {
+      "id": 4040243790,
+      "name": "剑客V长弓",
+      "name_show": "剑客长弓",
+      "portrait": "tb.1.6f9f30e6.UxipWlkMIZ6AUdOYb-85WA?t=1774141263",
+      "ip_address": "江苏",
+      "type": null
+    }
+  ],
+  "post_list": [
+    {
+      "id": 153281204597,
+      "title": "原神版本预言家内容征集大赛——第一届",
+      "floor": 1,
+      "time": 1773128963,
+      "author_id": 887207872,
+      "content": [
+        {
+          "type": 0,
+          "text": "各位吧友大家好！贴吧汇聚了众多游戏忠实玩家，为展现大家的才华、丰富吧内氛围，贴吧官方特发起长期游戏内容创作活动。活动详情如下：活动时间即日起至 2026 年 3 月 30 日，欢迎各位吧友积极构思内容，按照规定格式发帖参与，期待大家的优质作品。",
+          "is_native_app": 0
+        }
+      ],
+      "sub_post_number": 0
+    },
+    {
+      "id": 153281710616,
+      "title": "回复：原神版本预言家内容征集大赛——第一届",
+      "floor": 2,
+      "time": 1773138545,
+      "author_id": 4040243790,
+      "content": [
+        {
+          "type": 1,
+          "text": "【吧友预测】原神新活动玩法预测",
+          "link": "https://tieba.baidu.com/p/10547704116",
+          "link_type": 1
+        }
+      ],
+      "sub_post_number": 0
+    }
+  ]
+}
