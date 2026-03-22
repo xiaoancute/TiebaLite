@@ -28,6 +28,28 @@ Missing items observed:
 
 Because of that, Gradle fails before Java/Kotlin compilation begins.
 
+## 2026-03-22 Environment Update
+
+The host also has a working user-scoped Android SDK at:
+
+- `/home/x/Android/Sdk`
+
+This path contains at least:
+
+- `platforms/android-34/android.jar`
+- `build-tools/34.0.0/aapt2`
+
+During autonomous recovery work on 2026-03-22, an older temporary SDK path under `/tmp/` had expired and no longer contained platform/build-tools packages. That stale path caused AGP task graph failures that looked like build-script problems until the SDK root was corrected.
+
+Current recommended exports on this machine:
+
+```bash
+export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+export ANDROID_HOME=/home/x/Android/Sdk
+export ANDROID_SDK_ROOT=/home/x/Android/Sdk
+export GRADLE_USER_HOME=/tmp/tblite-gradle17-local
+```
+
 ## Observed Build Failure
 
 `./gradlew :app:compileDebugJavaWithJavac --stacktrace`
@@ -86,6 +108,7 @@ sudo apt-get install -y \
 ## Troubleshooting Notes
 
 - If Gradle fails before compilation, verify SDK contents first.
+- If a previously working `/tmp/...` SDK path suddenly fails, re-check whether the directory was cleaned up by the OS and switch back to a persistent SDK root.
 - If Gradle fails with wildcard IP or socket-creation errors, retry outside the restricted sandbox or on a normal local machine.
 - If the SDK is present but Gradle still fails, inspect AGP/Kotlin/KSP/Wire version compatibility next.
 - If login-related flows fail at runtime, inspect WebView cookie capture in:

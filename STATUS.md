@@ -9,9 +9,17 @@ Recover TiebaLite into a stable, reading-first Android 10+ Tieba client. Public 
 ## Baseline Snapshot
 
 - Workspace path: `/home/x/My_Dev/TiebaLite-4.0-dev`
-- Local Git history: not present at the start of this run; first execution task is to create a rescue repository baseline.
-- Build baseline: `:app:assembleDebug` passed on 2026-03-22 with Java 17 and the local Android 34 SDK environment.
+- Local Git history: initialized in this run; current rescue branch is `main`.
+- Baseline rescue commits:
+  - `680327e` `chore: import autonomous recovery baseline`
+  - `8c96ed4` `build: set aar metadata sdk fallback values`
+  - `61b8cf4` `build: apply aar metadata fallback after evaluation`
+  - `61fe438` `build: remove temporary aar metadata workaround`
+- Build baseline: `:app:assembleDebug` passed on 2026-03-22 with Java 17 and the Android 34 SDK installed at `/home/x/Android/Sdk`.
 - Live browse smoke baseline: `:app:testDebugUnitTest --tests 'com.huanchengfly.tieba.post.PublicBrowseLiveSmokeTest'` passed on 2026-03-22.
+- Environment correction discovered during this run:
+  - the old temporary SDK path `/tmp/tblite-android-sdk-14742923` had expired and no longer contained `platforms/android-34` or `build-tools/34.0.0`
+  - switching to `/home/x/Android/Sdk` restored AGP task graph resolution and normal builds
 - Current validated public browse routes:
   - forum search
   - thread search
@@ -35,7 +43,7 @@ Recover TiebaLite into a stable, reading-first Android 10+ Tieba client. Public 
 
 | Phase | Status | Notes |
 | --- | --- | --- |
-| Workflow baseline | In progress | `TODO.md` / `STATUS.md` creation and local Git rescue setup are first. |
+| Workflow baseline | Completed | `TODO.md`, `STATUS.md`, local Git rescue history, and reproducible SDK path are now in place. |
 | Public browse confidence | In progress | Live smoke already passes; offline fixture coverage still needs expansion. |
 | Reading-first product polish | Not started | Navigation and capability alignment audit pending. |
 | Modern Android and Compose debt | Not started | Compat cleanup and inset/status-bar work are still queued. |
@@ -46,8 +54,8 @@ Recover TiebaLite into a stable, reading-first Android 10+ Tieba client. Public 
 
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-export ANDROID_HOME=/tmp/tblite-android-sdk-14742923
-export ANDROID_SDK_ROOT=/tmp/tblite-android-sdk-14742923
+export ANDROID_HOME=/home/x/Android/Sdk
+export ANDROID_SDK_ROOT=/home/x/Android/Sdk
 export GRADLE_USER_HOME=/tmp/tblite-gradle17-local
 
 ./gradlew :app:testDebugUnitTest --tests 'com.huanchengfly.tieba.post.PublicBrowseLiveSmokeTest' --console=plain
@@ -56,6 +64,6 @@ export GRADLE_USER_HOME=/tmp/tblite-gradle17-local
 
 ## Next Actions
 
-1. Initialize local Git rescue history and create the baseline commit.
-2. Expand public browse verification beyond live smoke into fixture-based offline tests.
-3. Audit visible entry points against stable/guarded/experimental capability states.
+1. Expand public browse verification beyond live smoke into fixture-based offline tests.
+2. Audit visible entry points against stable/guarded/experimental capability states.
+3. Update `docs/development-setup.md` to prefer the persistent SDK path and document why `/tmp` SDK paths are unsafe.
