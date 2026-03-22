@@ -52,7 +52,7 @@ class ForumPageFixtureTest {
         assertEquals("原神版本预言家内容征集大赛——第一届", firstThread.title)
         assertTrue(
             "first thread should keep abstract text",
-            firstThread.abstractString.orEmpty().contains("活动时间")
+            firstThread.getAbstractString().orEmpty().contains("活动时间")
         )
 
         val secondThread = threadList[1]
@@ -60,7 +60,7 @@ class ForumPageFixtureTest {
         assertEquals("3", secondThread.media.orEmpty().first().type)
         assertTrue(
             "second thread should keep text abstracts",
-            secondThread.abstractString.orEmpty().contains("复刻")
+            secondThread.getAbstractString().orEmpty().contains("复刻")
         )
 
         val authorMap = forumPageBean.userList.orEmpty().associateBy { it.id }
