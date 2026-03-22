@@ -1,7 +1,0 @@
-{
-  "active": false,
-  "iteration": 2,
-  "started_at": "2026-03-21T00:00:00+08:00",
-  "task_description": "Parallel audit and cleanup of legacy permissions and device identifier usage in TiebaLite revival work.",
-  "completed_at": "2026-03-21T00:00:00+08:00"
-}

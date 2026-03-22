@@ -97,3 +97,14 @@
    登录、会话健康、通知字段样本、手动签到、退出/切号清理。
 3. 最后再决定是否推进实验性能力：
    自动签到、回帖、发帖。
+
+## 已知技术债
+
+- **P1: 构建工具链锁定在 Android 14** — `compileSdk`/`targetSdk` = 34，未来升级到 SDK 35/36 可能引发 edge-to-edge 布局回归，需先审计 `ImmersionBar`/`fitsSystemWindows` 用法。
+- **P1: "赞过我"通知解析仍是启发式兼容** — `agree_list`/`agreeme` 作为主字段，缺失时回退到历史字段并显示兼容提示；需要测试号样本确认真实字段后精简。
+- **P1: 核心账号路径未经真实账号端到端验证** — 登录、通知、签到、退出/切号的守卫逻辑已就位，但仍待测试号闭环确认。
+- **P1: 论坛维度落后于网页版** — 当前只有 `最新 / 精华 / 吧内搜索`，缺少 `图片 / 视频 / 推荐` 等内容维度 tab。
+- **P2: cleartext traffic 全局开启** — manifest 仍声明 `usesCleartextTraffic="true"`，主要 API 已迁移 HTTPS，待确认是否可收紧。
+- **P2: 旧 OEM 兼容 manifest flags** — `largeHeap`、`notch_support`、`EasyGoClient` 等仍在，需逐项验证后清理。
+- **P2: 设备身份兼容层仍是 shim** — 已不泄露真实硬件 ID，但 `AID`/`CUID`/`android_id` 等字段仍以假值填充，需配合真实账号验证。
+- **P3: 旧 ViewPager/Fragment 基类疑似死代码** — `BaseFragment` 无活跃子类，待确认后删除。
