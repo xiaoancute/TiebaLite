@@ -1,0 +1,172 @@
+{
+  "error_code": 0,
+  "error_msg": "",
+  "forum": {
+    "id": 3193775,
+    "name": "原神",
+    "member_num": 2806939,
+    "thread_num": 9999,
+    "slogan": "找回遗落的命运吧",
+    "avatar": "http://tiebapic.baidu.com/forum/w%3D120%3Bh%3D120/sign=c6e39812d6ef76c6d0d2ff29ad2d95c7/9f510fb30f2442a7fa0db7969743ad4bd1130285.jpg?tbpicau=2026-04-02-05_941f5cc2f592fa6f4cc9cfd7b5c7b680",
+    "managers": [
+      {
+        "id": 2213840917,
+        "name": "崩坏学园总策划",
+        "show_name": "贴吧用户_7QC47SV",
+        "portrait": "tb.1.6bcd371e.WNjnlZOtkSh0a3LIfwFVEA?t=1495418313"
+      },
+      {
+        "id": 1148824587,
+        "name": "左耳沉迷",
+        "show_name": "贴吧用户_Q7Rb1S1",
+        "portrait": "tb.1.d17023ae.LscsONcd5aSr5UzgnviNKw?t=1505966592"
+      }
+    ],
+    "theme_color": {
+      "night": {
+        "common_color": "0E0C19",
+        "dark_color": "0E0C19",
+        "light_color": "1B142B",
+        "pattern_image": "http://imgsrc.baidu.com/forum/pic/item/757f494c510fd9f922863a112a2dd42a2934a4b9.jpg",
+        "font_color": "6F56FE"
+      },
+      "dark": {
+        "common_color": "17152B",
+        "dark_color": "17152B",
+        "light_color": "241D3D",
+        "pattern_image": "http://imgsrc.baidu.com/forum/pic/item/757f494c510fd9f922863a112a2dd42a2934a4b9.jpg",
+        "font_color": "6456FE"
+      },
+      "day": {
+        "dark_color": "231F3F",
+        "light_color": "332851",
+        "pattern_image": "http://imgsrc.baidu.com/forum/pic/item/757f494c510fd9f922863a112a2dd42a2934a4b9.jpg",
+        "font_color": "3823D3",
+        "common_color": "231F3F"
+      }
+    },
+    "first_class": "游戏",
+    "second_class": "手机游戏",
+    "is_like": 0,
+    "good_classify": null
+  },
+  "anti": {
+    "tbs": "07b499f80f9020241774140621",
+    "ifpost": 0,
+    "forbid_flag": 1,
+    "forbid_info": "本吧目前仅限登录用户发贴"
+  },
+  "page": {
+    "current_page": 1,
+    "total_count": 9999,
+    "total_page": 770,
+    "has_more": 1,
+    "has_prev": 0,
+    "cur_good_id": 0,
+    "page_size": 13,
+    "offset": 0
+  },
+  "frs_common_info": "{\"user\":{\"is_manager\":0},\"forum\":{\"id\":3193775,\"name\":\"原神\",\"avatar\":\"http://tiebapic.baidu.com/forum/w%3D120%3Bh%3D120/sign=c6e39812d6ef76c6d0d2ff29ad2d95c7/9f510fb30f2442a7fa0db7969743ad4bd1130285.jpg?tbpicau=2026-04-02-05_941f5cc2f592fa6f4cc9cfd7b5c7b680\",\"level_id\":0},\"anti\":{\"del_thread_text\":[{\"text_id\":1,\"text_info\":\"恶意刷屏\"},{\"text_id\":2,\"text_info\":\"不友善言论\"},{\"text_id\":3,\"text_info\":\"色情低俗\"},{\"text_id\":4,\"text_info\":\"违法信息\"},{\"text_id\":5,\"text_info\":\"散布广告\"},{\"text_id\":6,\"text_info\":\"违反自设吧规\"}]},\"forum_rule\":null,\"nav_tab_info\":{}}",
+  "frs_tab_info": [
+    {
+      "tab_name": "看贴",
+      "tab_url": "",
+      "tab_id": 1,
+      "tab_type": 0
+    },
+    {
+      "tab_id": 2,
+      "tab_type": 0,
+      "tab_name": "热门",
+      "tab_url": ""
+    },
+    {
+      "tab_url": "",
+      "tab_id": 3,
+      "tab_type": 0,
+      "tab_name": "成员"
+    },
+    {
+      "tab_type": 0,
+      "tab_name": "群组",
+      "tab_url": "",
+      "tab_id": 4
+    }
+  ],
+  "nav_tab_info": {},
+  "thread_list": [
+    {
+      "id": 10547324883,
+      "tid": 10547324883,
+      "title": "原神版本预言家内容征集大赛——第一届",
+      "reply_num": 27,
+      "view_num": 3291,
+      "last_time": "3-22",
+      "last_time_int": 1774118930,
+      "create_time": 1773128963,
+      "agree_num": 29,
+      "is_top": 1,
+      "is_good": 1,
+      "is_ntitle": 0,
+      "author_id": 887207872,
+      "media": null,
+      "abstract": [
+        {
+          "type": 0,
+          "text": "各位吧友大家好！贴吧汇聚了众多游戏忠实玩家，为展现大家的才华、丰富吧内氛围，贴吧官方特发起长期游戏内容创作活动。大家可结合游戏现有公开设定、官方剧情伏笔、更新规律及自身游戏经验，对后续版本、角色、剧情等进行合理预测，参与即有机会赢取丰厚奖励，后续还将开放更多活动方向，欢迎各位积极参与！ 活动详情如下： 【活动时间】: 即日起——2026年3月30日23:59 【内容方向参考】: 1. 版本更新：预测后续大版本主题、核心内容、"
+        }
+      ]
+    },
+    {
+      "id": 10577262395,
+      "tid": 10577262395,
+      "title": "玆白1+1和2+0哪个更好一点",
+      "reply_num": 0,
+      "view_num": 7,
+      "last_time": "3-22",
+      "last_time_int": 1774140531,
+      "create_time": 1774140531,
+      "agree_num": 0,
+      "is_top": 0,
+      "is_good": 0,
+      "is_ntitle": 0,
+      "author_id": 138602285,
+      "media": [
+        {
+          "is_long_pic": 0,
+          "show_original_btn": 1,
+          "type": 3,
+          "big_pic": "http://tiebapic.baidu.com/forum/whfpf%3D441%2C980%2C40%3Bq%3D92%3Bg%3D0/sign=1319a2151543fbf2c579f563d643feb4/7ee3fcbf6c81800acc9d0e13f73533fa838b47eb.jpg?tbpicau=2026-04-02-05_ebdc47fc7d662315fbf894efc54a2355",
+          "src_pic": "http://tiebapic.baidu.com/forum/w%3D960%3Bq%3D100/sign=6d4bc9c112e736d15813800eab6b3eff/7ee3fcbf6c81800acc9d0e13f73533fa838b47eb.jpg?tbpicau=2026-04-02-05_0b81954a707f4153a19618ac51ea494b",
+          "origin_pic": "http://tiebapic.baidu.com/forum/pic/item/7ee3fcbf6c81800acc9d0e13f73533fa838b47eb.jpg?tbpicau=2026-04-02-05_a339cc9c84d431b53c3ce97199f50596",
+          "origin_size": 1057820,
+          "post_id": 153326229746
+        }
+      ],
+      "abstract": [
+        {
+          "type": 0,
+          "text": "准备等玆白出复刻后再多抽一命或抽一把专武 "
+        }
+      ]
+    }
+  ],
+  "user_list": [
+    {
+      "id": 887207872,
+      "name": "贴吧游戏",
+      "name_show": "贴吧用户_0895PyS",
+      "portrait": "tb.1.ac2fb35f.6EcKrMSIQS2QxF4dbxxrcA?t=1706781023",
+      "type": 2,
+      "sex": 2
+    },
+    {
+      "id": 138602285,
+      "name": "张恒三代",
+      "name_show": "张恒三代",
+      "portrait": "tb.1.5d00e3ab.AWbDNuiVKMUsnMCs68IY4w?t=1651719169",
+      "type": 1,
+      "sex": 1
+    }
+  ]
+}
