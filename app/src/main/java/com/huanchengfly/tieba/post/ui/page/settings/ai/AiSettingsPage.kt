@@ -32,8 +32,8 @@ import com.huanchengfly.tieba.post.ui.common.prefs.widgets.TextPref
 import com.huanchengfly.tieba.post.ui.page.settings.LeadingIcon
 import com.huanchengfly.tieba.post.ui.widgets.compose.AvatarIcon
 import com.huanchengfly.tieba.post.ui.widgets.compose.BackNavigationIcon
-import com.huanchengfly.tieba.post.ui.widgets.compose.LocalSnackbarHostState
 import com.huanchengfly.tieba.post.ui.widgets.compose.MyScaffold
+import androidx.compose.material.rememberScaffoldState
 import com.huanchengfly.tieba.post.ui.widgets.compose.Sizes
 import com.huanchengfly.tieba.post.ui.widgets.compose.TitleCentredToolbar
 import com.huanchengfly.tieba.post.utils.appPreferences
@@ -49,10 +49,11 @@ fun AiSettingsPage(
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    val snackbarHostState = LocalSnackbarHostState.current
     var isTesting by remember { mutableStateOf(false) }
+    val scaffoldState = rememberScaffoldState()
 
     MyScaffold(
+        scaffoldState = scaffoldState,
         backgroundColor = Color.Transparent,
         topBar = {
             TitleCentredToolbar(
@@ -149,7 +150,7 @@ fun AiSettingsPage(
                         val model = prefs.aiModelName ?: "deepseek-chat"
                         if (baseUrl.isNullOrBlank() || apiKey.isNullOrBlank()) {
                             coroutineScope.launch {
-                                snackbarHostState.showSnackbar(
+                                scaffoldState.snackbarHostState.showSnackbar(
                                     context.getString(R.string.ai_summary_not_configured)
                                 )
                             }
@@ -161,12 +162,12 @@ fun AiSettingsPage(
                             isTesting = false
                             result.fold(
                                 onSuccess = {
-                                    snackbarHostState.showSnackbar(
+                                    scaffoldState.snackbarHostState.showSnackbar(
                                         context.getString(R.string.toast_ai_test_success)
                                     )
                                 },
                                 onFailure = {
-                                    snackbarHostState.showSnackbar(
+                                    scaffoldState.snackbarHostState.showSnackbar(
                                         context.getString(
                                             R.string.toast_ai_test_failure,
                                             it.message ?: "Unknown"
