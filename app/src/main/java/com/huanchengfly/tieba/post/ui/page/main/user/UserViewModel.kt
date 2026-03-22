@@ -52,8 +52,12 @@ class UserViewModel @Inject constructor() : BaseViewModel<UserUiIntent, UserPart
             return if (account == null) {
                 listOf(UserPartialChange.Refresh.NotLogin).asFlow()
             } else {
+                val userId = account.uid.toLongOrNull()
+                if (userId == null) {
+                    return listOf(UserPartialChange.Refresh.Success(account, isLocal = true)).asFlow()
+                }
                 TiebaApi.getInstance()
-                    .userProfileFlow(account.uid.toLong())
+                    .userProfileFlow(userId)
                     .map<ProfileResponse, UserPartialChange> { profile ->
                         val user = checkNotNull(profile.data_?.user)
                         account.apply {

@@ -29,13 +29,12 @@ private fun resolveAppLinkRouting(
     parsedLink: ParsedLink?,
     useWebView: Boolean,
 ): LinkRoutingDecision {
-    val host = parsedLink?.host?.lowercase() ?: return LinkRoutingDecision.Ignore
-    val scheme = parsedLink.scheme ?: return LinkRoutingDecision.Ignore
-    val path = parsedLink.path ?: return LinkRoutingDecision.Ignore
+    val parsed = parsedLink ?: return LinkRoutingDecision.Ignore
+    val scheme = parsed.scheme?.lowercase() ?: return LinkRoutingDecision.Ignore
     if (scheme.equals("tiebaclient", ignoreCase = true)) {
-        return when (parsedLink.queryParameter("action")) {
+        return when (parsed.queryParameter("action")) {
             "preview_file" -> {
-                val realUrl = parsedLink.queryParameter("url")
+                val realUrl = parsed.queryParameter("url")
                 if (realUrl.isNullOrEmpty()) {
                     LinkRoutingDecision.Ignore
                 } else {
@@ -46,11 +45,16 @@ private fun resolveAppLinkRouting(
             else -> LinkRoutingDecision.UnsupportedTiebaClientAction
         }
     }
+    if (!scheme.startsWith("http")) {
+        return LinkRoutingDecision.LaunchThirdParty(parsed.rawUrl)
+    }
+    val host = parsed.host?.lowercase() ?: return LinkRoutingDecision.Ignore
+    val path = parsed.path ?: return LinkRoutingDecision.Ignore
     if (path.contains("android_asset")) {
         return LinkRoutingDecision.Ignore
     }
     if (path == "/mo/q/checkurl") {
-        val realUrl = parsedLink.queryParameter("url")
+        val realUrl = parsed.queryParameter("url")
             ?.replace("http://https://", "https://")
             .orEmpty()
         return if (realUrl.isBlank()) {
@@ -59,20 +63,20 @@ private fun resolveAppLinkRouting(
             resolveAppLinkRouting(realUrl, useWebView)
         }
     }
-    resolveTiebaRouting(host, path, parsedLink)?.let {
+    resolveTiebaRouting(host, path, parsed)?.let {
         return it
     }
     val isTiebaLink =
         isInternalHost(host)
     return when {
         shouldOpenExternallyFromRouting(scheme, host) ->
-            LinkRoutingDecision.OpenExternal(parsedLink.rawUrl)
+            LinkRoutingDecision.OpenExternal(parsed.rawUrl)
 
         isTiebaLink || useWebView ->
-            LinkRoutingDecision.OpenWebView(parsedLink.rawUrl)
+            LinkRoutingDecision.OpenWebView(parsed.rawUrl)
 
         else ->
-            LinkRoutingDecision.OpenExternal(parsedLink.rawUrl)
+            LinkRoutingDecision.OpenExternal(parsed.rawUrl)
     }
 }
 

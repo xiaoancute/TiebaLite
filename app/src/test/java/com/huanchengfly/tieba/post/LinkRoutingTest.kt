@@ -64,6 +64,32 @@ class LinkRoutingTest {
     }
 
     @Test
+    fun appRoutingLaunchesMailtoLinksInsteadOfIgnoringThem() {
+        val decision = resolveAppLinkRouting(
+            "mailto:test@example.com",
+            useWebView = false
+        )
+
+        assertEquals(
+            LinkRoutingDecision.LaunchThirdParty("mailto:test@example.com"),
+            decision
+        )
+    }
+
+    @Test
+    fun appRoutingDoesNotTrapThirdPartySchemesInWebView() {
+        val decision = resolveAppLinkRouting(
+            "weixin://dl/business/?t=123",
+            useWebView = true
+        )
+
+        assertEquals(
+            LinkRoutingDecision.LaunchThirdParty("weixin://dl/business/?t=123"),
+            decision
+        )
+    }
+
+    @Test
     fun webViewRoutingTurnsForumLinksIntoNativeForumNavigation() {
         val decision = resolveWebViewLinkRouting(
             "https://tieba.baidu.com/f?kw=%E5%8E%9F%E7%A5%9E",

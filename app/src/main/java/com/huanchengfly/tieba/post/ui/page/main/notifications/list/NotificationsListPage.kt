@@ -46,6 +46,7 @@ import com.huanchengfly.tieba.post.ui.widgets.compose.Sizes
 import com.huanchengfly.tieba.post.ui.widgets.compose.UserHeader
 import com.huanchengfly.tieba.post.utils.DateTimeUtils
 import com.huanchengfly.tieba.post.utils.StringUtil
+import com.huanchengfly.tieba.post.toastShort
 import kotlinx.collections.immutable.persistentListOf
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -62,6 +63,7 @@ fun NotificationsListPage(
         viewModel.send(NotificationsListUiIntent.Refresh)
         viewModel.initialized = true
     }
+    val context = LocalContext.current
     val navigator = LocalNavigator.current
     val isRefreshing by viewModel.uiState.collectPartialAsState(
         prop1 = NotificationsListUiState::isRefreshing,
@@ -146,19 +148,23 @@ fun NotificationsListPage(
                             Column(
                                 modifier = Modifier
                                     .clickable {
-                                        if (info.isFloor == "1") {
+                                        val threadId = info.threadId?.toLongOrNull()
+                                        val postId = info.postId?.toLongOrNull()
+                                        if (threadId == null) {
+                                            context.toastShort(R.string.toast_load_failed)
+                                        } else if (info.isFloor == "1" && postId != null) {
                                             navigator.navigate(
                                                 SubPostsPageDestination(
-                                                    threadId = info.threadId!!.toLong(),
-                                                    subPostId = info.postId!!.toLong(),
+                                                    threadId = threadId,
+                                                    subPostId = postId,
                                                     loadFromSubPost = true
                                                 )
                                             )
                                         } else {
                                             navigator.navigate(
                                                 ThreadPageDestination(
-                                                    threadId = info.threadId!!.toLong(),
-                                                    postId = info.postId!!.toLong()
+                                                    threadId = threadId,
+                                                    postId = postId ?: 0L
                                                 )
                                             )
                                         }
@@ -182,15 +188,22 @@ fun NotificationsListPage(
                                             )
                                         },
                                         onClick = {
-                                            navigator.navigate(UserProfilePageDestination(info.replyer.id!!.toLong()))
+                                            val replyerId = info.replyer.id?.toLongOrNull()
+                                            if (replyerId == null) {
+                                                context.toastShort(R.string.toast_load_failed)
+                                            } else {
+                                                navigator.navigate(UserProfilePageDestination(replyerId))
+                                            }
                                         },
                                         desc = {
-                                            Text(
-                                                text = DateTimeUtils.getRelativeTimeString(
-                                                    LocalContext.current,
-                                                    info.time!!
+                                            info.time?.let { timestamp ->
+                                                Text(
+                                                    text = DateTimeUtils.getRelativeTimeString(
+                                                        LocalContext.current,
+                                                        timestamp
+                                                    )
                                                 )
-                                            )
+                                            }
                                         },
                                     ) {}
                                 }
@@ -217,18 +230,22 @@ fun NotificationsListPage(
                                             .fillMaxWidth()
                                             .clip(RoundedCornerShape(6.dp))
                                             .clickable {
-                                                if ("1" == info.isFloor && info.quotePid != null) {
+                                                val threadId = info.threadId?.toLongOrNull()
+                                                val quotePostId = info.quotePid?.toLongOrNull()
+                                                if (threadId == null) {
+                                                    context.toastShort(R.string.toast_load_failed)
+                                                } else if ("1" == info.isFloor && quotePostId != null) {
                                                     navigator.navigate(
                                                         SubPostsPageDestination(
-                                                            threadId = info.threadId!!.toLong(),
-                                                            postId = info.quotePid.toLong(),
+                                                            threadId = threadId,
+                                                            postId = quotePostId,
                                                             loadFromSubPost = true,
                                                         )
                                                     )
                                                 } else {
                                                     navigator.navigate(
                                                         ThreadPageDestination(
-                                                            threadId = info.threadId!!.toLong(),
+                                                            threadId = threadId,
                                                         )
                                                     )
                                                 }

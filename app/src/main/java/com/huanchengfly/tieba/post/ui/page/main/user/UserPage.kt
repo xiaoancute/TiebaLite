@@ -260,6 +260,7 @@ fun UserPage(
         initial = null
     )
     val sessionHealth = remember(account) { AccountUtil.getSessionHealth(account) }
+    val profileUserId = account?.uid?.toLongOrNull()
 
     val switchToNightDialogState = rememberDialogState()
     ConfirmDialog(
@@ -299,8 +300,14 @@ fun UserPage(
                     InfoCard(
                         modifier = Modifier
                             .padding(top = 8.dp)
-                            .clickable {
-                                navigator.navigate(UserProfilePageDestination(account!!.uid.toLong()))
+                            .let { baseModifier ->
+                                if (profileUserId != null) {
+                                    baseModifier.clickable {
+                                        navigator.navigate(UserProfilePageDestination(profileUserId))
+                                    }
+                                } else {
+                                    baseModifier
+                                }
                             }
                             .padding(horizontal = 16.dp, vertical = 16.dp),
                         userName = account!!.nameShow ?: account!!.name,

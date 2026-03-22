@@ -84,6 +84,8 @@ Keep TiebaLite in a reading-first usable state on Android 10+, with public brows
 - T14 completed: 收藏页和账号附属 WebView 入口现在都会在会话不完整时显示明确守卫页，不再默认落到空白页面或半成品接口失败。
 - T15 completed: Tieba 吧链接会重新优先走原生论坛页，`/mo/q/checkurl` 也会先解析真实目标，再决定原生跳转、内嵌 WebView 还是外跳浏览器。
 - README, `docs/feature-status.md`, and `docs/revival-audit.md` are now aligned to the same external promise: public browsing is the stable mainline; guarded account pages stay conservative; posting/replying/auto sign remain unpromised.
+- 2026-03-22 usage bug sweep: app-level non-HTTP links now leave the app through explicit third-party intents instead of being ignored or trapped by the WebView preference; malformed `@user` annotations in post content now fail safely instead of crashing on `toLong()`; notifications list navigation now degrades safely when `threadId / postId / replyer.id / time` are missing; incomplete accounts now surface as `AccountIncomplete`, and the user page no longer crashes on blank `uid`.
+- Re-verified after the sweep on 2026-03-22: `:app:testDebugUnitTest` and `:app:assembleDebug` both passed locally with JDK 17 and the local Android SDK baseline.
 
 ## Known Good Commands
 

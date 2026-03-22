@@ -50,6 +50,7 @@ import com.huanchengfly.tieba.post.ui.widgets.compose.VoicePlayer
 import com.huanchengfly.tieba.post.utils.EmoticonUtil.emoticonString
 import com.huanchengfly.tieba.post.utils.appPreferences
 import com.huanchengfly.tieba.post.utils.launchUrl
+import com.huanchengfly.tieba.post.toastShort
 
 @Stable
 interface PbContentRender {
@@ -321,8 +322,12 @@ fun PbContentText(
                             }
 
                             "user" -> {
-                                val uid = annotation.item.toLong()
-                                navigator.navigate(UserProfilePageDestination(uid))
+                                val uid = annotation.item.toLongOrNull()
+                                if (uid != null) {
+                                    navigator.navigate(UserProfilePageDestination(uid))
+                                } else {
+                                    context.toastShort(R.string.toast_load_failed)
+                                }
                             }
                         }
                     }

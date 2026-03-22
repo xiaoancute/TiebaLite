@@ -102,5 +102,8 @@ object SessionHealthEvaluator {
         if (account.bduss.isBlank()) add("BDUSS")
         if (account.sToken.isBlank()) add("STOKEN")
         if (account.tbs.isBlank()) add("TBS")
+        if (account.uid.isBlank()) add("uid")
+        if (account.name.isBlank() && account.nameShow.isNullOrBlank()) add("name")
+        if (account.portrait.isBlank()) add("portrait")
     }
 }

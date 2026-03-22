@@ -181,7 +181,9 @@ fun launchUrl(
             openExternalUri(context, Uri.parse(decision.url))
         }
 
-        is LinkRoutingDecision.LaunchThirdParty -> Unit
+        is LinkRoutingDecision.LaunchThirdParty -> {
+            openThirdPartyUri(context, decision.url)
+        }
     }
 }
 
@@ -206,6 +208,27 @@ fun openExternalUri(context: Context, uri: Uri) {
         }
     }
     context.startActivity(Intent(Intent.ACTION_VIEW, uri))
+}
+
+fun openThirdPartyUri(context: Context, rawUrl: String) {
+    val uri = Uri.parse(rawUrl)
+    val intent = try {
+        if (uri.scheme.equals("intent", ignoreCase = true)) {
+            Intent.parseUri(rawUrl, Intent.URI_INTENT_SCHEME)
+                .addCategory(Intent.CATEGORY_BROWSABLE)
+        } else {
+            Intent(Intent.ACTION_VIEW, uri)
+                .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        }
+    } catch (e: Exception) {
+        context.toastShort(R.string.toast_feature_unavailable)
+        return
+    }
+    try {
+        context.startActivity(intent)
+    } catch (e: ActivityNotFoundException) {
+        context.toastShort(R.string.toast_feature_unavailable)
+    }
 }
 
 fun showErrorSnackBar(view: View, throwable: Throwable) {
