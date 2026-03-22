@@ -40,6 +40,7 @@ This file tracks which parts of the app have already been modernized and which p
 - The `Explore` second-level tab model now re-syncs with login state, so the concern-feed entry no longer lingers or shifts to the wrong tab after logout or account changes.
 - Experimental reply flows now always show a risk-self-borne warning before entry, and the old setting that implied this protection could be disabled has been replaced with a fixed explanatory note.
 - The settings, about, home, and explore surfaces now share explicit "public browsing first" recovery copy, so the visible product promise no longer implies a full Tieba replacement before account validation exists.
+- The user-page account navigation now stops advertising half-working completeness: notifications route directly to login/account management when needed, and complete-session-only entries like favorites/service-center no longer linger in incomplete states.
 
 ## Remaining Outdated Areas
 

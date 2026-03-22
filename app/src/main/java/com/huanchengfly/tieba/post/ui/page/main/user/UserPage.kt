@@ -31,6 +31,7 @@ import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,9 +54,11 @@ import com.huanchengfly.tieba.post.revival.label
 import com.huanchengfly.tieba.post.ui.common.theme.compose.ExtendedTheme
 import com.huanchengfly.tieba.post.ui.common.theme.compose.pullRefreshIndicator
 import com.huanchengfly.tieba.post.ui.page.LocalNavigator
+import com.huanchengfly.tieba.post.ui.page.destinations.AccountManagePageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.AboutPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.AppThemePageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.HistoryPageDestination
+import com.huanchengfly.tieba.post.ui.page.destinations.LoginPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.NotificationsPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.SettingsPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.ThreadStorePageDestination
@@ -70,6 +73,7 @@ import com.huanchengfly.tieba.post.ui.widgets.compose.Switch
 import com.huanchengfly.tieba.post.ui.widgets.compose.VerticalDivider
 import com.huanchengfly.tieba.post.ui.widgets.compose.tiebaPlaceholder
 import com.huanchengfly.tieba.post.ui.widgets.compose.rememberDialogState
+import com.huanchengfly.tieba.post.utils.AccountUtil
 import com.huanchengfly.tieba.post.utils.CuidUtils
 import com.huanchengfly.tieba.post.utils.StringUtil
 import com.huanchengfly.tieba.post.utils.ThemeUtil
@@ -255,6 +259,7 @@ fun UserPage(
         prop1 = UserUiState::account,
         initial = null
     )
+    val sessionHealth = remember(account) { AccountUtil.getSessionHealth(account) }
 
     val switchToNightDialogState = rememberDialogState()
     ConfirmDialog(
@@ -331,7 +336,7 @@ fun UserPage(
                             .padding(top = 8.dp),
                     )
                 }
-                if (account != null) {
+                if (sessionHealth.isComplete) {
                     ListMenuItem(
                         icon = ImageVector.vectorResource(id = R.drawable.ic_favorite),
                         text = stringResource(id = R.string.title_my_collect),
@@ -351,11 +356,19 @@ fun UserPage(
                     icon = ImageVector.vectorResource(id = R.drawable.ic_round_mode_comment),
                     text = stringResource(id = R.string.title_notifications),
                     onClick = {
-                        navigator.navigate(NotificationsPageDestination())
+                        when {
+                            account == null -> navigator.navigate(LoginPageDestination)
+                            !sessionHealth.isComplete -> navigator.navigate(AccountManagePageDestination)
+                            else -> navigator.navigate(NotificationsPageDestination())
+                        }
                     }
                 ) {
                     Text(
-                        text = notificationsCapabilityState.label(context),
+                        text = when {
+                            account == null -> stringResource(id = R.string.button_login)
+                            !sessionHealth.isComplete -> stringResource(id = R.string.title_account_manage)
+                            else -> notificationsCapabilityState.label(context)
+                        },
                         color = ExtendedTheme.colors.textSecondary,
                         fontSize = 12.sp,
                     )
@@ -384,7 +397,7 @@ fun UserPage(
                         }
                     )
                 }
-                if (account != null) {
+                if (sessionHealth.isComplete) {
                     ListMenuItem(
                         icon = ImageVector.vectorResource(id = R.drawable.ic_help_outline_black_24),
                         text = stringResource(id = R.string.my_info_service_center),
