@@ -1,7 +1,5 @@
 package com.huanchengfly.tieba.post.api.adapters;
 
-import android.text.TextUtils;
-
 import androidx.annotation.Nullable;
 
 import com.google.gson.JsonArray;
@@ -26,7 +24,7 @@ public class MediaAdapter implements JsonDeserializer<List<ForumPageBean.MediaIn
                 if (element.isJsonObject()) {
                     JsonObject jsonObject = element.getAsJsonObject();
                     String type = getNonNullString(jsonObject.get("type"));
-                    if (TextUtils.equals(type, "3")) {
+                    if ("3".equals(type)) {
                         mediaInfoBeans.add(new ForumPageBean.MediaInfoBean()
                                 .setType(type)
                                 .setBigPic(getNonNullString(jsonObject.get("big_pic")))
