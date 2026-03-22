@@ -32,6 +32,7 @@ import com.huanchengfly.tieba.post.ui.common.theme.compose.ExtendedTheme
 import com.huanchengfly.tieba.post.ui.page.LocalNavigator
 import com.huanchengfly.tieba.post.ui.page.ProvideNavigator
 import com.huanchengfly.tieba.post.ui.page.destinations.AccountManagePageDestination
+import com.huanchengfly.tieba.post.ui.page.destinations.AiSettingsPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.BlockSettingsPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.CustomSettingsPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.HabitSettingsPageDestination
@@ -268,6 +269,23 @@ fun SettingsPage(
                         onClick = {
                             navigator.navigate(OKSignSettingsPageDestination)
                         }
+                    )
+                }
+                prefsItem {
+                    TextPref(
+                        title = stringResource(id = R.string.title_ai_settings),
+                        summary = stringResource(id = R.string.summary_ai_settings),
+                        leadingIcon = {
+                            LeadingIcon {
+                                AvatarIcon(
+                                    icon = ImageVector.vectorResource(id = R.drawable.ic_dashboard_customize_black_24),
+                                    size = Sizes.Small,
+                                    contentDescription = null,
+                                )
+                            }
+                        },
+                        darkenOnDisable = false,
+                        onClick = { navigator.navigate(AiSettingsPageDestination) }
                     )
                 }
                 prefsItem {

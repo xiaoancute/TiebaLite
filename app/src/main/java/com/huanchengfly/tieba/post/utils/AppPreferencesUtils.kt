@@ -213,6 +213,18 @@ open class AppPreferencesUtils private constructor(ctx: Context) {
 
     var useWebView by DataStoreDelegates.boolean(defaultValue = false, key = "use_webview")
 
+    var aiApiBaseUrl by DataStoreDelegates.string(key = "ai_api_base_url")
+
+    var aiApiKey by DataStoreDelegates.string(key = "ai_api_key")
+
+    var aiModelName by DataStoreDelegates.string(
+        defaultValue = "deepseek-chat",
+        key = "ai_model_name"
+    )
+
+    val isAiConfigured: Boolean
+        get() = !aiApiBaseUrl.isNullOrBlank() && !aiApiKey.isNullOrBlank()
+
     private object DataStoreDelegates {
         fun int(
             defaultValue: Int = 0,

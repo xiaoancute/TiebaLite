@@ -59,6 +59,7 @@ import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Report
 import androidx.compose.material.icons.rounded.RocketLaunch
 import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material.icons.rounded.SmartToy
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.StarBorder
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
@@ -601,6 +602,10 @@ fun ThreadPage(
         prop1 = ThreadUiState::latestPosts,
         initial = persistentListOf()
     )
+    val summaryState by viewModel.uiState.collectPartialAsState(
+        prop1 = ThreadUiState::summaryState,
+        initial = SummaryState.Idle
+    )
 
     val isEmpty by remember {
         derivedStateOf { data.isEmpty() && firstPost == null }
@@ -660,6 +665,7 @@ fun ThreadPage(
     }
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
+    val isAiConfigured = remember { context.appPreferences.isAiConfigured }
     val openBottomSheet = {
         coroutineScope.launch {
             bottomSheetState.show()
@@ -1074,6 +1080,26 @@ fun ThreadPage(
     }
 
     ProvideNavigator(navigator = navigator) {
+        AiSummaryDialog(
+            summaryState = summaryState,
+            onDismiss = { viewModel.send(ThreadUiIntent.DismissSummary) },
+            onRetry = {
+                val prefs = context.appPreferences
+                val baseUrl = prefs.aiApiBaseUrl ?: return@AiSummaryDialog
+                val apiKey = prefs.aiApiKey ?: return@AiSummaryDialog
+                val model = prefs.aiModelName ?: "deepseek-chat"
+                viewModel.send(
+                    ThreadUiIntent.Summarize(
+                        title = threadTitle,
+                        firstPost = firstPost?.get { this },
+                        postData = data.toList(),
+                        baseUrl = baseUrl,
+                        apiKey = apiKey,
+                        model = model,
+                    )
+                )
+            },
+        )
         StateScreen(
             modifier = Modifier.fillMaxSize(),
             isEmpty = isEmpty,
@@ -1230,6 +1256,25 @@ fun ThreadPage(
                                     )
                                 )
                                 closeBottomSheet()
+                            },
+                            isAiConfigured = isAiConfigured,
+                            onAiSummaryClick = {
+                                closeBottomSheet()
+                                val prefs = context.appPreferences
+                                val baseUrl = prefs.aiApiBaseUrl
+                                val apiKey = prefs.aiApiKey
+                                val model = prefs.aiModelName ?: "deepseek-chat"
+                                if (baseUrl.isNullOrBlank() || apiKey.isNullOrBlank()) return@ThreadMenu
+                                viewModel.send(
+                                    ThreadUiIntent.Summarize(
+                                        title = threadTitle,
+                                        firstPost = firstPost?.get { this },
+                                        postData = data.toList(),
+                                        baseUrl = baseUrl,
+                                        apiKey = apiKey,
+                                        model = model,
+                                    )
+                                )
                             },
                             onJumpPageClick = {
                                 closeBottomSheet()
@@ -2102,11 +2147,13 @@ private fun ThreadMenu(
     isCollected: Boolean,
     isImmersiveMode: Boolean,
     isDesc: Boolean,
+    isAiConfigured: Boolean,
     canDelete: () -> Boolean,
     onSeeLzClick: () -> Unit,
     onCollectClick: () -> Unit,
     onImmersiveModeClick: () -> Unit,
     onDescClick: () -> Unit,
+    onAiSummaryClick: () -> Unit,
     onJumpPageClick: () -> Unit,
     onShareClick: () -> Unit,
     onCopyLinkClick: () -> Unit,
@@ -2215,6 +2262,27 @@ private fun ThreadMenu(
                     },
                     modifier = Modifier.fillMaxSize()
                 )
+            }
+            if (isAiConfigured) {
+                item {
+                    ToggleButton(
+                        text = {
+                            TextWithMinWidth(
+                                text = stringResource(id = R.string.title_ai_summary),
+                                minLength = 4
+                            )
+                        },
+                        checked = false,
+                        onClick = onAiSummaryClick,
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Rounded.SmartToy,
+                                contentDescription = null
+                            )
+                        },
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
             }
         }
         Column {

@@ -6,6 +6,8 @@ import androidx.compose.ui.text.AnnotatedString
 import com.huanchengfly.tieba.post.App
 import com.huanchengfly.tieba.post.R
 import com.huanchengfly.tieba.post.api.TiebaApi
+import com.huanchengfly.tieba.post.api.ai.AiSummaryClient
+import com.huanchengfly.tieba.post.api.ai.PostText
 import com.huanchengfly.tieba.post.api.models.AgreeBean
 import com.huanchengfly.tieba.post.api.models.CommonResponse
 import com.huanchengfly.tieba.post.api.models.protos.Anti
@@ -16,6 +18,7 @@ import com.huanchengfly.tieba.post.api.models.protos.ThreadInfo
 import com.huanchengfly.tieba.post.api.models.protos.User
 import com.huanchengfly.tieba.post.api.models.protos.contentRenders
 import com.huanchengfly.tieba.post.api.models.protos.pbPage.PbPageResponse
+import com.huanchengfly.tieba.post.api.models.protos.plainText
 import com.huanchengfly.tieba.post.api.models.protos.renders
 import com.huanchengfly.tieba.post.api.models.protos.subPosts
 import com.huanchengfly.tieba.post.api.models.protos.updateAgreeStatus
@@ -140,6 +143,10 @@ class ThreadViewModel @Inject constructor() :
                     .flatMapConcat { it.producePartialChange() },
                 intentFlow.filterIsInstance<ThreadUiIntent.DeleteThread>()
                     .flatMapConcat { it.producePartialChange() },
+                intentFlow.filterIsInstance<ThreadUiIntent.Summarize>()
+                    .flatMapConcat { it.producePartialChange() },
+                intentFlow.filterIsInstance<ThreadUiIntent.DismissSummary>()
+                    .map { ThreadPartialChange.DismissSummary },
             )
 
         fun ThreadUiIntent.Init.producePartialChange(): Flow<ThreadPartialChange.Init> =
@@ -485,6 +492,45 @@ class ThreadViewModel @Inject constructor() :
                         )
                     )
                 }
+
+        fun ThreadUiIntent.Summarize.producePartialChange(): Flow<ThreadPartialChange.Summarize> =
+            flowOf(Unit)
+                .map<Unit, ThreadPartialChange.Summarize> {
+                    val posts = buildList {
+                        firstPost?.let { post ->
+                            add(
+                                PostText(
+                                    floor = post.floor,
+                                    author = post.author?.nameShow ?: post.author?.name ?: "",
+                                    content = post.content.plainText,
+                                )
+                            )
+                        }
+                        postData.forEach { item ->
+                            val post = item.post.get { this }
+                            add(
+                                PostText(
+                                    floor = post.floor,
+                                    author = post.author?.nameShow ?: post.author?.name ?: "",
+                                    content = post.content.plainText,
+                                )
+                            )
+                        }
+                    }
+                    val result = AiSummaryClient.summarize(
+                        baseUrl = baseUrl,
+                        apiKey = apiKey,
+                        model = model,
+                        title = title,
+                        posts = posts,
+                    )
+                    result.fold(
+                        onSuccess = { ThreadPartialChange.Summarize.Success(it) },
+                        onFailure = { ThreadPartialChange.Summarize.Failure(it.message ?: "Unknown error") },
+                    )
+                }
+                .onStart { emit(ThreadPartialChange.Summarize.Loading) }
+                .catch { emit(ThreadPartialChange.Summarize.Failure(it.message ?: "Unknown error")) }
     }
 }
 
@@ -602,6 +648,17 @@ sealed interface ThreadUiIntent : UiIntent {
         val deleteMyThread: Boolean,
         val tbs: String? = null
     ) : ThreadUiIntent
+
+    data class Summarize(
+        val title: String,
+        val firstPost: Post?,
+        val postData: List<PostItemData>,
+        val baseUrl: String,
+        val apiKey: String,
+        val model: String,
+    ) : ThreadUiIntent
+
+    data object DismissSummary : ThreadUiIntent
 }
 
 sealed interface ThreadPartialChange : PartialChange<ThreadUiState> {
@@ -1168,6 +1225,23 @@ sealed interface ThreadPartialChange : PartialChange<ThreadUiState> {
             val errorMessage: String
         ) : DeleteThread()
     }
+
+    sealed class Summarize : ThreadPartialChange {
+        override fun reduce(oldState: ThreadUiState): ThreadUiState = when (this) {
+            is Loading -> oldState.copy(summaryState = SummaryState.Loading)
+            is Success -> oldState.copy(summaryState = SummaryState.Success(summary))
+            is Failure -> oldState.copy(summaryState = SummaryState.Error(errorMessage))
+        }
+
+        data object Loading : Summarize()
+        data class Success(val summary: String) : Summarize()
+        data class Failure(val errorMessage: String) : Summarize()
+    }
+
+    data object DismissSummary : ThreadPartialChange {
+        override fun reduce(oldState: ThreadUiState): ThreadUiState =
+            oldState.copy(summaryState = SummaryState.Idle)
+    }
 }
 
 data class ThreadUiState(
@@ -1201,7 +1275,15 @@ data class ThreadUiState(
     val latestPosts: ImmutableList<PostItemData> = persistentListOf(),
 
     val isImmersiveMode: Boolean = false,
+    val summaryState: SummaryState = SummaryState.Idle,
 ) : UiState
+
+sealed interface SummaryState {
+    data object Idle : SummaryState
+    data object Loading : SummaryState
+    data class Success(val summary: String) : SummaryState
+    data class Error(val message: String) : SummaryState
+}
 
 sealed interface ThreadUiEvent : UiEvent {
     data object ScrollToFirstReply : ThreadUiEvent

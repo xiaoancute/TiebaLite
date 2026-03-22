@@ -562,4 +562,24 @@
     <string name="release_to_load_latest_posts">松开加载最新回复</string>
     <string name="pull_to_load_latest_posts">继续上拉加载最新回复</string>
     <string name="settings_home_page_show_history_forum">首页显示最近逛的吧</string>
+    <string name="title_ai_settings">AI 设置</string>
+    <string name="summary_ai_settings">配置 AI 总结功能</string>
+    <string name="title_ai_summary">AI 总结</string>
+    <string name="title_ai_api_url">API 地址</string>
+    <string name="summary_ai_api_url">OpenAI 兼容接口地址，如 https://api.deepseek.com</string>
+    <string name="title_ai_api_key">API Key</string>
+    <string name="summary_ai_api_key">用于身份验证的密钥</string>
+    <string name="title_ai_model">模型名称</string>
+    <string name="summary_ai_model">如 deepseek-chat、gpt-4o-mini 等</string>
+    <string name="title_ai_test_connection">测试连接</string>
+    <string name="toast_ai_test_success">连接成功</string>
+    <string name="toast_ai_test_failure">连接失败：%s</string>
+    <string name="ai_summary_loading">正在总结…</string>
+    <string name="ai_summary_error">总结失败：%s</string>
+    <string name="ai_summary_not_configured">请先在设置中配置 AI API</string>
+    <string name="ai_summary_copy">复制总结</string>
+    <string name="ai_summary_retry">重试</string>
+    <string name="ai_summary_close">关闭</string>
+    <string name="ai_summary_copied">已复制到剪贴板</string>
+    <string name="ai_summary_no_content">当前没有可总结的内容</string>
 </resources>
