@@ -18,6 +18,7 @@ data class TopicDetailDataBean(
     val topicInfo: TopicInfoBean,
     val user: UserBean,
     val tbs: String,
+    @SerialName("relate_forum")
     val relateForum: List<RelateForumBean>,
     @SerialName("special_topic")
     val specialTopic: List<SpecialTopicBean>,
@@ -54,6 +55,7 @@ data class TopicInfoBean(
     @SerialName("topic_desc")
     val topicDesc: String,
     @SerialName("discuss_num")
+    @Serializable(with = StringFromPrimitiveSerializer::class)
     val discussNum: String,
     @SerialName("topic_image")
     val topicImage: String,

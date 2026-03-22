@@ -1,0 +1,42 @@
+{
+  "no": 0,
+  "error": "success",
+  "data": {
+    "topic_info": {
+      "topic_id": "28352154",
+      "topic_name": "G2虐爆全场!GEN惨遭碾压",
+      "candle": "0",
+      "topic_desc": "G2彻底打崩GEN，3-0横扫零封带走比赛，全程碾压毫无还手之力，LCK头号种子被打得毫无脾气，直接被送出局！",
+      "discuss_num": 13075092,
+      "topic_image": "https://tiebapic.baidu.com/forum/pic/item/0df431adcbef760934c9038268dda3cc7dd99ee9.jpg?tbpicau=2026-04-02-05_e72cf01be1b868a07e8efe768b65cc29",
+      "share_title": "吧友们都在讨论#G2虐爆全场!GEN惨遭碾压#，快去参与一起讨论吧！",
+      "share_pic": "https://tb1.bdstatic.com/tb/290ad081bb5cfbec3098e8a70.png",
+      "is_video_topic": 0
+    },
+    "user": {
+      "is_login": false,
+      "id": 0,
+      "uid": 0,
+      "name": "",
+      "name_show": "",
+      "portrait": "https://gss0.bdstatic.com/6LZ1dD3d1sgCo2Kml5_Y_D3/sys/portrait/item/.jpg"
+    },
+    "tbs": "7f0acb2e6affd31a1774141809",
+    "relate_forum": [
+      {
+        "forum_id": 17019292,
+        "forum_name": "抗压背锅",
+        "avatar": "https://tiebapic.baidu.com/forum/w%3D120%3Bh%3D120/sign=2d07ca6aec014c08193b2ca73a406a35/a2cc7cd98d1001e9fd2253ccfd0e7bec55e797d3.jpg?tbpicau=2026-04-02-05_91daa967c7718397bbc7a71ce27e2397",
+        "desc": "电竞爱好者聚集地，超越游戏，玩出精彩~",
+        "member_num": 5974687,
+        "thread_num": 2519837,
+        "post_num": 186577823
+      }
+    ],
+    "special_topic": [],
+    "relate_thread": {
+      "thread_list": []
+    },
+    "has_more": true
+  }
+}
