@@ -73,7 +73,6 @@ import com.huanchengfly.tieba.post.utils.TiebaUtil
 import com.huanchengfly.tieba.post.utils.appPreferences
 import com.huanchengfly.tieba.post.utils.compose.launchActivityForResult
 import com.huanchengfly.tieba.post.utils.openExternalUri
-import com.huanchengfly.tieba.post.utils.shouldOpenExternallyFromApp
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.CoroutineScope
@@ -287,68 +286,35 @@ open class MyWebViewClient(
         webView: WebView,
         request: WebResourceRequest,
     ): Boolean {
-        val newUri = request.url
-        val scheme = newUri.scheme?.lowercase() ?: return false
-        val host = newUri.host?.lowercase() ?: return false
-        val path = newUri.path?.lowercase() ?: return false
-        val isHttp = scheme.startsWith("http")
-        val isTieba = host == "wapp.baidu.com" ||
-                host.contains("tieba.baidu.com") ||
-                host == "tiebac.baidu.com"
-        val isInternal = isTieba ||
-                host.contains("wappass.baidu.com") ||
-                host.contains("ufosdk.baidu.com") ||
-                host.contains("m.help.baidu.com")
-        return when {
-            isHttp && isTieba -> {
-                if (path == "/f" || path == "/mo/q/m") {
-                    val forumName =
-                        newUri.getQueryParameter("kw") ?: newUri.getQueryParameter("word")
-                    val threadId = newUri.getQueryParameter("kz")?.toLongOrNull()
-                    if (threadId != null) {
-                        nativeNavigator?.navigate(
-                            ThreadPageDestination(threadId)
-                        )
-                        true
-                    } else if (forumName != null) {
-                        nativeNavigator?.navigate(
-                            ForumPageDestination(forumName)
-                        )
-                        true
-                    } else false
-                } else if (path.startsWith("/p/")) {
-                    val threadId = path.substring(3).toLongOrNull()
-                    if (threadId != null) {
-                        nativeNavigator?.navigate(
-                            ThreadPageDestination(threadId)
-                        )
-                        true
-                    } else false
-                } else false
-            }
+        return when (val decision = resolveWebViewLinkRouting(request.url.toString(), context.appPreferences.useWebView)) {
+            LinkRoutingDecision.AllowWebView,
+            LinkRoutingDecision.Ignore,
+            LinkRoutingDecision.UnsupportedTiebaClientAction,
+            is LinkRoutingDecision.OpenWebView -> false
 
-            isHttp && !isInternal -> {
-                if (shouldOpenExternallyFromApp(newUri)) {
-                    openExternalUri(context, newUri)
-                    true
-                } else if (context.appPreferences.useWebView)
-                    false
-                else {
-                    openExternalUri(context, newUri)
-                    true
-                }
-            }
-
-            !isHttp -> {
-                val currentUri = webView.url?.toUri()
-                val currentHost = currentUri?.host
-                if (currentHost != null) {
-                    launchThirdPartyApp(newUri, currentHost)
-                }
+            is LinkRoutingDecision.OpenThread -> {
+                nativeNavigator?.navigate(ThreadPageDestination(decision.threadId))
                 true
             }
 
-            else -> false
+            is LinkRoutingDecision.OpenForum -> {
+                nativeNavigator?.navigate(ForumPageDestination(decision.forumName))
+                true
+            }
+
+            is LinkRoutingDecision.OpenExternal -> {
+                openExternalUri(context, decision.url.toUri())
+                true
+            }
+
+            is LinkRoutingDecision.LaunchThirdParty -> {
+                val currentUri = webView.url?.toUri()
+                val currentHost = currentUri?.host
+                if (currentHost != null) {
+                    launchThirdPartyApp(decision.url.toUri(), currentHost)
+                }
+                true
+            }
         }
     }
 

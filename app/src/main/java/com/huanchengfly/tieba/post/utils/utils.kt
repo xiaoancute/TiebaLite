@@ -35,7 +35,9 @@ import com.huanchengfly.tieba.post.ui.common.theme.utils.ColorStateListUtils
 import com.huanchengfly.tieba.post.ui.common.theme.utils.ThemeUtils
 import com.huanchengfly.tieba.post.ui.page.destinations.ThreadPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.WebViewPageDestination
+import com.huanchengfly.tieba.post.ui.page.webview.LinkRoutingDecision
 import com.huanchengfly.tieba.post.ui.page.webview.isInternalHost
+import com.huanchengfly.tieba.post.ui.page.webview.resolveAppLinkRouting
 import com.huanchengfly.tieba.post.utils.Util.createSnackbar
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 
@@ -154,67 +156,30 @@ fun launchUrl(
     navigator: DestinationsNavigator,
     url: String,
 ) {
-    val uri = Uri.parse(url)
-    val host = uri.host
-    val path = uri.path
-    val scheme = uri.scheme
-    if (host == null || scheme == null || path == null) {
-        return
-    }
-    if (scheme == "tiebaclient") {
-        when (uri.getQueryParameter("action")) {
-            "preview_file" -> {
-                val realUrl = uri.getQueryParameter("url")
-                if (realUrl.isNullOrEmpty()) {
-                    return
-                }
-                launchUrl(context, navigator, realUrl)
-            }
+    when (val decision = resolveAppLinkRouting(url, context.appPreferences.useWebView)) {
+        LinkRoutingDecision.AllowWebView,
+        LinkRoutingDecision.Ignore -> Unit
 
-            else -> {
-                context.toastShort(R.string.toast_feature_unavailable)
-            }
+        LinkRoutingDecision.UnsupportedTiebaClientAction -> {
+            context.toastShort(R.string.toast_feature_unavailable)
         }
-        return
-    }
-    if (!path.contains("android_asset")) {
-        if (path == "/mo/q/checkurl") {
-            launchUrl(
-                context,
-                navigator,
-                uri.getQueryParameter("url")?.replace("http://https://", "https://").orEmpty()
-            )
-            return
-        }
-        if (host == "tieba.baidu.com" && path.startsWith("/p/")) {
-            val threadId = path.substring(3).toLongOrNull()
-            if (threadId != null) {
-                navigator.navigate(
-                    ThreadPageDestination(threadId)
-                )
-            }
-            return
-        }
-        val isTiebaLink =
-            host.contains("tieba.baidu.com") || host.contains("wappass.baidu.com") || host.contains(
-                "ufosdk.baidu.com"
-            ) || host.contains("m.help.baidu.com")
-        if (shouldOpenExternallyFromApp(uri)) {
-            openExternalUri(context, uri)
-        } else if (isTiebaLink || context.appPreferences.useWebView) {
-            navigator.navigate(
-                WebViewPageDestination(url)
-            )
-        } else {
-            openExternalUri(context, uri)
-        }
-    }
-}
 
-fun shouldOpenExternallyFromApp(uri: Uri): Boolean {
-    val scheme = uri.scheme?.lowercase() ?: return false
-    val host = uri.host?.lowercase() ?: return false
-    return scheme == "http" && !isInternalHost(host)
+        is LinkRoutingDecision.OpenThread -> {
+            navigator.navigate(ThreadPageDestination(decision.threadId))
+        }
+
+        is LinkRoutingDecision.OpenForum -> Unit
+
+        is LinkRoutingDecision.OpenWebView -> {
+            navigator.navigate(WebViewPageDestination(decision.url))
+        }
+
+        is LinkRoutingDecision.OpenExternal -> {
+            openExternalUri(context, Uri.parse(decision.url))
+        }
+
+        is LinkRoutingDecision.LaunchThirdParty -> Unit
+    }
 }
 
 fun openExternalUri(context: Context, uri: Uri) {

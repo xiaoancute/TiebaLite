@@ -48,7 +48,7 @@ Recover TiebaLite into a stable, reading-first Android 10+ Tieba client. Public 
 | Phase | Status | Notes |
 | --- | --- | --- |
 | Workflow baseline | Completed | `TODO.md`, `STATUS.md`, local Git rescue history, and reproducible SDK path are now in place. |
-| Public browse confidence | In progress | Live smoke passes; T05 forum, T06 thread, T07 hot topic/topic detail fixture coverage, and T09 failure-mode guardrails are in place; link-routing coverage is next. |
+| Public browse confidence | In progress | Live smoke passes; T05 forum, T06 thread, T07 hot topic/topic detail fixture coverage, T08 link-routing coverage, and T09 failure-mode guardrails are now in place. |
 | Reading-first product polish | Not started | Navigation and capability alignment audit pending. |
 | Modern Android and Compose debt | Not started | Compat cleanup and inset/status-bar work are still queued. |
 | Experimental/account containment | Not started | Guardrails exist but more explicit labeling and isolation remain. |
@@ -66,6 +66,9 @@ Recover TiebaLite into a stable, reading-first Android 10+ Tieba client. Public 
 - T09 completed: added `PublicBrowseFailureModeTest` plus a shared `PublicBrowsePayloadGuard` so forum, thread, hot topic, and topic detail payload drift now degrades through explicit browse-specific exceptions instead of generic opaque failures.
 - Topic detail parsing is now nullable/default-aware for missing optional sections, and the hot topic web model now keeps nested `topic_id / topic_name` fallback fields for route extraction when `mul_id / mul_name` disappear.
 - Re-verified the browse regression set after T09: `PublicBrowseFailureModeTest`, `ForumPageFixtureTest`, `ThreadPageFixtureTest`, `HotTopicFixtureTest`, and `:app:assembleDebug` all passed on 2026-03-22.
+- T08 completed: extracted pure-JVM `LinkRouting` decisions for app-level launch routing and `WebViewPage` interception, so Tieba thread/forum links, external browser fallbacks, and third-party scheme launches are now covered without relying on `android.net.Uri` in unit tests.
+- Added `LinkRoutingTest` to lock current link behavior around in-app Tieba navigation, `/mo/q/checkurl` redirects, external cleartext browser fallback, optional HTTPS WebView retention, and third-party scheme dispatch.
+- Re-verified the browse regression set after T08: `LinkRoutingTest`, `PublicBrowseFailureModeTest`, `ForumPageFixtureTest`, `ThreadPageFixtureTest`, `HotTopicFixtureTest`, and `:app:assembleDebug` all passed on 2026-03-22.
 
 ## Known Good Commands
 
@@ -79,12 +82,13 @@ export GRADLE_USER_HOME=/tmp/tblite-gradle17-local
 ./gradlew :app:testDebugUnitTest --tests 'com.huanchengfly.tieba.post.ForumPageFixtureTest' --console=plain
 ./gradlew :app:testDebugUnitTest --tests 'com.huanchengfly.tieba.post.ThreadPageFixtureTest' --console=plain
 ./gradlew :app:testDebugUnitTest --tests 'com.huanchengfly.tieba.post.HotTopicFixtureTest' --console=plain
+./gradlew :app:testDebugUnitTest --tests 'com.huanchengfly.tieba.post.LinkRoutingTest' --console=plain
 ./gradlew :app:testDebugUnitTest --tests 'com.huanchengfly.tieba.post.PublicBrowseFailureModeTest' --console=plain
 ./gradlew :app:assembleDebug --stacktrace
 ```
 
 ## Next Actions
 
-1. Add focused URL routing and external-link behavior coverage for Tieba vs browser fallback paths (`T08`).
-2. Start auditing visible entry points against stable/guarded/experimental capability states (`T10`).
-3. Tighten high-risk reply/post entry points with explicit risk-self-borne messaging (`T11`).
+1. Start auditing visible entry points against stable/guarded/experimental capability states (`T10`).
+2. Tighten high-risk reply/post entry points with explicit risk-self-borne messaging (`T11`).
+3. Add or refine read-only recovery messaging in key browse surfaces and settings (`T12`).
