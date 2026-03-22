@@ -4,13 +4,13 @@ import com.huanchengfly.tieba.post.api.TiebaApi
 import com.huanchengfly.tieba.post.api.models.protos.OriginThreadInfo
 import com.huanchengfly.tieba.post.api.models.protos.pbPage.PbPageResponse
 import com.huanchengfly.tieba.post.api.retrofit.exception.TiebaException
-import com.huanchengfly.tieba.post.api.retrofit.exception.TiebaUnknownException
+import com.huanchengfly.tieba.post.revival.PublicBrowsePayloadGuard
 import com.huanchengfly.tieba.post.ui.page.thread.ThreadPageFrom
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-object EmptyDataException : TiebaException("data is empty!") {
+object EmptyDataException : TiebaException("帖子页返回空帖子列表") {
     override val code: Int
         get() = -2
 }
@@ -45,30 +45,20 @@ object PbPageRepository {
                 lastPostId = lastPostId
             )
             .map { response ->
-                if (response.data_ == null) {
-                    throw TiebaUnknownException
-                }
-                if (response.data_.post_list.isEmpty()) {
-                    throw EmptyDataException
-                }
-                if (
-                    response.data_.page == null
-                    || response.data_.thread?.author == null
-                    || response.data_.forum == null
-                    || response.data_.anti == null
-                ) {
-                    throw TiebaUnknownException
-                }
-                val userList = response.data_.user_list
-                val postList = response.data_.post_list.map {
+                val data = PublicBrowsePayloadGuard.requireThreadPageData(response)
+                val forum = requireNotNull(data.forum)
+                val thread = requireNotNull(data.thread)
+                val threadAuthor = requireNotNull(thread.author)
+                val userList = data.user_list
+                val postList = data.post_list.map {
                     val author = it.author
                         ?: userList.first { user -> user.id == it.author_id }
                     it.copy(
                         author_id = author.id,
                         author = it.author
                             ?: userList.first { user -> user.id == it.author_id },
-                        from_forum = response.data_.forum,
-                        tid = response.data_.thread.id,
+                        from_forum = forum,
+                        tid = thread.id,
                         sub_post_list = it.sub_post_list?.copy(
                             sub_post_list = it.sub_post_list.sub_post_list.map { subPost ->
                                 subPost.copy(
@@ -78,18 +68,18 @@ object PbPageRepository {
                             }
                         ),
                         origin_thread_info = OriginThreadInfo(
-                            author = response.data_.thread.author
+                            author = threadAuthor
                         )
                     )
                 }
                 val firstPost = postList.firstOrNull { it.floor == 1 }
-                    ?: response.data_.first_floor_post?.copy(
-                        author_id = response.data_.thread.author.id,
-                        author = response.data_.thread.author,
-                        from_forum = response.data_.forum,
-                        tid = response.data_.thread.id,
-                        sub_post_list = response.data_.first_floor_post.sub_post_list?.copy(
-                            sub_post_list = response.data_.first_floor_post.sub_post_list.sub_post_list.map { subPost ->
+                    ?: data.first_floor_post?.copy(
+                        author_id = threadAuthor.id,
+                        author = threadAuthor,
+                        from_forum = forum,
+                        tid = thread.id,
+                        sub_post_list = data.first_floor_post.sub_post_list?.copy(
+                            sub_post_list = data.first_floor_post.sub_post_list.sub_post_list.map { subPost ->
                                 subPost.copy(
                                     author = subPost.author
                                         ?: userList.first { user -> user.id == subPost.author_id }
@@ -99,7 +89,7 @@ object PbPageRepository {
                     )
 
                 response.copy(
-                    data_ = response.data_.copy(
+                    data_ = data.copy(
                         post_list = postList,
                         first_floor_post = firstPost,
                     )

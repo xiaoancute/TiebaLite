@@ -5,6 +5,7 @@ import com.huanchengfly.tieba.post.api.TiebaApi
 import com.huanchengfly.tieba.post.api.models.protos.frsPage.FrsPageResponse
 import com.huanchengfly.tieba.post.api.models.protos.threadList.ThreadListResponse
 import com.huanchengfly.tieba.post.api.retrofit.exception.TiebaUnknownException
+import com.huanchengfly.tieba.post.revival.PublicBrowsePayloadGuard
 import com.huanchengfly.tieba.post.utils.appPreferences
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -30,15 +31,15 @@ object FrsPageRepository {
         lastHash = hash
         return TiebaApi.getInstance().frsPage(forumName, page, loadType, sortType, goodClassifyId)
             .map { response ->
-                if (response.data_ == null) throw TiebaUnknownException
-                val userList = response.data_.user_list
-                val threadList = response.data_.thread_list
+                val data = PublicBrowsePayloadGuard.requireForumPageData(response)
+                val userList = data.user_list
+                val threadList = data.thread_list
                     .map { threadInfo ->
                         threadInfo.copy(author = userList.find { it.id == threadInfo.authorId })
                     }
                     .filter { !App.INSTANCE.appPreferences.blockVideo || it.videoInfo == null }
                     .filter { it.ala_info == null } // 去他妈的直播
-                response.copy(data_ = response.data_.copy(thread_list = threadList))
+                response.copy(data_ = data.copy(thread_list = threadList))
             }
             .onEach { lastResponse = it }
     }

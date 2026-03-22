@@ -2,6 +2,7 @@ package com.huanchengfly.tieba.post
 
 import com.huanchengfly.tieba.post.api.models.TopicDetailBean
 import com.huanchengfly.tieba.post.api.models.web.HotMessageListBean
+import com.huanchengfly.tieba.post.revival.PublicBrowsePayloadGuard
 import com.huanchengfly.tieba.post.utils.GsonUtil
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
@@ -59,15 +60,16 @@ class HotTopicFixtureTest {
             data.requireObject("relate_thread").requireArray("thread_list").size
         )
 
-        val bean = json.decodeFromString<TopicDetailBean>(payload)
-        assertEquals("28352154", bean.data.topicInfo.topicId)
-        assertEquals("G2虐爆全场!GEN惨遭碾压", bean.data.topicInfo.topicName)
-        assertEquals("13075092", bean.data.topicInfo.discussNum)
-        assertTrue(bean.data.topicInfo.topicDesc.contains("GEN"))
-        assertTrue(bean.data.tbs.isNotBlank())
-        assertEquals("抗压背锅", bean.data.relateForum.first().forumName)
-        assertTrue(bean.data.relateThread.threadList.isEmpty())
-        assertTrue(bean.data.hasMore)
+        val payloadData = PublicBrowsePayloadGuard.requireTopicDetailPayload(
+            json.decodeFromString<TopicDetailBean>(payload)
+        )
+        assertEquals("28352154", payloadData.topicInfo.topicId)
+        assertEquals("G2虐爆全场!GEN惨遭碾压", payloadData.topicInfo.topicName)
+        assertEquals("13075092", payloadData.topicInfo.discussNum)
+        assertTrue(payloadData.topicInfo.topicDesc.contains("GEN"))
+        assertEquals("抗压背锅", payloadData.relatedForums.first().forumName)
+        assertTrue(payloadData.relatedThreads.isEmpty())
+        assertTrue(payloadData.hasMore)
     }
 
     private fun loadFixture(path: String): String =

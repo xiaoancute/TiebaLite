@@ -15,6 +15,7 @@ import com.huanchengfly.tieba.post.arch.UiEvent
 import com.huanchengfly.tieba.post.arch.UiIntent
 import com.huanchengfly.tieba.post.arch.UiState
 import com.huanchengfly.tieba.post.arch.wrapImmutable
+import com.huanchengfly.tieba.post.revival.PublicBrowsePayloadGuard
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -50,16 +51,13 @@ class TopicDetailViewModel @Inject constructor() :
             TiebaApi.getInstance()
                 .topicDetailFlow(topicId, topicName, page)
                 .map<TopicDetailBean, TopicDetailPartialChange.Load> { response ->
-                    check(response.errorCode == 0) {
-                        response.errorMsg.ifBlank { "Topic detail failed: ${response.errorCode}" }
-                    }
-                    val data = response.data
+                    val payload = PublicBrowsePayloadGuard.requireTopicDetailPayload(response)
                     TopicDetailPartialChange.Load.Success(
-                        topicInfo = data.topicInfo,
-                        relatedForums = data.relateForum,
-                        specialTopics = data.specialTopic,
-                        relatedThreads = data.relateThread.threadList.map { it.threadInfo },
-                        hasMore = data.hasMore
+                        topicInfo = payload.topicInfo,
+                        relatedForums = payload.relatedForums,
+                        specialTopics = payload.specialTopics,
+                        relatedThreads = payload.relatedThreads,
+                        hasMore = payload.hasMore
                     )
                 }
                 .onStart { emit(TopicDetailPartialChange.Load.Start) }

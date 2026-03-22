@@ -16,6 +16,7 @@ import com.huanchengfly.tieba.post.arch.UiIntent
 import com.huanchengfly.tieba.post.arch.UiState
 import com.huanchengfly.tieba.post.arch.wrapImmutable
 import com.huanchengfly.tieba.post.repository.FrsPageRepository
+import com.huanchengfly.tieba.post.revival.PublicBrowsePayloadGuard
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -84,12 +85,12 @@ class ForumViewModel @Inject constructor() :
 
         private fun ForumUiIntent.Load.produceLoadPartialChange() =
             FrsPageRepository.frsPage(forumName, 1, 1, sortType, null, true)
-                .map {
-                    if (it.data_?.forum != null) ForumPartialChange.Load.Success(
-                        it.data_.forum,
-                        it.data_.anti?.tbs
+                .map<_, ForumPartialChange.Load> {
+                    val payload = PublicBrowsePayloadGuard.requireForumHeader(it)
+                    ForumPartialChange.Load.Success(
+                        payload.forum,
+                        payload.tbs
                     )
-                    else ForumPartialChange.Load.Failure(NullPointerException("未知错误"))
                 }
                 .onStart { emit(ForumPartialChange.Load.Start) }
                 .catch { emit(ForumPartialChange.Load.Failure(it)) }

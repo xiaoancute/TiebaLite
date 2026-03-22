@@ -62,8 +62,20 @@ public class HotMessageListBean extends BaseBean {
     }
 
     public static class TopicInfoBean {
+        @SerializedName("topic_id")
+        private String topicId;
+        @SerializedName("topic_name")
+        private String topicName;
         @SerializedName("topic_desc")
         private String topicDesc;
+
+        public String getTopicId() {
+            return topicId;
+        }
+
+        public String getTopicName() {
+            return topicName;
+        }
 
         public String getTopicDesc() {
             return topicDesc;

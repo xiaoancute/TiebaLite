@@ -6,32 +6,32 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class TopicDetailBean(
     @SerialName("no")
-    val errorCode: Int,
+    val errorCode: Int = 0,
     @SerialName("error")
-    val errorMsg: String,
-    val data: TopicDetailDataBean,
+    val errorMsg: String = "",
+    val data: TopicDetailDataBean? = null,
 )
 
 @Serializable
 data class TopicDetailDataBean(
     @SerialName("topic_info")
-    val topicInfo: TopicInfoBean,
-    val user: UserBean,
-    val tbs: String,
+    val topicInfo: TopicInfoBean? = null,
+    val user: UserBean? = null,
+    val tbs: String = "",
     @SerialName("relate_forum")
-    val relateForum: List<RelateForumBean>,
+    val relateForum: List<RelateForumBean> = emptyList(),
     @SerialName("special_topic")
-    val specialTopic: List<SpecialTopicBean>,
+    val specialTopic: List<SpecialTopicBean> = emptyList(),
     @SerialName("relate_thread")
-    val relateThread: RelateThreadBean,
+    val relateThread: RelateThreadBean? = null,
     @SerialName("has_more")
-    val hasMore: Boolean,
+    val hasMore: Boolean = false,
 )
 
 @Serializable
 data class RelateThreadBean(
     @SerialName("thread_list")
-    val threadList: List<ThreadBean>,
+    val threadList: List<ThreadBean> = emptyList(),
 )
 
 @Serializable
