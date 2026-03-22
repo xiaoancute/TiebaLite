@@ -372,11 +372,14 @@
     <string name="source_code">开源代码</string>
     <string name="summary_now_account">已登录账号 %s</string>
     <string name="summary_not_logged_in">未登录，点击登录</string>
+    <string name="summary_account_manage_revival_logged_in">当前账号：%1$s · %2$s · %3$s</string>
+    <string name="summary_account_manage_revival_logged_out">未登录 · %1$s</string>
     <string name="title_settings_more">更多</string>
     <string name="summary_block_settings">眼不见心不烦</string>
     <string name="summary_settings_custom">个性你的 UI 界面</string>
     <string name="summary_settings_habit">万般功能不如自己顺手</string>
     <string name="summary_settings_oksign">一键签到功能设定</string>
+    <string name="summary_settings_oksign_revival">手动签到：%1$s · 自动签到：%2$s</string>
     <string name="summary_revival_status">公开浏览：%1$s；登录/签到/通知：%2$s；自动签到：%3$s</string>
     <string name="summary_settings_more">其他杂项</string>
     <string name="tip_start">提示：</string>

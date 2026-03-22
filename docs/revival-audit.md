@@ -1,6 +1,6 @@
 # Revival Audit
 
-Last updated: 2026-03-21
+Last updated: 2026-03-22
 
 This file tracks which parts of the app have already been modernized and which parts still look stale, risky, or unsupported for a long-term revival.
 
@@ -36,6 +36,8 @@ This file tracks which parts of the app have already been modernized and which p
 - Forum navigation is no longer hardcoded to only two fixed tabs internally; it now uses an extensible forum-surface tab model with `最新 / 精华 / 吧内搜索`.
 - Auto sign is now explicitly treated as an experimental capability and is gated behind the existing experimental-features toggle.
 - The main navigation has been re-centered on reading, so notifications are no longer a first-level tab, the home top bar no longer exposes one-tap sign, and forum headers stop surfacing sign as a primary action once a forum is already followed.
+- Visible entry points now have a first-pass capability audit in docs, and the settings entry summaries expose which routes are stable, core-account guarded, or still experimental.
+- The `Explore` second-level tab model now re-syncs with login state, so the concern-feed entry no longer lingers or shifts to the wrong tab after logout or account changes.
 
 ## Remaining Outdated Areas
 

@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -42,6 +43,7 @@ import com.huanchengfly.tieba.post.ui.widgets.compose.AvatarIcon
 import com.huanchengfly.tieba.post.ui.widgets.compose.BackNavigationIcon
 import com.huanchengfly.tieba.post.ui.widgets.compose.Sizes
 import com.huanchengfly.tieba.post.ui.widgets.compose.TitleCentredToolbar
+import com.huanchengfly.tieba.post.utils.AccountUtil
 import com.huanchengfly.tieba.post.utils.AccountUtil.LocalAccount
 import com.huanchengfly.tieba.post.utils.StringUtil
 import com.ramcosta.composedestinations.annotation.Destination
@@ -64,10 +66,16 @@ fun NowAccountItem(
     modifier: Modifier = Modifier
 ) {
     val navigator = LocalNavigator.current
+    val context = LocalContext.current
+    val sessionHealth = remember(account) { AccountUtil.getSessionHealth(account) }
     if (account != null) {
         TextPref(
             title = stringResource(id = R.string.title_account_manage),
-            summary = stringResource(id = R.string.summary_now_account, account.nameShow ?: account.name),
+            summary = RevivalFeatureRegistry.buildAccountManageSummary(
+                context = context,
+                accountName = account.nameShow ?: account.name,
+                sessionHealth = sessionHealth,
+            ),
             enabled = true,
             onClick = { navigator.navigate(AccountManagePageDestination) },
             leadingIcon = {
@@ -84,7 +92,11 @@ fun NowAccountItem(
     } else {
         TextPref(
             title = stringResource(id = R.string.title_account_manage),
-            summary = stringResource(id = R.string.summary_not_logged_in),
+            summary = RevivalFeatureRegistry.buildAccountManageSummary(
+                context = context,
+                accountName = null,
+                sessionHealth = sessionHealth,
+            ),
             enabled = true,
             onClick = { navigator.navigate(LoginPageDestination) },
             leadingIcon = {
@@ -225,7 +237,7 @@ fun SettingsPage(
                 prefsItem {
                     TextPref(
                         title = stringResource(id = R.string.title_oksign),
-                        summary = stringResource(id = R.string.summary_settings_oksign),
+                        summary = RevivalFeatureRegistry.buildOKSignSummary(context),
                         leadingIcon = {
                             LeadingIcon {
                                 AvatarIcon(

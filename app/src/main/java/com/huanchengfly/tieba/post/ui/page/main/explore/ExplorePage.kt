@@ -14,8 +14,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -114,9 +120,9 @@ fun ExplorePage() {
     val account = LocalAccount.current
     val navigator = LocalNavigator.current
 
-    val loggedIn = remember(account) { account != null }
+    val loggedIn = account != null
 
-    val pages = remember {
+    val pages = remember(loggedIn) {
         listOfNotNull(
             if (loggedIn) ExplorePageItem(
                 "concern",
@@ -137,6 +143,25 @@ fun ExplorePage() {
     }
     val pagerState = rememberPagerState(initialPage = if (account != null) 1 else 0) { pages.size }
     val coroutineScope = rememberCoroutineScope()
+    var selectedPageId by rememberSaveable { mutableStateOf("personalized") }
+
+    LaunchedEffect(pagerState, pages) {
+        snapshotFlow { pagerState.currentPage }
+            .collect { currentPage ->
+                pages.getOrNull(currentPage)?.id?.let { pageId ->
+                    selectedPageId = pageId
+                }
+            }
+    }
+
+    LaunchedEffect(pages, selectedPageId) {
+        val targetPage = pages.indexOfFirst { it.id == selectedPageId }
+            .takeIf { it >= 0 }
+            ?: 0
+        if (targetPage != pagerState.currentPage) {
+            pagerState.scrollToPage(targetPage)
+        }
+    }
 
     onGlobalEvent<GlobalEvent.Refresh>(
         filter = { it.key == "explore" }

@@ -49,7 +49,7 @@ Recover TiebaLite into a stable, reading-first Android 10+ Tieba client. Public 
 | --- | --- | --- |
 | Workflow baseline | Completed | `TODO.md`, `STATUS.md`, local Git rescue history, and reproducible SDK path are now in place. |
 | Public browse confidence | In progress | Live smoke passes; T05 forum, T06 thread, T07 hot topic/topic detail fixture coverage, T08 link-routing coverage, and T09 failure-mode guardrails are now in place. |
-| Reading-first product polish | Not started | Navigation and capability alignment audit pending. |
+| Reading-first product polish | In progress | T10 capability-state audit is now landing in docs and settings summaries; T11/T12 entry messaging cleanup is next. |
 | Modern Android and Compose debt | Not started | Compat cleanup and inset/status-bar work are still queued. |
 | Experimental/account containment | Not started | Guardrails exist but more explicit labeling and isolation remain. |
 | Release hardening and delivery | Not started | Final docs, scripts, and manual matrix still pending. |
@@ -69,6 +69,9 @@ Recover TiebaLite into a stable, reading-first Android 10+ Tieba client. Public 
 - T08 completed: extracted pure-JVM `LinkRouting` decisions for app-level launch routing and `WebViewPage` interception, so Tieba thread/forum links, external browser fallbacks, and third-party scheme launches are now covered without relying on `android.net.Uri` in unit tests.
 - Added `LinkRoutingTest` to lock current link behavior around in-app Tieba navigation, `/mo/q/checkurl` redirects, external cleartext browser fallback, optional HTTPS WebView retention, and third-party scheme dispatch.
 - Re-verified the browse regression set after T08: `LinkRoutingTest`, `PublicBrowseFailureModeTest`, `ForumPageFixtureTest`, `ThreadPageFixtureTest`, `HotTopicFixtureTest`, and `:app:assembleDebug` all passed on 2026-03-22.
+- T10 completed: added a visible-entry capability audit to `docs/feature-status.md`, classifying first-level and second-level routes as stable, core-account guarded, experimental, or not promised.
+- Settings entry points now surface capability context directly: account management shows current session-health-aware core-account summary, and OKSign now shows manual-sign versus auto-sign capability states in the entry summary.
+- `Explore` second-level tabs now recompute against login state, so the concern-feed entry no longer drifts or survives incorrectly after logout or account changes.
 
 ## Known Good Commands
 
@@ -89,6 +92,6 @@ export GRADLE_USER_HOME=/tmp/tblite-gradle17-local
 
 ## Next Actions
 
-1. Start auditing visible entry points against stable/guarded/experimental capability states (`T10`).
-2. Tighten high-risk reply/post entry points with explicit risk-self-borne messaging (`T11`).
-3. Add or refine read-only recovery messaging in key browse surfaces and settings (`T12`).
+1. Tighten high-risk reply/post entry points with explicit risk-self-borne messaging (`T11`).
+2. Add or refine read-only recovery messaging in key browse surfaces and settings (`T12`).
+3. Continue removing misleading dead-end affordances from reading-first navigation (`T13`).

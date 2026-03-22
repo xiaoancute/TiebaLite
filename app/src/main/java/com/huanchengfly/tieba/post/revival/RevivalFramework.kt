@@ -56,6 +56,32 @@ object RevivalFeatureRegistry {
             state(context, RevivalFeatureGate.Login).label(context),
             state(context, RevivalFeatureGate.AutoSign).label(context),
         )
+
+    fun buildAccountManageSummary(
+        context: Context,
+        accountName: String?,
+        sessionHealth: SessionHealth,
+    ): String =
+        if (accountName.isNullOrBlank()) {
+            context.getString(
+                R.string.summary_account_manage_revival_logged_out,
+                state(context, RevivalFeatureGate.Login).label(context),
+            )
+        } else {
+            context.getString(
+                R.string.summary_account_manage_revival_logged_in,
+                accountName,
+                state(context, RevivalFeatureGate.Login).label(context),
+                sessionHealth.toDisplayText(context),
+            )
+        }
+
+    fun buildOKSignSummary(context: Context): String =
+        context.getString(
+            R.string.summary_settings_oksign_revival,
+            state(context, RevivalFeatureGate.ManualSign).label(context),
+            state(context, RevivalFeatureGate.AutoSign).label(context),
+        )
 }
 
 fun CapabilityState.label(context: Context): String =
