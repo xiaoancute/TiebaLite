@@ -41,6 +41,8 @@ This file tracks which parts of the app have already been modernized and which p
 - Experimental reply flows now always show a risk-self-borne warning before entry, and the old setting that implied this protection could be disabled has been replaced with a fixed explanatory note.
 - The settings, about, home, and explore surfaces now share explicit "public browsing first" recovery copy, so the visible product promise no longer implies a full Tieba replacement before account validation exists.
 - The user-page account navigation now stops advertising half-working completeness: notifications route directly to login/account management when needed, and complete-session-only entries like favorites/service-center no longer linger in incomplete states.
+- Favorites and account-attached WebView entries now show explicit complete-session guards instead of dropping incomplete accounts into blank or half-working pages.
+- Tieba forum links and `/mo/q/checkurl` redirects are now resolved before WebView fallback, so forum links return to native navigation and outbound targets no longer get stuck in the in-app page by mistake.
 
 ## Remaining Outdated Areas
 
@@ -231,6 +233,7 @@ Current status:
 - Notifications no longer enter the stable path when the session is incomplete; the page now shows an explicit session-health gate instead of silently hitting account APIs.
 - Manual sign now checks capability + complete session before enqueueing work and immediately tells the user why it was blocked.
 - Account exit and switch now refresh the persisted account list before rebuilding current-account state, reducing stale unread / polling residue in multi-account scenarios.
+- Favorites and account-attached WebView routes also follow the same conservative posture now: incomplete sessions are intercepted before the app tries to render account-dependent surfaces.
 
 Why this still feels unfinished:
 

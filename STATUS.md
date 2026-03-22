@@ -4,7 +4,7 @@ Last updated: 2026-03-22
 
 ## Current Goal
 
-Recover TiebaLite into a stable, reading-first Android 10+ Tieba client. Public browsing is the mainline. Account-heavy and posting-heavy features stay conservative until there is real validation evidence.
+Keep TiebaLite in a reading-first usable state on Android 10+, with public browsing as the mainline and account/posting-heavy features kept conservative until there is real validation evidence.
 
 ## Baseline Snapshot
 
@@ -21,6 +21,7 @@ Recover TiebaLite into a stable, reading-first Android 10+ Tieba client. Public 
 - Offline thread fixture baseline: `:app:testDebugUnitTest --tests 'com.huanchengfly.tieba.post.ThreadPageFixtureTest'` passed on 2026-03-22.
 - Offline hot topic fixture baseline: `:app:testDebugUnitTest --tests 'com.huanchengfly.tieba.post.HotTopicFixtureTest'` passed on 2026-03-22.
 - Public browse failure-mode baseline: `:app:testDebugUnitTest --tests 'com.huanchengfly.tieba.post.PublicBrowseFailureModeTest'` passed on 2026-03-22.
+- Targeted reading-first browse regression suite: `PublicBrowseFailureModeTest`, `LinkRoutingTest`, `ForumPageFixtureTest`, `ThreadPageFixtureTest`, and `HotTopicFixtureTest` all passed together on 2026-03-22.
 - Environment correction discovered during this run:
   - the old temporary SDK path `/tmp/tblite-android-sdk-14742923` had expired and no longer contained `platforms/android-34` or `build-tools/34.0.0`
   - switching to `/home/x/Android/Sdk` restored AGP task graph resolution and normal builds
@@ -31,6 +32,8 @@ Recover TiebaLite into a stable, reading-first Android 10+ Tieba client. Public 
   - signed thread page
   - hot topic list
   - topic detail
+  - Tieba thread/forum native link routing
+  - `/mo/q/checkurl` redirect handling
 - Current environment limits:
   - no connected Android device
   - no working emulator/AVD tooling in this workspace
@@ -48,11 +51,11 @@ Recover TiebaLite into a stable, reading-first Android 10+ Tieba client. Public 
 | Phase | Status | Notes |
 | --- | --- | --- |
 | Workflow baseline | Completed | `TODO.md`, `STATUS.md`, local Git rescue history, and reproducible SDK path are now in place. |
-| Public browse confidence | In progress | Live smoke passes; T05 forum, T06 thread, T07 hot topic/topic detail fixture coverage, T08 link-routing coverage, and T09 failure-mode guardrails are now in place. |
-| Reading-first product polish | In progress | T10 capability-state audit, T11 risk-warning hardening, T12 read-only scope messaging, and T13 user-page dead-end cleanup are in place; T14 is next. |
+| Public browse confidence | Completed (local baseline) | Live smoke, fixture coverage, link-routing regression coverage, failure-mode guardrails, and `assembleDebug` all pass locally; device/emulator smoke is still unavailable in this workspace. |
+| Reading-first product polish | Completed | T10-T15 are in place: capability-state audit, risk-warning hardening, read-only scope messaging, user-page dead-end cleanup, guarded account empty states, and WebView/native routing cleanup. |
 | Modern Android and Compose debt | Not started | Compat cleanup and inset/status-bar work are still queued. |
 | Experimental/account containment | Not started | Guardrails exist but more explicit labeling and isolation remain. |
-| Release hardening and delivery | Not started | Final docs, scripts, and manual matrix still pending. |
+| Release hardening and delivery | In progress | User-facing README, feature-status docs, and recovery status are now aligned around the reading-first promise; broader device matrix work is still pending. |
 
 ## Recent Progress
 
@@ -78,6 +81,9 @@ Recover TiebaLite into a stable, reading-first Android 10+ Tieba client. Public 
 - 首页与 `Explore` 页现在也会直接说明当前复活分支的读优先范围，未登录用户可以一眼看出“先浏览内容、账号功能单独守卫”的实际产品承诺。
 - T13 completed: 用户页里的消息入口现在会直接按状态跳到登录或账号管理，不再先把用户送进守卫页再拦截。
 - 收藏和服务中心这类完整会话能力也不再在半登录状态下继续暴露，减少“账号功能已经完整可用”的误导。
+- T14 completed: 收藏页和账号附属 WebView 入口现在都会在会话不完整时显示明确守卫页，不再默认落到空白页面或半成品接口失败。
+- T15 completed: Tieba 吧链接会重新优先走原生论坛页，`/mo/q/checkurl` 也会先解析真实目标，再决定原生跳转、内嵌 WebView 还是外跳浏览器。
+- README, `docs/feature-status.md`, and `docs/revival-audit.md` are now aligned to the same external promise: public browsing is the stable mainline; guarded account pages stay conservative; posting/replying/auto sign remain unpromised.
 
 ## Known Good Commands
 
@@ -98,6 +104,6 @@ export GRADLE_USER_HOME=/tmp/tblite-gradle17-local
 
 ## Next Actions
 
-1. Ensure guarded account pages prefer explicit degraded states over silent empties (`T14`).
-2. Audit `WebViewPage` interception and browser fallback behavior for current Tieba/public-web usage (`T15`).
-3. Harden the forum surface abstraction for future image/video/recommend expansion (`T16`).
+1. Continue modern Android / Compose debt cleanup without mixing it into an SDK bump.
+2. Harden the forum surface abstraction for future image/video/recommend expansion (`T16`).
+3. Revisit conservative account Alpha only when test-account evidence becomes available.
