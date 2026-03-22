@@ -46,8 +46,11 @@ import com.huanchengfly.tieba.post.arch.onEvent
 import com.huanchengfly.tieba.post.arch.pageViewModel
 import com.huanchengfly.tieba.post.dpToPxFloat
 import com.huanchengfly.tieba.post.pxToSp
+import com.huanchengfly.tieba.post.revival.SessionHealthStatus
 import com.huanchengfly.tieba.post.ui.common.theme.compose.ExtendedTheme
 import com.huanchengfly.tieba.post.ui.common.theme.compose.pullRefreshIndicator
+import com.huanchengfly.tieba.post.ui.page.destinations.AccountManagePageDestination
+import com.huanchengfly.tieba.post.ui.page.destinations.LoginPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.ThreadPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.UserProfilePageDestination
 import com.huanchengfly.tieba.post.ui.page.thread.ThreadPageFrom
@@ -55,6 +58,7 @@ import com.huanchengfly.tieba.post.ui.page.thread.ThreadPageFromStoreExtra
 import com.huanchengfly.tieba.post.ui.page.thread.ThreadSortType
 import com.huanchengfly.tieba.post.ui.widgets.compose.Avatar
 import com.huanchengfly.tieba.post.ui.widgets.compose.BackNavigationIcon
+import com.huanchengfly.tieba.post.ui.widgets.compose.CompleteSessionGateScreen
 import com.huanchengfly.tieba.post.ui.widgets.compose.ErrorScreen
 import com.huanchengfly.tieba.post.ui.widgets.compose.LazyLoad
 import com.huanchengfly.tieba.post.ui.widgets.compose.LoadMoreLayout
@@ -65,6 +69,7 @@ import com.huanchengfly.tieba.post.ui.widgets.compose.Sizes
 import com.huanchengfly.tieba.post.ui.widgets.compose.TitleCentredToolbar
 import com.huanchengfly.tieba.post.ui.widgets.compose.UserHeader
 import com.huanchengfly.tieba.post.ui.widgets.compose.states.StateScreen
+import com.huanchengfly.tieba.post.utils.AccountUtil
 import com.huanchengfly.tieba.post.utils.StringUtil
 import com.huanchengfly.tieba.post.utils.StringUtil.getUsernameAnnotatedString
 import com.huanchengfly.tieba.post.utils.appPreferences
@@ -85,6 +90,50 @@ fun ThreadStorePage(
     navigator: DestinationsNavigator,
     viewModel: ThreadStoreViewModel = pageViewModel()
 ) {
+    val context = LocalContext.current
+    val account = AccountUtil.LocalAccount.current
+    val sessionHealth = remember(account) { AccountUtil.getSessionHealth(account) }
+    if (!sessionHealth.isComplete) {
+        MyScaffold(
+            backgroundColor = Color.Transparent,
+            topBar = {
+                TitleCentredToolbar(
+                    title = {
+                        Text(
+                            text = stringResource(id = R.string.title_my_collect),
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.h6
+                        )
+                    },
+                    navigationIcon = {
+                        BackNavigationIcon(onBackPressed = { navigator.navigateUp() })
+                    }
+                )
+            }
+        ) { contentPaddings ->
+            CompleteSessionGateScreen(
+                sessionHealth = sessionHealth,
+                title = stringResource(id = R.string.title_my_collect),
+                message = stringResource(
+                    id = R.string.message_account_feature_session_incomplete,
+                    sessionHealth.toDisplayText(context),
+                    context.getString(R.string.title_my_collect)
+                ),
+                onResolveSession = { status ->
+                    if (status == SessionHealthStatus.LoggedOut) {
+                        navigator.navigate(LoginPageDestination)
+                    } else {
+                        navigator.navigate(AccountManagePageDestination)
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(contentPaddings)
+            )
+        }
+        return
+    }
+
     LazyLoad(loaded = viewModel.initialized) {
         viewModel.send(ThreadStoreUiIntent.Refresh)
         viewModel.initialized = true
@@ -115,7 +164,6 @@ fun ThreadStorePage(
     )
     val isError by remember { derivedStateOf { error != null } }
 
-    val context = LocalContext.current
     val scaffoldState = rememberScaffoldState()
     viewModel.onEvent<ThreadStoreUiEvent.Delete.Failure> {
         scaffoldState.snackbarHostState.showSnackbar(

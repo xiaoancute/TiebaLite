@@ -33,6 +33,7 @@ import com.huanchengfly.tieba.post.getBoolean
 import com.huanchengfly.tieba.post.toastShort
 import com.huanchengfly.tieba.post.ui.common.theme.utils.ColorStateListUtils
 import com.huanchengfly.tieba.post.ui.common.theme.utils.ThemeUtils
+import com.huanchengfly.tieba.post.ui.page.destinations.ForumPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.ThreadPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.WebViewPageDestination
 import com.huanchengfly.tieba.post.ui.page.webview.LinkRoutingDecision
@@ -168,7 +169,9 @@ fun launchUrl(
             navigator.navigate(ThreadPageDestination(decision.threadId))
         }
 
-        is LinkRoutingDecision.OpenForum -> Unit
+        is LinkRoutingDecision.OpenForum -> {
+            navigator.navigate(ForumPageDestination(decision.forumName))
+        }
 
         is LinkRoutingDecision.OpenWebView -> {
             navigator.navigate(WebViewPageDestination(decision.url))

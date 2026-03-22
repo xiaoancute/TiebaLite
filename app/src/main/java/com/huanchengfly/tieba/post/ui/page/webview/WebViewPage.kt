@@ -51,14 +51,18 @@ import com.huanchengfly.tieba.post.arch.GlobalEvent
 import com.huanchengfly.tieba.post.arch.onGlobalEvent
 import com.huanchengfly.tieba.post.components.dialogs.PermissionDialog
 import com.huanchengfly.tieba.post.models.PermissionBean
+import com.huanchengfly.tieba.post.revival.SessionHealthStatus
 import com.huanchengfly.tieba.post.ui.common.theme.compose.ExtendedTheme
 import com.huanchengfly.tieba.post.ui.common.theme.utils.ThemeUtils
+import com.huanchengfly.tieba.post.ui.page.destinations.AccountManagePageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.ForumPageDestination
+import com.huanchengfly.tieba.post.ui.page.destinations.LoginPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.ThreadPageDestination
 import com.huanchengfly.tieba.post.ui.widgets.compose.AccompanistWebChromeClient
 import com.huanchengfly.tieba.post.ui.widgets.compose.AccompanistWebViewClient
 import com.huanchengfly.tieba.post.ui.widgets.compose.BackNavigationIcon
 import com.huanchengfly.tieba.post.ui.widgets.compose.ClickMenu
+import com.huanchengfly.tieba.post.ui.widgets.compose.CompleteSessionGateScreen
 import com.huanchengfly.tieba.post.ui.widgets.compose.LazyLoad
 import com.huanchengfly.tieba.post.ui.widgets.compose.LoadingState
 import com.huanchengfly.tieba.post.ui.widgets.compose.MyScaffold
@@ -91,6 +95,41 @@ fun WebViewPage(
     navigator: DestinationsNavigator,
 ) {
     val context = LocalContext.current
+    val account = AccountUtil.LocalAccount.current
+    val sessionHealth = remember(account) { AccountUtil.getSessionHealth(account) }
+    val guardedPageTitle = remember(initialUrl) { accountAttachedPageLabel(context, initialUrl) }
+    if (requiresCompleteSession(initialUrl) && !sessionHealth.isComplete) {
+        MyScaffold(
+            topBar = {
+                Toolbar(
+                    title = guardedPageTitle,
+                    navigationIcon = { BackNavigationIcon(onBackPressed = { navigator.navigateUp() }) }
+                )
+            }
+        ) { paddingValues ->
+            CompleteSessionGateScreen(
+                sessionHealth = sessionHealth,
+                title = guardedPageTitle,
+                message = stringResource(
+                    id = R.string.message_account_feature_session_incomplete,
+                    sessionHealth.toDisplayText(context),
+                    guardedPageTitle
+                ),
+                onResolveSession = { status ->
+                    if (status == SessionHealthStatus.LoggedOut) {
+                        navigator.navigate(LoginPageDestination)
+                    } else {
+                        navigator.navigate(AccountManagePageDestination)
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            )
+        }
+        return
+    }
+
     val coroutineScope = rememberCoroutineScope()
     val webViewState = rememberSaveableWebViewState()
     val webViewNavigator = rememberWebViewNavigator()
@@ -274,6 +313,29 @@ fun isInternalHost(host: String): Boolean {
             host.contains("wappass.baidu.com") ||
             host.contains("ufosdk.baidu.com") ||
             host.contains("m.help.baidu.com")
+}
+
+private fun requiresCompleteSession(url: String): Boolean {
+    val uri = runCatching { url.toUri() }.getOrNull() ?: return false
+    val host = uri.host?.lowercase() ?: return false
+    val path = uri.path?.lowercase() ?: return false
+    return when {
+        host == "tieba.baidu.com" && path.startsWith("/mo/q/hybrid-main-service/") -> true
+        host == "wappass.baidu.com" && path.startsWith("/static/manage-chunk/") -> true
+        else -> false
+    }
+}
+
+private fun accountAttachedPageLabel(
+    context: Context,
+    url: String,
+): String {
+    val path = runCatching { url.toUri().path.orEmpty().lowercase() }.getOrDefault("")
+    return if (path.startsWith("/mo/q/hybrid-main-service/")) {
+        context.getString(R.string.my_info_service_center)
+    } else {
+        context.getString(R.string.title_account_web_page)
+    }
 }
 
 open class MyWebViewClient(

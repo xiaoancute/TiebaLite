@@ -19,6 +19,16 @@ class LinkRoutingTest {
     }
 
     @Test
+    fun appRoutingTurnsForumLinksIntoNativeForumNavigation() {
+        val decision = resolveAppLinkRouting(
+            "https://tieba.baidu.com/f?kw=%E5%8E%9F%E7%A5%9E",
+            useWebView = false
+        )
+
+        assertEquals(LinkRoutingDecision.OpenForum("原神"), decision)
+    }
+
+    @Test
     fun appRoutingSendsExternalHttpLinksToBrowserEvenWhenWebViewEnabled() {
         val decision = resolveAppLinkRouting(
             "http://example.com/readme",
@@ -71,6 +81,27 @@ class LinkRoutingTest {
         )
 
         assertEquals(LinkRoutingDecision.OpenThread(10547704116), decision)
+    }
+
+    @Test
+    fun webViewRoutingResolvesCheckUrlBeforeLeavingWebView() {
+        val decision = resolveWebViewLinkRouting(
+            "https://tieba.baidu.com/mo/q/checkurl?url=https://example.com/docs",
+            useWebView = false
+        )
+
+        assertTrue(decision is LinkRoutingDecision.OpenExternal)
+        assertEquals("https://example.com/docs", (decision as LinkRoutingDecision.OpenExternal).url)
+    }
+
+    @Test
+    fun webViewRoutingResolvesCheckUrlToNativeForumNavigation() {
+        val decision = resolveWebViewLinkRouting(
+            "https://tieba.baidu.com/mo/q/checkurl?url=https://tieba.baidu.com/f?kw=%E5%8E%9F%E7%A5%9E",
+            useWebView = false
+        )
+
+        assertEquals(LinkRoutingDecision.OpenForum("原神"), decision)
     }
 
     @Test

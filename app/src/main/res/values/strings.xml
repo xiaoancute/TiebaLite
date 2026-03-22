@@ -246,8 +246,10 @@
     <string name="title_notifications_not_ready">消息通知暂未纳入稳定路径</string>
     <string name="message_notifications_capability_disabled">消息通知当前未进入默认稳定路径。若你想了解当前复活阶段的能力边界，请先查看“关于”页中的复活状态说明。</string>
     <string name="message_notifications_session_incomplete">当前账号会话还不完整：%1$s。为避免出现“网页登录成功但客户端不可用”的灰状态，消息入口已暂时拦截。</string>
+    <string name="message_account_feature_session_incomplete">当前账号会话还不完整：%1$s。为避免 %2$s 页面出现空白或半成品状态，当前入口已暂时拦截。</string>
     <string name="message_notifications_agree_me_compatibility_fallback">当前“赞过我”仍使用兼容字段回退，结果可能不完全准确。</string>
     <string name="button_open_about_page">前往关于页</string>
+    <string name="title_account_web_page">账号网页</string>
     <string name="title_history_today">今天早些时候</string>
     <string name="title_history_before">昨天或更早</string>
     <string name="title_history_thread">贴子记录</string>
