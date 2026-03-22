@@ -49,7 +49,7 @@ Recover TiebaLite into a stable, reading-first Android 10+ Tieba client. Public 
 | --- | --- | --- |
 | Workflow baseline | Completed | `TODO.md`, `STATUS.md`, local Git rescue history, and reproducible SDK path are now in place. |
 | Public browse confidence | In progress | Live smoke passes; T05 forum, T06 thread, T07 hot topic/topic detail fixture coverage, T08 link-routing coverage, and T09 failure-mode guardrails are now in place. |
-| Reading-first product polish | In progress | T10 capability-state audit and T11 risk-warning hardening are in place; T12/T13 entry messaging cleanup is next. |
+| Reading-first product polish | In progress | T10 capability-state audit, T11 risk-warning hardening, and T12 read-only scope messaging are in place; T13/T14 entry cleanup is next. |
 | Modern Android and Compose debt | Not started | Compat cleanup and inset/status-bar work are still queued. |
 | Experimental/account containment | Not started | Guardrails exist but more explicit labeling and isolation remain. |
 | Release hardening and delivery | Not started | Final docs, scripts, and manual matrix still pending. |
@@ -74,6 +74,8 @@ Recover TiebaLite into a stable, reading-first Android 10+ Tieba client. Public 
 - `Explore` second-level tabs now recompute against login state, so the concern-feed entry no longer drifts or survives incorrectly after logout or account changes.
 - T11 completed: reply flows now always show the “风险自负” warning before entering the experimental send path, so users can no longer bypass the warning by toggling a settings switch.
 - The old “发帖/回帖前显示风险提示” preference has been downgraded into a fixed explanatory item, making it clear that this protection is mandatory for the current recovery branch.
+- T12 completed: settings now expose an explicit “公开浏览优先”定位说明, and the about page mirrors the same recovery scope so guarded pages no longer point users at an empty explanation.
+- 首页与 `Explore` 页现在也会直接说明当前复活分支的读优先范围，未登录用户可以一眼看出“先浏览内容、账号功能单独守卫”的实际产品承诺。
 
 ## Known Good Commands
 
@@ -94,6 +96,6 @@ export GRADLE_USER_HOME=/tmp/tblite-gradle17-local
 
 ## Next Actions
 
-1. Add or refine read-only recovery messaging in key browse surfaces and settings (`T12`).
-2. Continue removing misleading dead-end affordances from reading-first navigation (`T13`).
-3. Ensure guarded account pages prefer explicit degraded states over silent empties (`T14`).
+1. Continue removing misleading dead-end affordances from reading-first navigation (`T13`).
+2. Ensure guarded account pages prefer explicit degraded states over silent empties (`T14`).
+3. Audit `WebViewPage` interception and browser fallback behavior for current Tieba/public-web usage (`T15`).

@@ -39,6 +39,7 @@ This file tracks which parts of the app have already been modernized and which p
 - Visible entry points now have a first-pass capability audit in docs, and the settings entry summaries expose which routes are stable, core-account guarded, or still experimental.
 - The `Explore` second-level tab model now re-syncs with login state, so the concern-feed entry no longer lingers or shifts to the wrong tab after logout or account changes.
 - Experimental reply flows now always show a risk-self-borne warning before entry, and the old setting that implied this protection could be disabled has been replaced with a fixed explanatory note.
+- The settings, about, home, and explore surfaces now share explicit "public browsing first" recovery copy, so the visible product promise no longer implies a full Tieba replacement before account validation exists.
 
 ## Remaining Outdated Areas
 

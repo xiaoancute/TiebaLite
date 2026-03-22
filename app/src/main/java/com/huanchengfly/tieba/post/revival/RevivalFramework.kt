@@ -57,6 +57,27 @@ object RevivalFeatureRegistry {
             state(context, RevivalFeatureGate.AutoSign).label(context),
         )
 
+    fun buildReadingFirstSummary(context: Context): String =
+        context.getString(R.string.summary_reading_first_scope)
+
+    fun buildHomeBrowseSummary(context: Context): String =
+        context.getString(R.string.summary_public_browse_priority_home)
+
+    fun buildExploreBrowseSummary(context: Context, loggedIn: Boolean): String =
+        context.getString(
+            if (loggedIn) {
+                R.string.summary_public_browse_priority_explore_logged_in
+            } else {
+                R.string.summary_public_browse_priority_explore_logged_out
+            }
+        )
+
+    fun buildAboutSummary(context: Context): String =
+        context.getString(
+            R.string.summary_about_revival_scope,
+            buildSettingsSummary(context),
+        )
+
     fun buildAccountManageSummary(
         context: Context,
         accountName: String?,

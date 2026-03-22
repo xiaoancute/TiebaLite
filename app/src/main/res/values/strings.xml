@@ -35,6 +35,7 @@
     <string name="tip_reply">评论一番，提高自己的姿势水平…</string>
     <string name="title_account_manage">账号管理</string>
     <string name="title_revival_status">复活状态</string>
+    <string name="title_reading_first_scope">当前定位</string>
     <string name="title_platform_support">平台支持</string>
     <string name="title_session_health">会话健康</string>
     <string name="title_block_settings">屏蔽设置</string>
@@ -112,6 +113,7 @@
     <string name="title_auto_sign">自动签到</string>
     <string name="summary_auto_sign">开启后，将每天定时运行一键签到</string>
     <string name="summary_platform_support">当前主支持 Android 10 及以上。Android 9 及以下仅保持最低维护，不再作为复活适配中心。</string>
+    <string name="summary_reading_first_scope">当前复活分支以公开浏览和阅读为主：搜索、吧页、帖子页、热榜优先保证可用；登录、签到、通知保守推进；发帖/回帖不作稳定承诺。</string>
     <string name="summary_auto_sign_on">自动签到已开启</string>
     <string name="summary_auto_sign_experimental">实验性能力，建议先用测试号验证后再长期启用</string>
     <string name="summary_auto_sign_experimental_locked">自动签到目前归为实验性能力，请先到“关于”页开启实验性功能</string>
@@ -382,6 +384,10 @@
     <string name="summary_settings_oksign">一键签到功能设定</string>
     <string name="summary_settings_oksign_revival">手动签到：%1$s · 自动签到：%2$s</string>
     <string name="summary_revival_status">公开浏览：%1$s；登录/签到/通知：%2$s；自动签到：%3$s</string>
+    <string name="summary_public_browse_priority_home">公开浏览优先：搜索、吧页、帖子页是当前主线，账号相关入口会单独标注能力状态。</string>
+    <string name="summary_public_browse_priority_explore_logged_out">推荐与热榜属于公开浏览主线；关注流需要登录后才会出现。</string>
+    <string name="summary_public_browse_priority_explore_logged_in">推荐与热榜属于公开浏览主线；关注流仍属于账号附属入口。</string>
+    <string name="summary_about_revival_scope">%1$s。\n当前复活分支以公开浏览和阅读为主，发帖/回帖仍不作稳定承诺。</string>
     <string name="summary_settings_more">其他杂项</string>
     <string name="tip_start">提示：</string>
     <string name="title_dialog_modify_little_tail">修改小尾巴</string>
@@ -434,7 +440,7 @@
     <string name="link">链接</string>
     <string name="user">用户</string>
     <string name="title_empty">这里什么都没有</string>
-    <string name="home_empty_login">请登录之后查看你的关注。\n或者你也可以先去逛逛发现？</string>
+    <string name="home_empty_login">登录后可以查看你的关注。\n如果你只是想先看内容，也可以直接搜索或去逛逛发现。</string>
     <string name="button_login">去登录</string>
     <string name="button_go_to_explore">随便看看</string>
     <string name="title_empty_login">你还未登录</string>

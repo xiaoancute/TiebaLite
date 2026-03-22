@@ -32,10 +32,12 @@ import androidx.compose.ui.unit.dp
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.huanchengfly.tieba.post.BuildConfig
 import com.huanchengfly.tieba.post.R
+import com.huanchengfly.tieba.post.revival.RevivalFeatureRegistry
 import com.huanchengfly.tieba.post.toastShort
 import com.huanchengfly.tieba.post.ui.common.theme.compose.ExtendedTheme
 import com.huanchengfly.tieba.post.ui.widgets.compose.BackNavigationIcon
 import com.huanchengfly.tieba.post.ui.widgets.compose.MyScaffold
+import com.huanchengfly.tieba.post.ui.widgets.compose.RevivalNotice
 import com.huanchengfly.tieba.post.ui.widgets.compose.TitleCentredToolbar
 import com.huanchengfly.tieba.post.utils.BackgroundWorkScheduler
 import com.huanchengfly.tieba.post.utils.appPreferences
@@ -48,6 +50,7 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 fun AboutPage(
     navigator: DestinationsNavigator,
 ) {
+    val context = LocalContext.current
     var lastClickTime by remember { mutableLongStateOf(0L) }
     var clickCount by remember { mutableIntStateOf(0) }
 
@@ -91,7 +94,6 @@ fun AboutPage(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth(0.5f)
             ) {
-                val context = LocalContext.current
                 TextButton(
                     shape = RoundedCornerShape(100),
                     colors = ButtonDefaults.textButtonColors(
@@ -138,6 +140,12 @@ fun AboutPage(
                     )
                 )
             }
+            RevivalNotice(
+                text = RevivalFeatureRegistry.buildAboutSummary(context),
+                modifier = Modifier
+                    .fillMaxWidth(0.8f)
+                    .padding(top = 20.dp)
+            )
             Spacer(modifier = Modifier.height(48.dp))
         }
     }

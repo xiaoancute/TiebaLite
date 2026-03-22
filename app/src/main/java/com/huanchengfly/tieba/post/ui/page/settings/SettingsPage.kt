@@ -168,6 +168,23 @@ fun SettingsPage(
                 }
                 prefsItem {
                     TextPref(
+                        title = stringResource(id = R.string.title_reading_first_scope),
+                        summary = RevivalFeatureRegistry.buildReadingFirstSummary(context),
+                        leadingIcon = {
+                            LeadingIcon {
+                                AvatarIcon(
+                                    icon = ImageVector.vectorResource(id = R.drawable.ic_info_black_24),
+                                    size = Sizes.Small,
+                                    contentDescription = null,
+                                )
+                            }
+                        },
+                        enabled = false,
+                        darkenOnDisable = false,
+                    )
+                }
+                prefsItem {
+                    TextPref(
                         title = stringResource(id = R.string.title_platform_support),
                         summary = stringResource(id = R.string.summary_platform_support),
                         leadingIcon = {

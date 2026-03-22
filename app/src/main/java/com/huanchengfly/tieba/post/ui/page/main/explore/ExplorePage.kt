@@ -1,8 +1,13 @@
 package com.huanchengfly.tieba.post.ui.page.main.explore
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -25,6 +30,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -35,6 +41,7 @@ import com.huanchengfly.tieba.post.R
 import com.huanchengfly.tieba.post.arch.GlobalEvent
 import com.huanchengfly.tieba.post.arch.emitGlobalEvent
 import com.huanchengfly.tieba.post.arch.onGlobalEvent
+import com.huanchengfly.tieba.post.revival.RevivalFeatureRegistry
 import com.huanchengfly.tieba.post.ui.common.theme.compose.ExtendedTheme
 import com.huanchengfly.tieba.post.ui.page.LocalNavigator
 import com.huanchengfly.tieba.post.ui.page.destinations.SearchPageDestination
@@ -44,6 +51,7 @@ import com.huanchengfly.tieba.post.ui.page.main.explore.personalized.Personalize
 import com.huanchengfly.tieba.post.ui.widgets.compose.ActionItem
 import com.huanchengfly.tieba.post.ui.widgets.compose.LazyLoadHorizontalPager
 import com.huanchengfly.tieba.post.ui.widgets.compose.PagerTabIndicator
+import com.huanchengfly.tieba.post.ui.widgets.compose.RevivalNotice
 import com.huanchengfly.tieba.post.ui.widgets.compose.TabRow
 import com.huanchengfly.tieba.post.ui.widgets.compose.Toolbar
 import com.huanchengfly.tieba.post.ui.widgets.compose.accountNavIconIfCompact
@@ -118,6 +126,7 @@ private fun TabText(
 @Composable
 fun ExplorePage() {
     val account = LocalAccount.current
+    val context = LocalContext.current
     val navigator = LocalNavigator.current
 
     val loggedIn = account != null
@@ -189,15 +198,27 @@ fun ExplorePage() {
         },
         modifier = Modifier.fillMaxSize(),
     ) { paddingValues ->
-        LazyLoadHorizontalPager(
-            contentPadding = paddingValues,
-            state = pagerState,
-            key = { pages[it].id },
-            modifier = Modifier.fillMaxSize(),
-            verticalAlignment = Alignment.Top,
-            userScrollEnabled = true,
+        Column(
+            modifier = Modifier
+                .padding(paddingValues)
+                .fillMaxSize()
         ) {
-            pages[it].content()
+            RevivalNotice(
+                text = RevivalFeatureRegistry.buildExploreBrowseSummary(context, loggedIn),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+            LazyLoadHorizontalPager(
+                contentPadding = PaddingValues(bottom = paddingValues.calculateBottomPadding()),
+                state = pagerState,
+                key = { pages[it].id },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                verticalAlignment = Alignment.Top,
+                userScrollEnabled = true,
+            ) {
+                pages[it].content()
+            }
         }
     }
 }
