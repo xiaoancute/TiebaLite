@@ -90,6 +90,7 @@
     <string name="toast_like_success">关注成功，你是第 %s 个关注本吧的</string>
     <string name="tab_forum_latest">最新</string>
     <string name="tab_forum_good">精华</string>
+    <string name="tab_forum_media">看图</string>
     <string name="tip_good">精</string>
     <string name="button_no">否</string>
     <string name="button_yes">是</string>
@@ -419,6 +420,7 @@
     <string name="snackbar_agree_fail">点赞失败(%1$d)：%2$s</string>
     <string name="button_signed_in">已签%d天</string>
     <string name="btn_search_in_forum">吧内搜索</string>
+    <string name="hint_search_in_thread">搜索帖内内容…</string>
     <string name="btn_more">更多选项</string>
     <string name="capability_state_public_stable">稳定可用</string>
     <string name="capability_state_account_core">核心账号</string>

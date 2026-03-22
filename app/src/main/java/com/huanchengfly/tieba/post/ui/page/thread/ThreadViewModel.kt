@@ -145,6 +145,10 @@ class ThreadViewModel @Inject constructor() :
                     .flatMapConcat { it.producePartialChange() },
                 intentFlow.filterIsInstance<ThreadUiIntent.Summarize>()
                     .flatMapConcat { it.producePartialChange() },
+                intentFlow.filterIsInstance<ThreadUiIntent.SearchInThread>()
+                    .map { ThreadPartialChange.Search.QueryChanged(it.query) },
+                intentFlow.filterIsInstance<ThreadUiIntent.ExitSearch>()
+                    .map { ThreadPartialChange.Search.Exit },
                 intentFlow.filterIsInstance<ThreadUiIntent.DismissSummary>()
                     .map { ThreadPartialChange.DismissSummary },
             )
@@ -657,6 +661,10 @@ sealed interface ThreadUiIntent : UiIntent {
         val apiKey: String,
         val model: String,
     ) : ThreadUiIntent
+
+    data class SearchInThread(val query: String) : ThreadUiIntent
+
+    data object ExitSearch : ThreadUiIntent
 
     data object DismissSummary : ThreadUiIntent
 }
@@ -1226,6 +1234,18 @@ sealed interface ThreadPartialChange : PartialChange<ThreadUiState> {
         ) : DeleteThread()
     }
 
+    sealed class Search : ThreadPartialChange {
+        data class QueryChanged(val query: String) : Search() {
+            override fun reduce(oldState: ThreadUiState): ThreadUiState =
+                oldState.copy(searchQuery = query, isSearchMode = true)
+        }
+
+        data object Exit : Search() {
+            override fun reduce(oldState: ThreadUiState): ThreadUiState =
+                oldState.copy(searchQuery = "", isSearchMode = false)
+        }
+    }
+
     sealed class Summarize : ThreadPartialChange {
         override fun reduce(oldState: ThreadUiState): ThreadUiState = when (this) {
             is Loading -> oldState.copy(summaryState = SummaryState.Loading)
@@ -1273,6 +1293,8 @@ data class ThreadUiState(
     val firstPostContentRenders: ImmutableList<PbContentRender> = persistentListOf(),
     val data: ImmutableList<PostItemData> = persistentListOf(),
     val latestPosts: ImmutableList<PostItemData> = persistentListOf(),
+    val searchQuery: String = "",
+    val isSearchMode: Boolean = false,
 
     val isImmersiveMode: Boolean = false,
     val summaryState: SummaryState = SummaryState.Idle,

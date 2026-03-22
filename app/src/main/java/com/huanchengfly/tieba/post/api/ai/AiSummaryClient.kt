@@ -33,13 +33,18 @@ object AiSummaryClient {
     }
 
     private const val SYSTEM_PROMPT =
-        "你是一个帖子总结助手。请根据以下贴吧帖子内容生成简洁的中文摘要，包括：\n" +
-                "1. 帖子主题\n" +
-                "2. 主要观点和讨论方向\n" +
-                "3. 关键结论或共识（如有）\n" +
-                "控制在 200 字以内。"
+        "你是一个帖子总结助手。请根据以下贴吧帖子内容，按以下四个维度生成结构化中文摘要：\n\n" +
+                "## 楼主观点\n" +
+                "概括楼主的核心表达和立场。\n\n" +
+                "## 争议焦点\n" +
+                "如果存在分歧或争论，列出主要争议点；如果没有争议，说明整体倾向。\n\n" +
+                "## 讨论脉络\n" +
+                "按讨论发展顺序，概括关键转折和重要回复。\n\n" +
+                "## 结论\n" +
+                "总结讨论的最终走向或共识。\n\n" +
+                "每个维度控制在 2-3 句话，总体不超过 400 字。使用上述 ## 标题格式输出。"
 
-    private const val MAX_CONTENT_LENGTH = 4000
+    private const val MAX_CONTENT_LENGTH = 6000
 
     @Serializable
     private data class ChatMessage(
@@ -52,7 +57,7 @@ object AiSummaryClient {
         val model: String,
         val messages: List<ChatMessage>,
         val temperature: Float = 0.3f,
-        val max_tokens: Int = 512,
+        val max_tokens: Int = 1024,
     )
 
     fun buildPostsContent(title: String, posts: List<PostText>): String {

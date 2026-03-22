@@ -3,6 +3,7 @@ package com.huanchengfly.tieba.post.ui.page.forum.threadlist
 import androidx.compose.runtime.Stable
 import com.huanchengfly.tieba.post.api.TiebaApi
 import com.huanchengfly.tieba.post.api.models.AgreeBean
+import com.huanchengfly.tieba.post.api.models.protos.ThreadInfo
 import com.huanchengfly.tieba.post.api.models.protos.frsPage.Classify
 import com.huanchengfly.tieba.post.api.models.protos.frsPage.FrsPageResponse
 import com.huanchengfly.tieba.post.api.models.protos.updateAgreeStatus
@@ -60,7 +61,7 @@ abstract class ForumThreadListViewModel :
 }
 
 enum class ForumThreadListType {
-    Latest, Good
+    Latest, Good, Media
 }
 
 @Stable
@@ -75,6 +76,13 @@ class LatestThreadListViewModel @Inject constructor() : ForumThreadListViewModel
 class GoodThreadListViewModel @Inject constructor() : ForumThreadListViewModel() {
     override fun createPartialChangeProducer(): PartialChangeProducer<ForumThreadListUiIntent, ForumThreadListPartialChange, ForumThreadListUiState> =
         ForumThreadListPartialChangeProducer(ForumThreadListType.Good)
+}
+
+@Stable
+@HiltViewModel
+class MediaThreadListViewModel @Inject constructor() : ForumThreadListViewModel() {
+    override fun createPartialChangeProducer(): PartialChangeProducer<ForumThreadListUiIntent, ForumThreadListPartialChange, ForumThreadListUiState> =
+        ForumThreadListPartialChangeProducer(ForumThreadListType.Media)
 }
 
 private class ForumThreadListPartialChangeProducer(val type: ForumThreadListType) :
@@ -92,18 +100,26 @@ private class ForumThreadListPartialChangeProducer(val type: ForumThreadListType
                 .flatMapConcat { it.producePartialChange() },
         )
 
+    private fun List<ThreadInfo>.toThreadItemDataList(): List<ThreadItemData> =
+        let { threadList ->
+            if (type == ForumThreadListType.Media) {
+                threadList.filter { it.media.isNotEmpty() || it.videoInfo != null }
+            } else {
+                threadList
+            }
+        }.map { ThreadItemData(it.wrapImmutable()) }
+
     private fun ForumThreadListUiIntent.FirstLoad.producePartialChange() =
         FrsPageRepository.frsPage(
             forumName,
             1,
             1,
-            sortType.takeIf { type == ForumThreadListType.Latest } ?: -1,
+            sortType.takeIf { type != ForumThreadListType.Good } ?: -1,
             goodClassifyId.takeIf { type == ForumThreadListType.Good }
         )
             .map<FrsPageResponse, ForumThreadListPartialChange.FirstLoad> { response ->
                 if (response.data_?.page == null) throw TiebaUnknownException
-                val threadList =
-                    response.data_.thread_list.map { ThreadItemData(it.wrapImmutable()) }
+                val threadList = response.data_.thread_list.toThreadItemDataList()
                 ForumThreadListPartialChange.FirstLoad.Success(
                     response.data_.forum_rule?.title.takeIf {
                         type == ForumThreadListType.Latest && response.data_.forum_rule?.has_forum_rule == 1
@@ -123,14 +139,13 @@ private class ForumThreadListPartialChangeProducer(val type: ForumThreadListType
             forumName,
             1,
             1,
-            sortType.takeIf { type == ForumThreadListType.Latest } ?: -1,
+            sortType.takeIf { type != ForumThreadListType.Good } ?: -1,
             goodClassifyId.takeIf { type == ForumThreadListType.Good },
             forceNew = true
         )
             .map<FrsPageResponse, ForumThreadListPartialChange.Refresh> { response ->
                 if (response.data_?.page == null) throw TiebaUnknownException
-                val threadList =
-                    response.data_.thread_list.map { ThreadItemData(it.wrapImmutable()) }
+                val threadList = response.data_.thread_list.toThreadItemDataList()
                 ForumThreadListPartialChange.Refresh.Success(
                     threadList,
                     response.data_.thread_id_list,
@@ -153,8 +168,7 @@ private class ForumThreadListPartialChangeProducer(val type: ForumThreadListType
                 threadListIds.subList(0, size).joinToString(separator = ",") { "$it" }
             ).map { response ->
                 if (response.data_ == null) throw TiebaUnknownException
-                val threadList =
-                    response.data_.thread_list.map { ThreadItemData(it.wrapImmutable()) }
+                val threadList = response.data_.thread_list.toThreadItemDataList()
                 ForumThreadListPartialChange.LoadMore.Success(
                     threadList = threadList,
                     threadListIds = threadListIds.drop(size),
@@ -167,13 +181,12 @@ private class ForumThreadListPartialChangeProducer(val type: ForumThreadListType
                 forumName,
                 currentPage + 1,
                 2,
-                sortType.takeIf { type == ForumThreadListType.Latest } ?: -1,
+                sortType.takeIf { type != ForumThreadListType.Good } ?: -1,
                 goodClassifyId.takeIf { type == ForumThreadListType.Good }
             )
                 .map<FrsPageResponse, ForumThreadListPartialChange.LoadMore> { response ->
                     if (response.data_?.page == null) throw TiebaUnknownException
-                    val threadList =
-                        response.data_.thread_list.map { ThreadItemData(it.wrapImmutable()) }
+                    val threadList = response.data_.thread_list.toThreadItemDataList()
                     ForumThreadListPartialChange.LoadMore.Success(
                         threadList = threadList,
                         threadListIds = response.data_.thread_id_list,
@@ -421,11 +434,17 @@ sealed interface ForumThreadListUiEvent : UiEvent {
     ) : ForumThreadListUiEvent
 
     data class Refresh(
-        val isGood: Boolean,
+        val listType: ForumThreadListType,
         val sortType: Int
-    ) : ForumThreadListUiEvent
+    ) : ForumThreadListUiEvent {
+        val isGood: Boolean
+            get() = listType == ForumThreadListType.Good
+    }
 
     data class BackToTop(
+        val listType: ForumThreadListType
+    ) : ForumThreadListUiEvent {
         val isGood: Boolean
-    ) : ForumThreadListUiEvent
+            get() = listType == ForumThreadListType.Good
+    }
 }

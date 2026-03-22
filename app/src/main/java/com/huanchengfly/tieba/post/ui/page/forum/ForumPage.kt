@@ -98,6 +98,7 @@ import com.huanchengfly.tieba.post.ui.page.ProvideNavigator
 import com.huanchengfly.tieba.post.ui.page.destinations.ForumDetailPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.ForumSearchPostPageDestination
 import com.huanchengfly.tieba.post.ui.page.forum.threadlist.ForumThreadListPage
+import com.huanchengfly.tieba.post.ui.page.forum.threadlist.ForumThreadListType
 import com.huanchengfly.tieba.post.ui.page.forum.threadlist.ForumThreadListUiEvent
 import com.huanchengfly.tieba.post.ui.widgets.compose.Avatar
 import com.huanchengfly.tieba.post.ui.widgets.compose.AvatarPlaceholder
@@ -158,6 +159,14 @@ suspend fun setSortType(
         it[intPreferencesKey("${forumName}_sort_type")] = sortType
     }
 }
+
+private fun ForumSurfaceTab.toThreadListType(): ForumThreadListType =
+    when (this) {
+        ForumSurfaceTab.Good -> ForumThreadListType.Good
+        ForumSurfaceTab.Media -> ForumThreadListType.Media
+        ForumSurfaceTab.Latest,
+        ForumSurfaceTab.Search -> ForumThreadListType.Latest
+    }
 
 @Composable
 private fun ForumHeaderPlaceholder(
@@ -438,6 +447,11 @@ fun ForumPage(
             ForumSurfaceTab.fromPagerIndex(currentPage)
         }
     }
+    val currentListType by remember {
+        derivedStateOf {
+            currentSurfaceTab.toThreadListType()
+        }
+    }
 
     val coroutineScope = rememberCoroutineScope()
     var currentSortType by remember {
@@ -595,12 +609,12 @@ fun ForumPage(
                                         coroutineScope.launch {
                                             emitGlobalEventSuspend(
                                                 ForumThreadListUiEvent.BackToTop(
-                                                    currentSurfaceTab == ForumSurfaceTab.Good
+                                                    currentListType
                                                 )
                                             )
                                             emitGlobalEventSuspend(
                                                 ForumThreadListUiEvent.Refresh(
-                                                    currentSurfaceTab == ForumSurfaceTab.Good,
+                                                    currentListType,
                                                     getSortType(
                                                         context,
                                                         forumName
@@ -614,7 +628,7 @@ fun ForumPage(
                                         coroutineScope.launch {
                                             emitGlobalEvent(
                                                 ForumThreadListUiEvent.BackToTop(
-                                                    currentSurfaceTab == ForumSurfaceTab.Good
+                                                    currentListType
                                                 )
                                             )
                                         }
@@ -655,7 +669,7 @@ fun ForumPage(
                     onRefresh = {
                         coroutineScope.emitGlobalEvent(
                             ForumThreadListUiEvent.Refresh(
-                                currentSurfaceTab == ForumSurfaceTab.Good,
+                                currentListType,
                                 getSortType(
                                     context,
                                     forumName
@@ -824,7 +838,13 @@ fun ForumPage(
                                                                     setSortType(context, forumName, value)
                                                                     emitGlobalEvent(
                                                                         ForumThreadListUiEvent.Refresh(
-                                                                            currentSurfaceTab == ForumSurfaceTab.Good,
+                                                                            ForumThreadListType.Latest,
+                                                                            value
+                                                                        )
+                                                                    )
+                                                                    emitGlobalEvent(
+                                                                        ForumThreadListUiEvent.Refresh(
+                                                                            ForumThreadListType.Media,
                                                                             value
                                                                         )
                                                                     )
@@ -840,6 +860,33 @@ fun ForumPage(
                                         }
 
                                         ForumSurfaceTab.Good -> {
+                                            Tab(
+                                                selected = currentSurfaceTab == tab,
+                                                onClick = {
+                                                    coroutineScope.launch {
+                                                        pagerState.animateScrollToPage(
+                                                            checkNotNull(tab.pagerIndex)
+                                                        )
+                                                    }
+                                                },
+                                                selectedContentColor = ExtendedTheme.colors.primary,
+                                                unselectedContentColor = ExtendedTheme.colors.textSecondary
+                                            ) {
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    modifier = Modifier
+                                                        .height(48.dp)
+                                                        .padding(horizontal = 16.dp)
+                                                ) {
+                                                    Text(
+                                                        text = stringResource(id = tab.titleRes),
+                                                        style = tabTextStyle
+                                                    )
+                                                }
+                                            }
+                                        }
+
+                                        ForumSurfaceTab.Media -> {
                                             Tab(
                                                 selected = currentSurfaceTab == tab,
                                                 onClick = {
@@ -912,6 +959,7 @@ fun ForumPage(
                                         forumId = forumInfo!!.get { id },
                                         forumName = forumInfo!!.get { name },
                                         isGood = ForumSurfaceTab.fromPagerIndex(it) == ForumSurfaceTab.Good,
+                                        listType = ForumSurfaceTab.fromPagerIndex(it).toThreadListType(),
                                     )
                                 }
                             }

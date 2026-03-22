@@ -92,15 +92,47 @@ fun AiSummaryDialog(
 
                     is SummaryState.Success -> {
                         SelectionContainer {
-                            Text(
-                                text = summaryState.summary,
-                                style = MaterialTheme.typography.body1,
-                                color = ExtendedTheme.colors.text,
+                            Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .heightIn(max = 400.dp)
                                     .verticalScroll(rememberScrollState()),
-                            )
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                val sections = summaryState.summary.split(
+                                    Regex("(?=^## )", RegexOption.MULTILINE)
+                                )
+                                    .map { it.trim() }
+                                    .filter { it.isNotEmpty() }
+                                if (sections.any { it.startsWith("## ") }) {
+                                    sections.forEach { section ->
+                                        val lines = section.lines()
+                                        val title = lines.firstOrNull()?.removePrefix("## ")?.trim()
+                                        val body = lines.drop(1).joinToString("\n").trim()
+                                        if (!title.isNullOrEmpty()) {
+                                            Text(
+                                                text = title,
+                                                style = MaterialTheme.typography.subtitle1,
+                                                fontWeight = FontWeight.Bold,
+                                                color = ExtendedTheme.colors.primary,
+                                            )
+                                        }
+                                        if (body.isNotEmpty()) {
+                                            Text(
+                                                text = body,
+                                                style = MaterialTheme.typography.body1,
+                                                color = ExtendedTheme.colors.text,
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    Text(
+                                        text = summaryState.summary,
+                                        style = MaterialTheme.typography.body1,
+                                        color = ExtendedTheme.colors.text,
+                                    )
+                                }
+                            }
                         }
                         Row(
                             modifier = Modifier.fillMaxWidth(),

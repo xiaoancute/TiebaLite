@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
@@ -37,6 +38,7 @@ import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ProvideTextStyle
@@ -44,6 +46,8 @@ import androidx.compose.material.SnackbarDuration
 import androidx.compose.material.SnackbarResult
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
+import androidx.compose.material.TextField
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ChromeReaderMode
 import androidx.compose.material.icons.automirrored.rounded.ChromeReaderMode
@@ -58,6 +62,7 @@ import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Report
 import androidx.compose.material.icons.rounded.RocketLaunch
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.SmartToy
 import androidx.compose.material.icons.rounded.Star
@@ -126,7 +131,6 @@ import com.huanchengfly.tieba.post.ui.common.theme.compose.pullRefreshIndicator
 import com.huanchengfly.tieba.post.ui.common.theme.compose.threadBottomBar
 import com.huanchengfly.tieba.post.ui.page.LocalNavigator
 import com.huanchengfly.tieba.post.ui.page.ProvideNavigator
-import com.huanchengfly.tieba.post.ui.page.destinations.CopyTextDialogPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.ForumPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.ReplyPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.SubPostsSheetPageDestination
@@ -155,6 +159,7 @@ import com.huanchengfly.tieba.post.ui.widgets.compose.PromptDialog
 import com.huanchengfly.tieba.post.ui.widgets.compose.Sizes
 import com.huanchengfly.tieba.post.ui.widgets.compose.TextWithMinWidth
 import com.huanchengfly.tieba.post.ui.widgets.compose.TipScreen
+import com.huanchengfly.tieba.post.ui.widgets.compose.Toolbar
 import com.huanchengfly.tieba.post.ui.widgets.compose.TitleCentredToolbar
 import com.huanchengfly.tieba.post.ui.widgets.compose.UserHeader
 import com.huanchengfly.tieba.post.ui.widgets.compose.VerticalDivider
@@ -176,6 +181,7 @@ import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -200,6 +206,12 @@ private fun getDescText(
     }
     return texts.joinToString(" · ")
 }
+
+private fun PostItemData.matchesSearchQuery(query: String): Boolean =
+    post.get { content.plainText }.contains(query, ignoreCase = true)
+
+private fun ImmutableHolder<Post>.matchesSearchQuery(query: String): Boolean =
+    get { content.plainText }.contains(query, ignoreCase = true)
 
 @Composable
 fun PostAgreeBtn(
@@ -606,6 +618,14 @@ fun ThreadPage(
         prop1 = ThreadUiState::summaryState,
         initial = SummaryState.Idle
     )
+    val searchQuery by viewModel.uiState.collectPartialAsState(
+        prop1 = ThreadUiState::searchQuery,
+        initial = ""
+    )
+    val isSearchMode by viewModel.uiState.collectPartialAsState(
+        prop1 = ThreadUiState::isSearchMode,
+        initial = false
+    )
 
     val isEmpty by remember {
         derivedStateOf { data.isEmpty() && firstPost == null }
@@ -646,6 +666,29 @@ fun ThreadPage(
     }
     val curForumName = remember(forum) { forum?.get { name } }
     val curTbs = remember(anti) { anti?.get { tbs } }
+    val showFirstPost by remember(searchQuery, firstPost) {
+        derivedStateOf {
+            searchQuery.isEmpty() || firstPost?.matchesSearchQuery(searchQuery) == true
+        }
+    }
+    val displayData by remember(searchQuery, data) {
+        derivedStateOf {
+            if (searchQuery.isEmpty()) {
+                data
+            } else {
+                data.filter { it.matchesSearchQuery(searchQuery) }.toImmutableList()
+            }
+        }
+    }
+    val displayLatestPosts by remember(searchQuery, latestPosts) {
+        derivedStateOf {
+            if (searchQuery.isEmpty()) {
+                latestPosts
+            } else {
+                latestPosts.filter { it.matchesSearchQuery(searchQuery) }.toImmutableList()
+            }
+        }
+    }
     var waitLoadSuccessAndScrollToFirstReply by remember { mutableStateOf(scrollToReply) }
 
     val lazyListState = rememberLazyListState()
@@ -770,6 +813,12 @@ fun ThreadPage(
         } else {
             navigator.navigateUp()
         }
+    }
+    MyBackHandler(
+        enabled = isSearchMode && !bottomSheetState.isVisible,
+        currentScreen = ThreadPageDestination
+    ) {
+        viewModel.send(ThreadUiIntent.ExitSearch)
     }
 
     val confirmDeleteDialogState = rememberDialogState()
@@ -983,9 +1032,7 @@ fun ThreadPage(
                 }
             },
             onMenuCopyClick = {
-                navigator.navigate(
-                    CopyTextDialogPageDestination(it)
-                )
+                TiebaUtil.copyText(context, it)
             },
             onMenuFavoriteClick = {
                 val isPostCollected =
@@ -1020,7 +1067,7 @@ fun ThreadPage(
     }
 
     fun LazyListScope.latestPosts(desc: Boolean) {
-        if (latestPosts.isNotEmpty()) {
+        if (displayLatestPosts.isNotEmpty()) {
             if (!desc) {
                 item("LatestPostsTip") {
                     Container {
@@ -1043,7 +1090,7 @@ fun ThreadPage(
                 }
             }
             items(
-                items = latestPosts,
+                items = displayLatestPosts,
                 key = { (item) -> "LatestPost_${item.get { id }}" }
             ) { (item, blocked, renders, subPosts) ->
                 Container {
@@ -1127,18 +1174,63 @@ fun ThreadPage(
             MyScaffold(
                 scaffoldState = scaffoldState,
                 topBar = {
-                    TopBar(
-                        forum = forum,
-                        onBack = { navigator.navigateUp() },
-                        onForumClick = {
-                            val forumName = forum?.get { name }
-                            if (forumName != null) navigator.navigate(
-                                ForumPageDestination(
-                                    forumName
+                    if (isSearchMode) {
+                        Toolbar(
+                            title = {
+                                TextField(
+                                    value = searchQuery,
+                                    onValueChange = {
+                                        viewModel.send(ThreadUiIntent.SearchInThread(it))
+                                    },
+                                    placeholder = {
+                                        Text(
+                                            text = stringResource(id = R.string.hint_search_in_thread),
+                                            color = ExtendedTheme.colors.textSecondary,
+                                        )
+                                    },
+                                    singleLine = true,
+                                    colors = TextFieldDefaults.textFieldColors(
+                                        backgroundColor = Color.Transparent,
+                                        focusedIndicatorColor = Color.Transparent,
+                                        unfocusedIndicatorColor = Color.Transparent,
+                                        cursorColor = ExtendedTheme.colors.primary,
+                                        textColor = ExtendedTheme.colors.text,
+                                    ),
+                                    modifier = Modifier.fillMaxWidth(),
                                 )
-                            )
-                        }
-                    )
+                            },
+                            navigationIcon = {
+                                BackNavigationIcon(
+                                    onBackPressed = { viewModel.send(ThreadUiIntent.ExitSearch) }
+                                )
+                            },
+                        )
+                    } else {
+                        TopBar(
+                            forum = forum,
+                            onBack = { navigator.navigateUp() },
+                            onForumClick = {
+                                val forumName = forum?.get { name }
+                                if (forumName != null) navigator.navigate(
+                                    ForumPageDestination(
+                                        forumName
+                                    )
+                                )
+                            },
+                            actions = {
+                                IconButton(
+                                    onClick = {
+                                        viewModel.send(ThreadUiIntent.SearchInThread(""))
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Search,
+                                        contentDescription = stringResource(id = R.string.btn_search_in_forum)
+                                    )
+                                }
+                            }
+                        )
+                    }
                 },
                 bottomBar = {
                     BottomBar(
@@ -1370,8 +1462,8 @@ fun ThreadPage(
                                 state = lazyListState,
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                item(key = "FirstPost") {
-                                    if (firstPost != null) {
+                                if (firstPost != null && showFirstPost) {
+                                    item(key = "FirstPost") {
                                         Container {
                                             Column {
                                                 PostCard(
@@ -1402,9 +1494,7 @@ fun ThreadPage(
                                                         )
                                                     },
                                                     onMenuCopyClick = {
-                                                        navigator.navigate(
-                                                            CopyTextDialogPageDestination(it)
-                                                        )
+                                                        TiebaUtil.copyText(context, it)
                                                     },
                                                     onMenuFavoriteClick = {
                                                         viewModel.send(
@@ -1602,7 +1692,7 @@ fun ThreadPage(
                                     }
                                 } else {
                                     items(
-                                        items = data,
+                                        items = displayData,
                                         key = { (item) -> "Post_${item.get { id }}" }
                                     ) { (item, blocked, renders, subPosts) ->
                                         Container {
@@ -1640,6 +1730,7 @@ private fun TopBar(
     forum: ImmutableHolder<SimpleForum>?,
     onBack: () -> Unit,
     onForumClick: () -> Unit,
+    actions: @Composable RowScope.() -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     TitleCentredToolbar(
@@ -1679,6 +1770,7 @@ private fun TopBar(
         navigationIcon = {
             BackNavigationIcon(onBack)
         },
+        actions = actions,
         modifier = modifier
     )
 }

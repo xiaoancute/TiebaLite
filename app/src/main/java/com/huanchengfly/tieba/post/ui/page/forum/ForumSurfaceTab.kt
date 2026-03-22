@@ -10,6 +10,7 @@ enum class ForumSurfaceTab(
 ) {
     Latest("latest", R.string.tab_forum_latest, 0),
     Good("good", R.string.tab_forum_good, 1),
+    Media("media", R.string.tab_forum_media, 2),
     Search("search", R.string.btn_search_in_forum, null),
     ;
 
