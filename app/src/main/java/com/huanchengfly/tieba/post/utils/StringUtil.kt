@@ -26,6 +26,9 @@ import java.util.regex.Pattern
 import kotlin.math.roundToInt
 
 object StringUtil {
+    private const val AVATAR_BASE_URL = "https://himg.bdimg.com/sys/portrait/item/"
+    private const val BIG_AVATAR_BASE_URL = "https://himg.bdimg.com/sys/portraith/item/"
+
     @JvmStatic
     fun getEmoticonContent(
         tv: TextView,
@@ -153,7 +156,7 @@ object StringUtil {
         }
         return if (portrait.startsWith("http://") || portrait.startsWith("https://")) {
             portrait
-        } else "https://tb.himg.baidu.com/sys/portrait/item/$portrait"
+        } else "$AVATAR_BASE_URL$portrait"
     }
 
     @JvmStatic
@@ -163,7 +166,7 @@ object StringUtil {
         }
         return if (portrait.startsWith("http://") || portrait.startsWith("https://")) {
             portrait
-        } else "https://tb.himg.baidu.com/sys/portraith/item/$portrait"
+        } else "$BIG_AVATAR_BASE_URL$portrait"
     }
 
     fun String.getShortNumString(): String {
