@@ -19,6 +19,7 @@ Recover TiebaLite into a stable, reading-first Android 10+ Tieba client. Public 
 - Live browse smoke baseline: `:app:testDebugUnitTest --tests 'com.huanchengfly.tieba.post.PublicBrowseLiveSmokeTest'` passed on 2026-03-22.
 - Offline forum fixture baseline: `:app:testDebugUnitTest --tests 'com.huanchengfly.tieba.post.ForumPageFixtureTest'` passed on 2026-03-22.
 - Offline thread fixture baseline: `:app:testDebugUnitTest --tests 'com.huanchengfly.tieba.post.ThreadPageFixtureTest'` passed on 2026-03-22.
+- Offline hot topic fixture baseline: `:app:testDebugUnitTest --tests 'com.huanchengfly.tieba.post.HotTopicFixtureTest'` passed on 2026-03-22.
 - Environment correction discovered during this run:
   - the old temporary SDK path `/tmp/tblite-android-sdk-14742923` had expired and no longer contained `platforms/android-34` or `build-tools/34.0.0`
   - switching to `/home/x/Android/Sdk` restored AGP task graph resolution and normal builds
@@ -46,7 +47,7 @@ Recover TiebaLite into a stable, reading-first Android 10+ Tieba client. Public 
 | Phase | Status | Notes |
 | --- | --- | --- |
 | Workflow baseline | Completed | `TODO.md`, `STATUS.md`, local Git rescue history, and reproducible SDK path are now in place. |
-| Public browse confidence | In progress | Live smoke passes; T05 forum and T06 thread fixture coverage are in place; topic offline fixtures are next. |
+| Public browse confidence | In progress | Live smoke passes; T05 forum, T06 thread, and T07 hot topic/topic detail fixture coverage are in place; failure-mode tests are next. |
 | Reading-first product polish | Not started | Navigation and capability alignment audit pending. |
 | Modern Android and Compose debt | Not started | Compat cleanup and inset/status-bar work are still queued. |
 | Experimental/account containment | Not started | Guardrails exist but more explicit labeling and isolation remain. |
@@ -59,6 +60,8 @@ Recover TiebaLite into a stable, reading-first Android 10+ Tieba client. Public 
 - `MediaAdapter` no longer depends on `android.text.TextUtils`, so forum media parsing now works in pure JVM tests instead of requiring Android framework stubs.
 - T06 completed: added an offline signed thread payload snapshot and `ThreadPageFixtureTest` to lock the current thread JSON shape into local regression coverage.
 - The thread fixture validates `forum`, `anti`, `thread`, `post_list`, Tieba in-app links, and `ThreadContentBean` parsing without any network dependency.
+- T07 completed: added offline hot topic list and topic detail snapshots plus `HotTopicFixtureTest` to lock `mul_id / mul_name / topic_info` compatibility into local regression coverage.
+- `TopicDetailBean` now matches the current web payload more closely: `relate_forum` is explicitly mapped and `discuss_num` is coerced from either numeric or string primitives for serializer stability.
 
 ## Known Good Commands
 
@@ -71,11 +74,12 @@ export GRADLE_USER_HOME=/tmp/tblite-gradle17-local
 ./gradlew :app:testDebugUnitTest --tests 'com.huanchengfly.tieba.post.PublicBrowseLiveSmokeTest' --console=plain
 ./gradlew :app:testDebugUnitTest --tests 'com.huanchengfly.tieba.post.ForumPageFixtureTest' --console=plain
 ./gradlew :app:testDebugUnitTest --tests 'com.huanchengfly.tieba.post.ThreadPageFixtureTest' --console=plain
+./gradlew :app:testDebugUnitTest --tests 'com.huanchengfly.tieba.post.HotTopicFixtureTest' --console=plain
 ./gradlew :app:assembleDebug --stacktrace
 ```
 
 ## Next Actions
 
-1. Add offline fixture coverage for hot topic list and topic detail parsing (`T07`).
-2. Add failure-mode parsing tests for browse payload drift (`T09`).
-3. Start auditing visible entry points against stable/guarded/experimental capability states (`T10`).
+1. Add failure-mode parsing tests for browse payload drift (`T09`).
+2. Start auditing visible entry points against stable/guarded/experimental capability states (`T10`).
+3. Tighten high-risk reply/post entry points with explicit risk-self-borne messaging (`T11`).
