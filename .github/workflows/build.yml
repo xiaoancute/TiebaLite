@@ -1,6 +1,15 @@
 name: Build, Deploy
 
-on: [ push, pull_request ]
+on:
+  push:
+    branches:
+      - "**"
+    tags:
+      - "v*"
+  pull_request:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -16,6 +25,26 @@ jobs:
           java-version: "17"
           distribution: "zulu"
           cache: gradle
+
+      - name: Validate tag release signing config
+        if: ${{ github.ref_type == 'tag' }}
+        env:
+          RELEASE_KEYSTORE: ${{ vars.RELEASE_KEYSTORE }}
+          RELEASE_KEY_ALIAS: ${{ vars.RELEASE_KEY_ALIAS }}
+          KEYSTORE: ${{ secrets.KEYSTORE }}
+          RELEASESTOREPASSWORD: ${{ secrets.RELEASESTOREPASSWORD }}
+          RELEASEKEYPASSWORD: ${{ secrets.RELEASEKEYPASSWORD }}
+        run: |
+          missing=0
+          for key in RELEASE_KEYSTORE RELEASE_KEY_ALIAS KEYSTORE RELEASESTOREPASSWORD RELEASEKEYPASSWORD; do
+            if [ -z "${!key}" ]; then
+              echo "::error title=Missing release signing config::${key} is required for tag prereleases."
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
 
       - name: Decode Keystore
         id: decode_keystore
@@ -67,8 +96,55 @@ jobs:
           name: mapping
           path: ./app/build/outputs/mapping/release
 
+      - name: Prepare prerelease notes
+        if: ${{ github.ref_type == 'tag' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ github.ref_name }}
+          TARGET_COMMITISH: ${{ github.sha }}
+        run: |
+          mkdir -p .github/release-notes/.out
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            "repos/${GITHUB_REPOSITORY}/releases/generate-notes" \
+            -f tag_name="${TAG_NAME}" \
+            -f target_commitish="${TARGET_COMMITISH}" \
+            --jq '.body' > .github/release-notes/.out/generated-notes.md
+          cp .github/release-notes/recovery-prerelease.md .github/release-notes/.out/release-notes.md
+          printf '\n\n## Auto-generated Changes\n\n' >> .github/release-notes/.out/release-notes.md
+          cat .github/release-notes/.out/generated-notes.md >> .github/release-notes/.out/release-notes.md
+
+      - name: Publish GitHub prerelease
+        if: ${{ github.ref_type == 'tag' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          shopt -s nullglob
+          files=(./app/build/outputs/apk/release/*.apk)
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "::error title=Missing release asset::No release APK was produced."
+            exit 1
+          fi
+
+          if gh release view "${TAG_NAME}" >/dev/null 2>&1; then
+            gh release edit "${TAG_NAME}" \
+              --title "${TAG_NAME}" \
+              --notes-file .github/release-notes/.out/release-notes.md \
+              --prerelease
+            gh release upload "${TAG_NAME}" "${files[@]}" --clobber
+          else
+            gh release create "${TAG_NAME}" "${files[@]}" \
+              --verify-tag \
+              --title "${TAG_NAME}" \
+              --notes-file .github/release-notes/.out/release-notes.md \
+              --prerelease \
+              --latest=false
+          fi
+
       - name: Post to channel
-        if: contains(github.event.head_commit.message, '[skip post]') == false && github.event_name != 'pull_request'
+        if: ${{ github.event_name != 'pull_request' && github.ref_type != 'tag' && contains(github.event.head_commit.message, '[skip post]') == false }}
         env:
           CHANNEL_ID: ${{ secrets.CHANNEL_DEV_ID }}
           BOT_TOKEN: ${{ secrets.BOT_DEV_TOKEN }}
