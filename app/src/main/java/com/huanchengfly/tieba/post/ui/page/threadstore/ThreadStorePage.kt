@@ -46,6 +46,7 @@ import com.huanchengfly.tieba.post.arch.onEvent
 import com.huanchengfly.tieba.post.arch.pageViewModel
 import com.huanchengfly.tieba.post.dpToPxFloat
 import com.huanchengfly.tieba.post.pxToSp
+import com.huanchengfly.tieba.post.toastShort
 import com.huanchengfly.tieba.post.revival.SessionHealthStatus
 import com.huanchengfly.tieba.post.ui.common.theme.compose.ExtendedTheme
 import com.huanchengfly.tieba.post.ui.common.theme.compose.pullRefreshIndicator
@@ -232,24 +233,35 @@ fun ThreadStorePage(
                             StoreItem(
                                 info = info,
                                 onUserClick = {
-                                    info.author.lzUid?.let {
-                                        navigator.navigate(UserProfilePageDestination(it.toLong()))
+                                    val userId = info.author.lzUid?.toLongOrNull()
+                                    if (userId == null) {
+                                        context.toastShort(R.string.toast_load_failed)
+                                    } else {
+                                        navigator.navigate(UserProfilePageDestination(userId))
                                     }
                                 },
                                 onClick = {
-                                    navigator.navigate(
-                                        ThreadPageDestination(
-                                            threadId = info.threadId.toLong(),
-                                            postId = info.markPid.toLong(),
-                                            seeLz = context.appPreferences.collectThreadSeeLz,
-                                            sortType = if(context.appPreferences.collectThreadDescSort) ThreadSortType.SORT_TYPE_DESC else ThreadSortType.SORT_TYPE_DEFAULT,
-                                            from = ThreadPageFrom.FROM_STORE,
-                                            extra = ThreadPageFromStoreExtra(
-                                                maxPid = info.maxPid.toLong(),
-                                                maxFloor = info.postNo.toInt()
+                                    val threadId = info.threadId.toLongOrNull()
+                                    val postId = info.markPid.toLongOrNull()
+                                    val maxPid = info.maxPid.toLongOrNull()
+                                    val maxFloor = info.postNo.toIntOrNull()
+                                    if (threadId == null || postId == null || maxPid == null || maxFloor == null) {
+                                        context.toastShort(R.string.toast_load_failed)
+                                    } else {
+                                        navigator.navigate(
+                                            ThreadPageDestination(
+                                                threadId = threadId,
+                                                postId = postId,
+                                                seeLz = context.appPreferences.collectThreadSeeLz,
+                                                sortType = if(context.appPreferences.collectThreadDescSort) ThreadSortType.SORT_TYPE_DESC else ThreadSortType.SORT_TYPE_DEFAULT,
+                                                from = ThreadPageFrom.FROM_STORE,
+                                                extra = ThreadPageFromStoreExtra(
+                                                    maxPid = maxPid,
+                                                    maxFloor = maxFloor
+                                                )
                                             )
                                         )
-                                    )
+                                    }
                                 },
                                 onDelete = {
                                     viewModel.send(

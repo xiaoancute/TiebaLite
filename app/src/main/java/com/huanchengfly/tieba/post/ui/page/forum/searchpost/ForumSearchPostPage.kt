@@ -81,6 +81,7 @@ import com.huanchengfly.tieba.post.ui.widgets.compose.TopAppBarContainer
 import com.huanchengfly.tieba.post.ui.widgets.compose.picker.ListSinglePicker
 import com.huanchengfly.tieba.post.ui.widgets.compose.rememberMenuState
 import com.huanchengfly.tieba.post.ui.widgets.compose.states.StateScreen
+import com.huanchengfly.tieba.post.toastShort
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.collections.immutable.ImmutableList
@@ -408,32 +409,42 @@ fun ForumSearchPostPage(
                                     data = data,
                                     lazyListState = lazyListState,
                                     onItemClick = {
-                                        if (it.postInfo != null) {
+                                        val threadId = it.tid.toLongOrNull()
+                                        val cid = it.cid.toLongOrNull()
+                                        val pid = it.pid.toLongOrNull()
+                                        if (threadId == null) {
+                                            context.toastShort(R.string.toast_load_failed)
+                                        } else if (it.postInfo != null && cid != null) {
                                             navigator.navigate(
                                                 SubPostsPageDestination(
-                                                    threadId = it.tid.toLong(),
-                                                    subPostId = it.cid.toLong(),
+                                                    threadId = threadId,
+                                                    subPostId = cid,
                                                     loadFromSubPost = true
                                                 )
                                             )
-                                        } else if (it.mainPost != null) {
+                                        } else if (it.mainPost != null && pid != null) {
                                             navigator.navigate(
                                                 ThreadPageDestination(
-                                                    threadId = it.tid.toLong(),
-                                                    postId = it.pid.toLong(),
+                                                    threadId = threadId,
+                                                    postId = pid,
                                                     scrollToReply = true,
                                                 )
                                             )
                                         } else {
                                             navigator.navigate(
                                                 ThreadPageDestination(
-                                                    threadId = it.tid.toLong()
+                                                    threadId = threadId
                                                 )
                                             )
                                         }
                                     },
                                     onItemUserClick = {
-                                        navigator.navigate(UserProfilePageDestination(it.userId.toLong()))
+                                        val userId = it.userId.toLongOrNull()
+                                        if (userId == null) {
+                                            context.toastShort(R.string.toast_load_failed)
+                                        } else {
+                                            navigator.navigate(UserProfilePageDestination(userId))
+                                        }
                                     },
                                     onItemForumClick = {
                                         navigator.navigate(

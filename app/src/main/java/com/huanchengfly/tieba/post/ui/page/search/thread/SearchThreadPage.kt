@@ -14,6 +14,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import com.huanchengfly.tieba.post.R
 import com.huanchengfly.tieba.post.arch.collectPartialAsState
 import com.huanchengfly.tieba.post.arch.onGlobalEvent
 import com.huanchengfly.tieba.post.arch.pageViewModel
@@ -30,6 +32,7 @@ import com.huanchengfly.tieba.post.ui.widgets.compose.LoadMoreLayout
 import com.huanchengfly.tieba.post.ui.widgets.compose.LocalShouldLoad
 import com.huanchengfly.tieba.post.ui.widgets.compose.SearchThreadList
 import com.huanchengfly.tieba.post.ui.widgets.compose.states.StateScreen
+import com.huanchengfly.tieba.post.toastShort
 import kotlinx.collections.immutable.persistentListOf
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -39,6 +42,7 @@ fun SearchThreadPage(
     initialSortType: Int = SearchThreadSortType.SORT_TYPE_NEWEST,
     viewModel: SearchThreadViewModel = pageViewModel(),
 ) {
+    val context = LocalContext.current
     val navigator = LocalNavigator.current
     LazyLoad(loaded = viewModel.initialized) {
         viewModel.send(SearchThreadUiIntent.Refresh(keyword, initialSortType))
@@ -137,14 +141,24 @@ fun SearchThreadPage(
                     data = data,
                     lazyListState = lazyListState,
                     onItemClick = {
-                        navigator.navigate(
-                            ThreadPageDestination(
-                                threadId = it.tid.toLong()
+                        val threadId = it.tid.toLongOrNull()
+                        if (threadId == null) {
+                            context.toastShort(R.string.toast_load_failed)
+                        } else {
+                            navigator.navigate(
+                                ThreadPageDestination(
+                                    threadId = threadId
+                                )
                             )
-                        )
+                        }
                     },
                     onItemUserClick = {
-                        navigator.navigate(UserProfilePageDestination(it.userId.toLong()))
+                        val userId = it.userId.toLongOrNull()
+                        if (userId == null) {
+                            context.toastShort(R.string.toast_load_failed)
+                        } else {
+                            navigator.navigate(UserProfilePageDestination(userId))
+                        }
                     },
                     onItemForumClick = {
                         navigator.navigate(
