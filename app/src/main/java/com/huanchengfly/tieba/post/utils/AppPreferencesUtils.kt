@@ -163,8 +163,6 @@ open class AppPreferencesUtils private constructor(ctx: Context) {
         key = "pic_watermark_type",
     )
 
-    var postOrReplyWarning by DataStoreDelegates.boolean(defaultValue = true)
-
     var radius by DataStoreDelegates.int(defaultValue = 8)
 
     var signDay by DataStoreDelegates.int(defaultValue = -1, key = "sign_day")

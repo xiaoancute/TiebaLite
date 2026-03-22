@@ -32,6 +32,7 @@ import com.huanchengfly.tieba.post.dataStore
 import com.huanchengfly.tieba.post.ui.common.prefs.PrefsScreen
 import com.huanchengfly.tieba.post.ui.common.prefs.widgets.ListPref
 import com.huanchengfly.tieba.post.ui.common.prefs.widgets.SwitchPref
+import com.huanchengfly.tieba.post.ui.common.prefs.widgets.TextPref
 import com.huanchengfly.tieba.post.ui.page.settings.LeadingIcon
 import com.huanchengfly.tieba.post.ui.widgets.compose.AvatarIcon
 import com.huanchengfly.tieba.post.ui.widgets.compose.BackNavigationIcon
@@ -47,7 +48,6 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 fun HabitSettingsPage(
     navigator: DestinationsNavigator
 ) {
-    val context = LocalContext.current
     MyScaffold(
         backgroundColor = Color.Transparent,
         topBar = {
@@ -276,12 +276,11 @@ fun HabitSettingsPage(
                 )
             }
             prefsItem {
-                SwitchPref(
-                    key = "postOrReplyWarning",
+                TextPref(
                     title = stringResource(id = R.string.title_post_or_reply_warning_pref),
-                    summaryOn = stringResource(id = R.string.summary_post_or_reply_warning_on),
-                    summaryOff = stringResource(id = R.string.summary_post_or_reply_warning_off),
-                    defaultChecked = true,
+                    summary = stringResource(id = R.string.summary_post_or_reply_warning_locked),
+                    enabled = false,
+                    darkenOnDisable = false,
                 ) {
                     LeadingIcon {
                         AvatarIcon(

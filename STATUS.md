@@ -49,7 +49,7 @@ Recover TiebaLite into a stable, reading-first Android 10+ Tieba client. Public 
 | --- | --- | --- |
 | Workflow baseline | Completed | `TODO.md`, `STATUS.md`, local Git rescue history, and reproducible SDK path are now in place. |
 | Public browse confidence | In progress | Live smoke passes; T05 forum, T06 thread, T07 hot topic/topic detail fixture coverage, T08 link-routing coverage, and T09 failure-mode guardrails are now in place. |
-| Reading-first product polish | In progress | T10 capability-state audit is now landing in docs and settings summaries; T11/T12 entry messaging cleanup is next. |
+| Reading-first product polish | In progress | T10 capability-state audit and T11 risk-warning hardening are in place; T12/T13 entry messaging cleanup is next. |
 | Modern Android and Compose debt | Not started | Compat cleanup and inset/status-bar work are still queued. |
 | Experimental/account containment | Not started | Guardrails exist but more explicit labeling and isolation remain. |
 | Release hardening and delivery | Not started | Final docs, scripts, and manual matrix still pending. |
@@ -72,6 +72,8 @@ Recover TiebaLite into a stable, reading-first Android 10+ Tieba client. Public 
 - T10 completed: added a visible-entry capability audit to `docs/feature-status.md`, classifying first-level and second-level routes as stable, core-account guarded, experimental, or not promised.
 - Settings entry points now surface capability context directly: account management shows current session-health-aware core-account summary, and OKSign now shows manual-sign versus auto-sign capability states in the entry summary.
 - `Explore` second-level tabs now recompute against login state, so the concern-feed entry no longer drifts or survives incorrectly after logout or account changes.
+- T11 completed: reply flows now always show the “风险自负” warning before entering the experimental send path, so users can no longer bypass the warning by toggling a settings switch.
+- The old “发帖/回帖前显示风险提示” preference has been downgraded into a fixed explanatory item, making it clear that this protection is mandatory for the current recovery branch.
 
 ## Known Good Commands
 
@@ -92,6 +94,6 @@ export GRADLE_USER_HOME=/tmp/tblite-gradle17-local
 
 ## Next Actions
 
-1. Tighten high-risk reply/post entry points with explicit risk-self-borne messaging (`T11`).
-2. Add or refine read-only recovery messaging in key browse surfaces and settings (`T12`).
-3. Continue removing misleading dead-end affordances from reading-first navigation (`T13`).
+1. Add or refine read-only recovery messaging in key browse surfaces and settings (`T12`).
+2. Continue removing misleading dead-end affordances from reading-first navigation (`T13`).
+3. Ensure guarded account pages prefer explicit degraded states over silent empties (`T14`).

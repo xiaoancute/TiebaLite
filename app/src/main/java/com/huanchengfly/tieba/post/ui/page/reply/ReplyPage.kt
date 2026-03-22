@@ -879,9 +879,7 @@ internal fun ReplyPageContent(
     }
 
     LaunchedEffect(Unit) {
-        if (context.appPreferences.postOrReplyWarning) {
-            warningDialogState.show()
-        }
+        warningDialogState.show()
     }
 }
 
