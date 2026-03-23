@@ -49,8 +49,6 @@ import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ChromeReaderMode
-import androidx.compose.material.icons.automirrored.rounded.ChromeReaderMode
 import androidx.compose.material.icons.automirrored.rounded.Sort
 import androidx.compose.material.icons.rounded.AlignVerticalTop
 import androidx.compose.material.icons.rounded.ContentCopy
@@ -131,6 +129,7 @@ import com.huanchengfly.tieba.post.ui.common.theme.compose.pullRefreshIndicator
 import com.huanchengfly.tieba.post.ui.common.theme.compose.threadBottomBar
 import com.huanchengfly.tieba.post.ui.page.LocalNavigator
 import com.huanchengfly.tieba.post.ui.page.ProvideNavigator
+import com.huanchengfly.tieba.post.ui.page.destinations.AiSettingsPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.ForumPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.ReplyPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.SubPostsSheetPageDestination
@@ -1283,7 +1282,6 @@ fun ThreadPage(
                         ThreadMenu(
                             isSeeLz = isSeeLz,
                             isCollected = isCollected,
-                            isImmersiveMode = isImmersiveMode,
                             isDesc = curSortType == ThreadSortType.SORT_TYPE_DESC,
                             canDelete = { author?.get { id } == user.get { id } },
                             onSeeLzClick = {
@@ -1324,20 +1322,6 @@ fun ThreadPage(
                                 }
                                 closeBottomSheet()
                             },
-                            onImmersiveModeClick = {
-                                if (!isImmersiveMode && !isSeeLz) {
-                                    viewModel.send(
-                                        ThreadUiIntent.LoadFirstPage(
-                                            threadId,
-                                            forumId,
-                                            true,
-                                            curSortType
-                                        )
-                                    )
-                                }
-                                viewModel.send(ThreadUiIntent.ToggleImmersiveMode(!isImmersiveMode))
-                                closeBottomSheet()
-                            },
                             onDescClick = {
                                 viewModel.send(
                                     ThreadUiIntent.LoadFirstPage(
@@ -1367,6 +1351,10 @@ fun ThreadPage(
                                         model = model,
                                     )
                                 )
+                            },
+                            onAiSettingsClick = {
+                                closeBottomSheet()
+                                navigator.navigate(AiSettingsPageDestination)
                             },
                             onJumpPageClick = {
                                 closeBottomSheet()
@@ -2237,15 +2225,14 @@ fun UserNameText(
 private fun ThreadMenu(
     isSeeLz: Boolean,
     isCollected: Boolean,
-    isImmersiveMode: Boolean,
     isDesc: Boolean,
     isAiConfigured: Boolean,
     canDelete: () -> Boolean,
     onSeeLzClick: () -> Unit,
     onCollectClick: () -> Unit,
-    onImmersiveModeClick: () -> Unit,
     onDescClick: () -> Unit,
     onAiSummaryClick: () -> Unit,
+    onAiSettingsClick: () -> Unit,
     onJumpPageClick: () -> Unit,
     onShareClick: () -> Unit,
     onCopyLinkClick: () -> Unit,
@@ -2318,27 +2305,6 @@ private fun ThreadMenu(
                     text = {
                         TextWithMinWidth(
                             text = stringResource(
-                                id = R.string.title_pure_read
-                            ),
-                            minLength = 4
-                        )
-                    },
-                    checked = isImmersiveMode,
-                    onClick = onImmersiveModeClick,
-                    icon = {
-                        Icon(
-                            imageVector = if (isImmersiveMode) Icons.AutoMirrored.Rounded.ChromeReaderMode else Icons.AutoMirrored.Outlined.ChromeReaderMode,
-                            contentDescription = null
-                        )
-                    },
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-            item {
-                ToggleButton(
-                    text = {
-                        TextWithMinWidth(
-                            text = stringResource(
                                 id = R.string.title_sort
                             ),
                             minLength = 4
@@ -2355,26 +2321,24 @@ private fun ThreadMenu(
                     modifier = Modifier.fillMaxSize()
                 )
             }
-            if (isAiConfigured) {
-                item {
-                    ToggleButton(
-                        text = {
-                            TextWithMinWidth(
-                                text = stringResource(id = R.string.title_ai_summary),
-                                minLength = 4
-                            )
-                        },
-                        checked = false,
-                        onClick = onAiSummaryClick,
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Rounded.SmartToy,
-                                contentDescription = null
-                            )
-                        },
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
+            item {
+                ToggleButton(
+                    text = {
+                        TextWithMinWidth(
+                            text = stringResource(id = R.string.title_ai_summary),
+                            minLength = 4
+                        )
+                    },
+                    checked = false,
+                    onClick = if (isAiConfigured) onAiSummaryClick else onAiSettingsClick,
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Rounded.SmartToy,
+                            contentDescription = null
+                        )
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
             }
         }
         Column {
