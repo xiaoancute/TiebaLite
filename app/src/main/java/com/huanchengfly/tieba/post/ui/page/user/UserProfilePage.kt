@@ -130,7 +130,7 @@ import kotlin.math.absoluteValue
 import kotlin.math.max
 import kotlin.math.min
 
-@ExperimentalMaterialApi
+@OptIn(ExperimentalMaterialApi::class)
 @Destination
 @Composable
 fun UserProfilePage(
@@ -230,7 +230,7 @@ fun UserProfilePage(
     }
 }
 
-@ExperimentalMaterialApi
+@OptIn(ExperimentalMaterialApi::class)
 @Preview(showBackground = true)
 @Composable
 fun PreviewPermissionDialog() {
@@ -243,7 +243,7 @@ fun PreviewPermissionDialog() {
     }
 }
 
-@ExperimentalMaterialApi
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun PermissionSettingDialogM2(
     initialPermissionList: PermissionListBean,
