@@ -1506,23 +1506,6 @@ object MixedTiebaApiImpl : ITiebaApi {
         )
     }
 
-    override fun addThreadFlow(
-        threadContent: String,
-        kw: String,
-        fid: String,
-        title: String,
-        isHide: Int,
-        isTitle: Int
-    ): Flow<AddThreadBean> =
-        RetrofitTiebaApi.MINI_TIEBA_API.addThreadFlow(
-            threadContent,
-            kw,
-            fid,
-            title,
-            isHide,
-            isTitle
-        )
-
     override fun setUserBlack(
         blackUid: Long,
         tbs: String,
