@@ -191,6 +191,7 @@ internal class DefaultVideoPlayerController(
         if (playerView != null) {
             playerViewAvailable(playerView!!)
         }
+        released.set(false)
     }
 
     /**
@@ -205,11 +206,15 @@ internal class DefaultVideoPlayerController(
             exoPlayer.seekTo(0)
         }
         exoPlayer.playWhenReady = true
-        autoHideControls()
+         coroutineScope.launch {
+            delay(200)
+            hideControls()
+        }
     }
 
     override fun pause() {
         exoPlayer.playWhenReady = false
+        showControls(false)
     }
 
     override fun togglePlaying() {
@@ -279,7 +284,7 @@ internal class DefaultVideoPlayerController(
         cancelAutoHideControls()
         Log.i("VideoPlayerController", "autoHideControls")
         autoHideControllerJob = coroutineScope.launch {
-            delay(5000)
+            delay(3000)
             hideControls()
         }
     }
@@ -370,7 +375,7 @@ internal class DefaultVideoPlayerController(
     }
 
     override fun release() {
-        Log.i("VideoPlayerController", "$this release")
+        Log.i("VideoPlayerController", "$this is release. is released $released")
         if (released.compareAndSet(false, true)) {
             exoPlayer.release()
             previewExoPlayer.release()

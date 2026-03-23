@@ -5,6 +5,8 @@ import com.huanchengfly.tieba.post.R
 import com.huanchengfly.tieba.post.api.TiebaApi
 import com.huanchengfly.tieba.post.api.models.CommonResponse
 import com.huanchengfly.tieba.post.api.models.FollowBean
+import com.huanchengfly.tieba.post.api.models.GetUserBlackInfoBean
+import com.huanchengfly.tieba.post.api.models.PermissionListBean
 import com.huanchengfly.tieba.post.api.models.protos.User
 import com.huanchengfly.tieba.post.api.models.protos.profile.ProfileResponse
 import com.huanchengfly.tieba.post.api.retrofit.exception.getErrorMessage
@@ -53,6 +55,13 @@ class UserProfileViewModel @Inject constructor() :
                 )
             )
 
+            is UserProfilePartialChange.PermListChange.Failure -> CommonUiEvent.Toast(
+                App.INSTANCE.getString(
+                    R.string.toast_ban_interact_failed,
+                    partialChange.error.getErrorMessage()
+                )
+            )
+
             else -> null
         }
 
@@ -66,6 +75,10 @@ class UserProfileViewModel @Inject constructor() :
                 intentFlow.filterIsInstance<UserProfileUiIntent.Follow>()
                     .flatMapConcat { it.producePartialChange() },
                 intentFlow.filterIsInstance<UserProfileUiIntent.Unfollow>()
+                    .flatMapConcat { it.producePartialChange() },
+                intentFlow.filterIsInstance<UserProfileUiIntent.SetUserBlack>()
+                    .flatMapConcat { it.producePartialChange() },
+                intentFlow.filterIsInstance<UserProfileUiIntent.GetUserBlackInfo>()
                     .flatMapConcat { it.producePartialChange() },
             )
 
@@ -97,6 +110,24 @@ class UserProfileViewModel @Inject constructor() :
                 }
                 .onStart { emit(UserProfilePartialChange.Unfollow.Start) }
                 .catch { emit(UserProfilePartialChange.Unfollow.Failure(it)) }
+
+        private fun UserProfileUiIntent.SetUserBlack.producePartialChange(): Flow<UserProfilePartialChange.PermListChange> =
+            TiebaApi.getInstance()
+                .setUserBlack(uid, tbs, permList)
+                .map<CommonResponse, UserProfilePartialChange.PermListChange> {
+                        UserProfilePartialChange.PermListChange.Success(this.permList)
+                }
+                .onStart { emit(UserProfilePartialChange.PermListChange.Start) }
+                .catch { emit(UserProfilePartialChange.PermListChange.Failure(it)) }
+
+        private fun UserProfileUiIntent.GetUserBlackInfo.producePartialChange(): Flow<UserProfilePartialChange.PermListChange> =
+            TiebaApi.getInstance()
+                .getUserBlackInfo(uid)
+                .map<GetUserBlackInfoBean, UserProfilePartialChange.PermListChange> {
+                    UserProfilePartialChange.PermListChange.Success(it.permList!!)
+                }
+                .onStart { emit(UserProfilePartialChange.PermListChange.Start) }
+                .catch { emit(UserProfilePartialChange.PermListChange.Failure(it)) }
     }
 }
 
@@ -113,6 +144,16 @@ sealed interface UserProfileUiIntent : UiIntent {
     data class Unfollow(
         val portrait: String,
         val tbs: String,
+    ) : UserProfileUiIntent
+
+    data class SetUserBlack(
+        val uid: Long,
+        val tbs: String,
+        val permList: PermissionListBean
+    ) : UserProfileUiIntent
+
+    data class GetUserBlackInfo(
+        val uid: Long
     ) : UserProfileUiIntent
 }
 
@@ -211,12 +252,26 @@ sealed interface UserProfilePartialChange : PartialChange<UserProfileUiState> {
             val error: Throwable,
         ) : Unfollow()
     }
+
+    sealed class PermListChange : UserProfilePartialChange {
+        data object Start : PermListChange()
+        data class Success(val permList: PermissionListBean) : PermListChange()
+        data class Failure(val error: Throwable) : PermListChange()
+
+        override fun reduce(oldState: UserProfileUiState): UserProfileUiState = when (this) {
+            is Start -> oldState
+            is Success -> oldState.copy(
+                permList = permList.wrapImmutable()
+            )
+            is Failure -> oldState
+        }
+    }
 }
 
 data class UserProfileUiState(
     val isRefreshing: Boolean = false,
     val error: ImmutableHolder<Throwable>? = null,
-
+    val permList: ImmutableHolder<PermissionListBean>? = null,
     val disableButton: Boolean = false,
     val user: ImmutableHolder<User>? = null,
 ) : UiState

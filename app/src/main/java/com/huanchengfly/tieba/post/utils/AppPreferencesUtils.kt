@@ -73,6 +73,12 @@ open class AppPreferencesUtils private constructor(ctx: Context) {
 
     var blockVideo by DataStoreDelegates.boolean(defaultValue = false)
 
+    var showFollowedOnly by DataStoreDelegates.boolean(defaultValue = false)
+
+    var checkCIUpdate by DataStoreDelegates.boolean(
+        defaultValue = false
+    )
+
     var collectThreadSeeLz by DataStoreDelegates.boolean(
         defaultValue = true,
         key = "collect_thread_see_lz"
@@ -118,6 +124,8 @@ open class AppPreferencesUtils private constructor(ctx: Context) {
     var hideExplore by DataStoreDelegates.boolean(defaultValue = false)
 
     var hideForumIntroAndStat by DataStoreDelegates.boolean(defaultValue = false)
+
+    var incognitoMode by DataStoreDelegates.boolean(defaultValue = false)
 
     var hideMedia by DataStoreDelegates.boolean(defaultValue = false)
 

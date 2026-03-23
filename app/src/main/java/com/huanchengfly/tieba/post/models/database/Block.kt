@@ -9,6 +9,7 @@ data class Block @JvmOverloads constructor(
     val keywords: String? = null,
     val username: String? = null,
     val uid: String? = null,
+    val isRegex: Boolean = false // 标记是否为正则表达式
 ) : LitePalSupport() {
     val id: Long = 0L
     companion object {

@@ -5,6 +5,7 @@ import com.huanchengfly.tieba.post.api.SearchThreadFilter
 import com.huanchengfly.tieba.post.api.SearchThreadOrder
 import com.huanchengfly.tieba.post.api.models.*
 import com.huanchengfly.tieba.post.api.models.protos.addPost.AddPostResponse
+import com.huanchengfly.tieba.post.api.models.protos.forumGuide.ForumGuideResponse
 import com.huanchengfly.tieba.post.api.models.protos.forumRecommend.ForumRecommendResponse
 import com.huanchengfly.tieba.post.api.models.protos.forumRuleDetail.ForumRuleDetailResponse
 import com.huanchengfly.tieba.post.api.models.protos.frsPage.FrsPageResponse
@@ -1338,6 +1339,18 @@ interface ITiebaApi {
     ): Flow<ForumRecommendResponse>
 
     /**
+     * 关注吧列表_V12版本
+     *
+     * **需登录**
+     *
+     * @param sortType 排序（0=更新排序 1=等级排序）
+     */
+    fun forumGuideNewFlow(
+        sortType: Int = 2
+    ): Flow<ForumGuideResponse>
+
+
+    /**
      * 吧页面
      *
      * @param forumName 吧名
@@ -1545,4 +1558,25 @@ interface ITiebaApi {
     fun getHistoryForumFlow(
         history: String,
     ): Flow<GetHistoryForumResponse>
+
+    /**
+     * 禁止用户互动（转、评、赞踩、@）
+     * @param blackUid 用户id
+     * @param tbs tbs（长）
+     * @param permList 参数列表：关注，互动，私信。(0,允许 1,禁止)
+     */
+    fun setUserBlack(
+        blackUid: Long,
+        tbs: String,
+        permList: PermissionListBean,
+    ): Flow<CommonResponse>
+
+
+    /**
+     * 查询单个用户的拉黑信息
+     * @param blackUid 被查询用户portrait
+     */
+    fun getUserBlackInfo(
+        blackUid: Long
+    ): Flow<GetUserBlackInfoBean>
 }

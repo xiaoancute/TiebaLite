@@ -276,7 +276,10 @@
     <string name="title_loading_data">正在加载数据</string>
     <string name="text_oksign_no_signable">没有可签到的吧</string>
     <string name="title_forum_info">关于本吧</string>
+    <string name="forum_portrait">贴吧头像</string>
     <string name="settings_forum_fab_function">吧页面悬浮按钮功能</string>
+    <string name="settings_default_start">启动首选页</string>
+    <string name="settings_incognito_mode">不保存浏览记录</string>
     <string name="btn_post">发贴</string>
     <string name="btn_refresh">刷新</string>
     <string name="btn_back_to_top">回到顶部</string>
@@ -484,6 +487,8 @@
     <string name="title_block_list">屏蔽词管理</string>
     <string name="settings_hide_blocked_content">彻底隐藏被屏蔽的内容</string>
     <string name="settings_block_video_summary">隐藏动态页面和吧页面的所有视频贴</string>
+    <string name="settings_show_followed_only">只推荐已关注的吧</string>
+    <string name="settings_show_followed_only_summary">在首页推荐中只会出现已经关注的吧的帖子</string>
     <string name="desc_image">图片</string>
     <string name="desc_add_image">添加图片</string>
     <string name="toast_upload_image_failed">上传图片失败 %s</string>
@@ -547,6 +552,8 @@
     <string name="title_user_hide_post">该用户已隐藏动态</string>
     <string name="menu_add_user_to_black_list">添加到黑名单</string>
     <string name="menu_add_user_to_white_list">添加到白名单</string>
+    <string name="ban_interact">拉黑</string>
+    <string name="toast_ban_interact_failed">更改拉黑配置失败 %1$s</string>
     <string name="btn_block">屏蔽选项</string>
     <string name="text_god_verify">%s领域大神</string>
     <string name="text_login_failed">登录失败 %s</string>

@@ -24,6 +24,7 @@ import com.huanchengfly.tieba.post.api.models.FollowBean
 import com.huanchengfly.tieba.post.api.models.ForumPageBean
 import com.huanchengfly.tieba.post.api.models.ForumRecommend
 import com.huanchengfly.tieba.post.api.models.GetForumListBean
+import com.huanchengfly.tieba.post.api.models.GetUserBlackInfoBean
 import com.huanchengfly.tieba.post.api.models.InitNickNameBean
 import com.huanchengfly.tieba.post.api.models.LikeForumResultBean
 import com.huanchengfly.tieba.post.api.models.LoginBean
@@ -31,6 +32,7 @@ import com.huanchengfly.tieba.post.api.models.MSignBean
 import com.huanchengfly.tieba.post.api.models.MessageListBean
 import com.huanchengfly.tieba.post.api.models.MsgBean
 import com.huanchengfly.tieba.post.api.models.NewCollectDataBean
+import com.huanchengfly.tieba.post.api.models.PermissionListBean
 import com.huanchengfly.tieba.post.api.models.PersonalizedBean
 import com.huanchengfly.tieba.post.api.models.PicPageBean
 import com.huanchengfly.tieba.post.api.models.Profile
@@ -52,6 +54,9 @@ import com.huanchengfly.tieba.post.api.models.WebUploadPicBean
 import com.huanchengfly.tieba.post.api.models.protos.addPost.AddPostRequest
 import com.huanchengfly.tieba.post.api.models.protos.addPost.AddPostRequestData
 import com.huanchengfly.tieba.post.api.models.protos.addPost.AddPostResponse
+import com.huanchengfly.tieba.post.api.models.protos.forumGuide.ForumGuideRequest
+import com.huanchengfly.tieba.post.api.models.protos.forumGuide.ForumGuideRequestData
+import com.huanchengfly.tieba.post.api.models.protos.forumGuide.ForumGuideResponse
 import com.huanchengfly.tieba.post.api.models.protos.forumRecommend.ForumRecommendRequest
 import com.huanchengfly.tieba.post.api.models.protos.forumRecommend.ForumRecommendRequestData
 import com.huanchengfly.tieba.post.api.models.protos.forumRecommend.ForumRecommendResponse
@@ -1046,6 +1051,22 @@ object MixedTiebaApiImpl : ITiebaApi {
         )
     }
 
+    override fun forumGuideNewFlow(
+        sortType: Int,
+    ): Flow<ForumGuideResponse> {
+        return RetrofitTiebaApi.OFFICIAL_PROTOBUF_TIEBA_API.forumGuideFlow(
+            buildProtobufRequestBody(
+                ForumGuideRequest(
+                    ForumGuideRequestData(
+                        sort_type = sortType,
+                        call_from = 0
+                    )
+                ),
+                clientVersion = ClientVersion.TIEBA_V12
+            ),
+        )
+    }
+
     override fun frsPage(
         forumName: String,
         page: Int,
@@ -1484,4 +1505,22 @@ object MixedTiebaApiImpl : ITiebaApi {
             )
         )
     }
+
+    override fun setUserBlack(
+        blackUid: Long,
+        tbs: String,
+        permList: PermissionListBean
+    ): Flow<CommonResponse> =
+        RetrofitTiebaApi.OFFICIAL_TIEBA_API.setUserBlack(
+            blackUid,
+            tbs,
+            permList.toJson()
+        )
+
+    override fun getUserBlackInfo(
+        blackUid: Long
+    ): Flow<GetUserBlackInfoBean>  =
+        RetrofitTiebaApi.OFFICIAL_TIEBA_API.getUserBlack(
+            blackUid
+        )
 }

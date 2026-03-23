@@ -29,6 +29,7 @@ import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
@@ -116,13 +117,13 @@ fun VideoPlayer(
         videoPlayerController.enableGestures(gesturesEnabled)
     }
 
-    DisposableEffect(Unit) {
-        videoPlayerController.initialize()
-        onDispose {
-            videoPlayerController.release()
-        }
-    }
-
+//    DisposableEffect(Unit) {
+//        videoPlayerController.initialize()
+//        onDispose {
+//            videoPlayerController.release()
+//        }
+//    }
+    LaunchedEffect(Unit) { videoPlayerController.initialize() }
     CompositionLocalProvider(
         LocalContentColor provides Color.White,
         LocalVideoPlayerController provides videoPlayerController

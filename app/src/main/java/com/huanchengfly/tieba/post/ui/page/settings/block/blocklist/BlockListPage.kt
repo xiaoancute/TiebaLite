@@ -1,13 +1,18 @@
 package com.huanchengfly.tieba.post.ui.page.settings.block.blocklist
 
+import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -15,6 +20,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Checkbox
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
@@ -35,10 +42,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.gson.reflect.TypeToken
@@ -77,14 +87,17 @@ fun BlockListPage(
 ) {
     var addBlockCategory by remember { mutableStateOf(Block.CATEGORY_BLACK_LIST) }
     val dialogState = rememberDialogState()
+    var isRegex by remember { mutableStateOf(false) } // 记录是否为正则
     PromptDialog(
         onConfirm = {
             viewModel.send(
                 BlockListUiIntent.Add(
                     category = addBlockCategory,
-                    keywords = it.split(" ")
+                    keywords =  if (isRegex) listOf(it) else it.split(" "), // 避免正则中的空格导致正则失效
+                    isRegex = isRegex // 传递正则状态
                 )
             )
+            isRegex = false // 重置
         },
         dialogState = dialogState,
         title = {
@@ -94,7 +107,17 @@ fun BlockListPage(
             )
         }
     ) {
-        Text(text = stringResource(id = R.string.tip_add_block))
+        Column {
+            Text(text = stringResource(id = R.string.tip_add_block))
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(
+                    checked = isRegex,
+                    onCheckedChange = { isRegex = it }
+                )
+                Text(text = "作为正则表达式")
+            }
+        }
     }
 
     val context = LocalContext.current
@@ -213,9 +236,9 @@ fun BlockListPage(
             }
         }
     ) { paddingValues ->
-        val snackbarHostState = LocalSnackbarHostState.current
+        val snackBarHostState = LocalSnackbarHostState.current
         viewModel.onEvent<BlockListUiEvent.Success> {
-            snackbarHostState.showSnackbar(
+            snackBarHostState.showSnackbar(
                 when (it) {
                     is BlockListUiEvent.Success.Add -> context.getString(R.string.toast_add_success)
                     is BlockListUiEvent.Success.Delete -> context.getString(R.string.toast_delete_success)
@@ -247,20 +270,38 @@ fun BlockListPage(
                 },
                 modifier = Modifier.fillMaxSize()
             ) {
+                val clipboardManager = LocalClipboardManager.current
+                val context = LocalContext.current
                 MyLazyColumn(Modifier.fillMaxSize()) {
-                    items(items, key = { it.id }) {
+                    items(items, key = { it.id }) { item ->
                         LongClickMenu(menuContent = {
+
+                            // 复制功能
+                            DropdownMenuItem(onClick = {
+                                val keywordsList: List<String> = GsonUtil.getGson().fromJson(
+                                    item.keywords ?: "[]",
+                                    object : TypeToken<List<String>>() {}.type
+                                )
+                                val merged = if (item.isRegex) {
+                                    keywordsList.joinToString(separator = "")
+                                } else {
+                                    keywordsList.joinToString(separator = " ")
+                                }
+
+                                clipboardManager.setText(AnnotatedString(merged))
+                                Toast.makeText(context, R.string.toast_copy_success, Toast.LENGTH_SHORT).show()
+                            }) {
+                                Text(text = stringResource(id = R.string.title_copy))
+                            }
                             DropdownMenuItem(onClick = {
                                 viewModel.send(
-                                    BlockListUiIntent.Delete(
-                                        it.id
-                                    )
+                                    BlockListUiIntent.Delete(item.id)
                                 )
                             }) {
                                 Text(text = stringResource(id = R.string.title_delete))
                             }
                         }) {
-                            BlockItem(item = it)
+                            BlockItem(item = item)
                         }
                     }
                 }
@@ -288,6 +329,7 @@ private fun BlockItemPlaceholder() {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun BlockItem(
     item: Block,
@@ -304,7 +346,11 @@ private fun BlockItem(
                 id = R.string.block_type_user
             ) else stringResource(
                 id = R.string.block_type_keywords
-            )
+            ),
+            tint = if (item.isRegex)
+                MaterialTheme.colors.secondary
+            else
+                MaterialTheme.colors.onSurface
         )
         Spacer(modifier = Modifier.width(16.dp))
         Column(
@@ -328,10 +374,35 @@ private fun BlockItem(
                             object : TypeToken<List<String>>() {}.type
                         )
                 }.getOrDefault(emptyList())
-                Text(
-                    text = keywordsList.joinToString(" "),
-                    style = MaterialTheme.typography.subtitle1
-                )
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(0.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = keywordsList.joinToString(" "),
+                        style = MaterialTheme.typography.subtitle1,
+                        color = if (item.isRegex)
+                            MaterialTheme.colors.secondary
+                        else
+                            MaterialTheme.colors.onSurface,
+                        maxLines = Int.MAX_VALUE, // 支持多行
+                        overflow = TextOverflow.Visible
+                    )
+                    if (item.isRegex) {
+                        Text(
+                            text = "正则",
+                            color = MaterialTheme.colors.secondary,
+                            fontSize = 12.sp,
+                            modifier = Modifier
+                                .background(
+                                    color = MaterialTheme.colors.secondary.copy(alpha = 0.13f),
+                                    shape = RoundedCornerShape(8.dp)
+                                )
+                                .padding(horizontal = 8.dp, vertical = 2.dp)
+                        )
+                    }
+                }
             }
         }
     }
