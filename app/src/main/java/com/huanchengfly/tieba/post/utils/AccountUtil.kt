@@ -155,6 +155,7 @@ object AccountUtil {
         context.sendBroadcast(Intent().setAction(ACTION_SWITCH_ACCOUNT))
         mutableCurrentAccountState.value = account
         refreshAccountsState()
+        FollowedForumsCache.clear()
         AppGlobalEventScope.emitGlobalEvent(GlobalEvent.AccountSwitched)
         clearUnreadNotifications(context)
         BackgroundWorkScheduler.syncAutoSign(context)
@@ -282,6 +283,7 @@ object AccountUtil {
         }
         mutableCurrentAccountState.value = null
         refreshAccountsState()
+        FollowedForumsCache.clear()
         context.getSharedPreferences("accountData", Context.MODE_PRIVATE).edit().clear().commit()
         BackgroundWorkScheduler.syncAutoSign(context)
         BackgroundWorkScheduler.cancelNotificationPolling(context)

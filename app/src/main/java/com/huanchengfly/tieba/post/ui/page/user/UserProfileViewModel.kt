@@ -124,7 +124,7 @@ class UserProfileViewModel @Inject constructor() :
             TiebaApi.getInstance()
                 .getUserBlackInfo(uid)
                 .map<GetUserBlackInfoBean, UserProfilePartialChange.PermListChange> {
-                    UserProfilePartialChange.PermListChange.Success(it.permList!!)
+                    UserProfilePartialChange.PermListChange.Success(it.permList ?: PermissionListBean())
                 }
                 .onStart { emit(UserProfilePartialChange.PermListChange.Start) }
                 .catch { emit(UserProfilePartialChange.PermListChange.Failure(it)) }

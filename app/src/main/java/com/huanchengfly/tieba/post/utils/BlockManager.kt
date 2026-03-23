@@ -116,6 +116,6 @@ object BlockManager {
     fun MessageListBean.MessageInfoBean.shouldBlock(): Boolean =
         shouldBlock(content.orEmpty()) || shouldBlock(
             this.replyer?.id?.toLongOrNull() ?: -1,
-            this.replyer?.name?.ifEmpty { this.replyer.nameShow }
+            this.replyer?.name?.ifEmpty { this.replyer.nameShow } ?: this.replyer?.nameShow
         )
 }

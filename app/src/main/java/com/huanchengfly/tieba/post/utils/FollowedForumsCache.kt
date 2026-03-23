@@ -8,6 +8,10 @@ object FollowedForumsCache {
         forumNames = names.toHashSet()
     }
 
+    fun clear() {
+        forumNames = emptySet()
+    }
+
     fun isFollowed(name: String?): Boolean {
         if (name.isNullOrEmpty()) return false
         return forumNames.contains(name)

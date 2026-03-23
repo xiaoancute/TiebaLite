@@ -146,7 +146,9 @@ fun UserProfilePage(
 
     LazyLoad(loaded = viewModel.initialized) {
         viewModel.send(UserProfileUiIntent.Refresh(uid))
-        viewModel.send(UserProfileUiIntent.GetUserBlackInfo(uid))
+        if (account != null) {
+            viewModel.send(UserProfileUiIntent.GetUserBlackInfo(uid))
+        }
         viewModel.initialized = true
     }
 
@@ -251,7 +253,7 @@ fun PermissionSettingDialogM2(
     onConfirm: (PermissionListBean) -> Unit
 ) {
     // 维护对话框内部的临时状态
-    var currentBean by remember { mutableStateOf(initialPermissionList.copy()) }
+    var currentBean by remember(initialPermissionList) { mutableStateOf(initialPermissionList.copy()) }
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
