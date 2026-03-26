@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.panpf.sketch.compose.AsyncImage
+import com.huanchengfly.tieba.post.App
 import com.huanchengfly.tieba.post.R
 import com.huanchengfly.tieba.post.arch.BaseComposeActivity.Companion.LocalWindowSizeClass
 import com.huanchengfly.tieba.post.models.PhotoViewData
@@ -149,7 +150,7 @@ data class PicContentRender(
     }
 
     override fun toString(): String {
-        return "[图片]"
+        return App.INSTANCE.getString(R.string.pb_content_image)
     }
 }
 
@@ -167,7 +168,7 @@ data class VoiceContentRender(
     }
 
     override fun toString(): String {
-        return "[视频]"
+        return App.INSTANCE.getString(R.string.pb_content_voice)
     }
 }
 
@@ -223,7 +224,7 @@ data class VideoContentRender(
     }
 
     override fun toString(): String {
-        return "[语音]"
+        return App.INSTANCE.getString(R.string.pb_content_video)
     }
 }
 

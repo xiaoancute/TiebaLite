@@ -24,30 +24,42 @@ object UnreadNotificationHelper {
     const val ACTION_NEW_MESSAGE = "com.huanchengfly.tieba.post.action.NEW_MESSAGE"
     const val CHANNEL_GROUP = "20"
     const val CHANNEL_AT = "3"
-    const val CHANNEL_AT_NAME = "提到我的"
     const val CHANNEL_AGREE = "4"
-    const val CHANNEL_AGREE_NAME = "赞过我的"
     const val CHANNEL_TOTAL = "total"
     const val ID_REPLY = 20
     const val ID_AT = 21
     const val ID_AGREE = 22
-    private const val CHANNEL_GROUP_NAME = "消息通知"
     private const val CHANNEL_REPLY = "2"
-    private const val CHANNEL_REPLY_NAME = "回复我的"
 
     fun ensureChannels(
         context: Context,
         notificationManager: NotificationManager,
     ) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channelGroup = NotificationChannelGroup(CHANNEL_GROUP, CHANNEL_GROUP_NAME)
+            val channelGroup = NotificationChannelGroup(
+                CHANNEL_GROUP,
+                context.getString(R.string.notification_channel_group_name)
+            )
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                channelGroup.description = "贴吧的各种消息通知"
+                channelGroup.description =
+                    context.getString(R.string.notification_channel_group_description)
             }
             notificationManager.createNotificationChannelGroup(channelGroup)
-            createChannel(notificationManager, CHANNEL_REPLY, CHANNEL_REPLY_NAME)
-            createChannel(notificationManager, CHANNEL_AT, CHANNEL_AT_NAME)
-            createChannel(notificationManager, CHANNEL_AGREE, CHANNEL_AGREE_NAME)
+            createChannel(
+                notificationManager,
+                CHANNEL_REPLY,
+                context.getString(R.string.notification_channel_reply_name)
+            )
+            createChannel(
+                notificationManager,
+                CHANNEL_AT,
+                context.getString(R.string.notification_channel_at_name)
+            )
+            createChannel(
+                notificationManager,
+                CHANNEL_AGREE,
+                context.getString(R.string.notification_channel_agree_name)
+            )
         }
     }
 
@@ -82,7 +94,7 @@ object UnreadNotificationHelper {
             count = replyCount,
             id = ID_REPLY,
             channel = CHANNEL_REPLY,
-            channelName = CHANNEL_REPLY_NAME,
+            channelName = context.getString(R.string.notification_channel_reply_name),
             title = context.getString(R.string.tips_message_reply, replyCount),
             intent = Intent(ACTION_VIEW, Uri.parse("tblite://notifications/0"))
         )
@@ -92,7 +104,7 @@ object UnreadNotificationHelper {
             count = atCount,
             id = ID_AT,
             channel = CHANNEL_AT,
-            channelName = CHANNEL_AT_NAME,
+            channelName = context.getString(R.string.notification_channel_at_name),
             title = context.getString(R.string.tips_message_at, atCount),
             intent = Intent(ACTION_VIEW, Uri.parse("tblite://notifications/1"))
         )
@@ -102,7 +114,7 @@ object UnreadNotificationHelper {
             count = agreeCount,
             id = ID_AGREE,
             channel = CHANNEL_AGREE,
-            channelName = CHANNEL_AGREE_NAME,
+            channelName = context.getString(R.string.notification_channel_agree_name),
             title = context.getString(R.string.tips_message_agree, agreeCount),
             intent = Intent(ACTION_VIEW, Uri.parse("tblite://notifications/2"))
         )

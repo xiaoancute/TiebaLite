@@ -225,7 +225,7 @@
     <string name="title_search_order_old">旧贴在前</string>
     <string name="title_search_order_relevant">相关度</string>
     <string name="title_search_filter_all">全部</string>
-    <string name="desc_user_avatar">用户 %1</string>
+    <string name="desc_user_avatar">用户头像</string>
     <string name="my_info_about">关于</string>
     <string name="relative_date_minute">%d 分钟前</string>
     <string name="relative_date_second">%d 秒前</string>
@@ -591,4 +591,28 @@
     <string name="ai_summary_close">关闭</string>
     <string name="ai_summary_copied">已复制到剪贴板</string>
     <string name="ai_summary_no_content">当前没有可总结的内容</string>
+    <string name="block_regex_option">作为正则表达式</string>
+    <string name="block_regex_badge">正则</string>
+    <string name="topic_meta_reply">%1$s 回复</string>
+    <string name="topic_meta_agree">%1$s 赞</string>
+    <string name="topic_meta_image">%1$d 图</string>
+    <string name="dialog_permission_black_scope_title">拉黑范围</string>
+    <string name="dialog_permission_black_follow">禁止TA关注我</string>
+    <string name="dialog_permission_black_interact">禁止TA互动</string>
+    <string name="dialog_permission_black_interact_summary">包含转,评,赞踩,@</string>
+    <string name="dialog_permission_black_chat">禁止TA私信</string>
+    <string name="launcher_icon_new">新图标</string>
+    <string name="launcher_icon_new_invert">新图标（反色）</string>
+    <string name="launcher_icon_old">旧图标</string>
+    <string name="notification_channel_group_name">消息通知</string>
+    <string name="notification_channel_group_description">贴吧的各种消息通知</string>
+    <string name="notification_channel_reply_name">回复我的</string>
+    <string name="notification_channel_at_name">提到我的</string>
+    <string name="notification_channel_agree_name">赞过我的</string>
+    <string name="account_exit_switch_success">退出登录成功，已切换至账号 %1$s</string>
+    <string name="pb_content_image">[图片]</string>
+    <string name="pb_content_video">[视频]</string>
+    <string name="pb_content_voice">[语音]</string>
+    <string name="label_bawu_manager">吧主</string>
+    <string name="label_bawu_helper">小吧主</string>
 </resources>

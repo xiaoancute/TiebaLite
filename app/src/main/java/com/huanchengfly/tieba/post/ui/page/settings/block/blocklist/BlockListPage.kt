@@ -115,7 +115,7 @@ fun BlockListPage(
                     checked = isRegex,
                     onCheckedChange = { isRegex = it }
                 )
-                Text(text = "作为正则表达式")
+                Text(text = stringResource(id = R.string.block_regex_option))
             }
         }
     }
@@ -391,7 +391,7 @@ private fun BlockItem(
                     )
                     if (item.isRegex) {
                         Text(
-                            text = "正则",
+                            text = stringResource(id = R.string.block_regex_badge),
                             color = MaterialTheme.colors.secondary,
                             fontSize = 12.sp,
                             modifier = Modifier

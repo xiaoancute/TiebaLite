@@ -1,6 +1,8 @@
 package com.huanchengfly.tieba.post.ui.page.threadstore
 
 import androidx.compose.runtime.Stable
+import com.huanchengfly.tieba.post.App
+import com.huanchengfly.tieba.post.R
 import com.huanchengfly.tieba.post.api.TiebaApi
 import com.huanchengfly.tieba.post.api.models.CommonResponse
 import com.huanchengfly.tieba.post.api.models.ThreadStoreBean
@@ -67,7 +69,9 @@ class ThreadStoreViewModel @Inject constructor() :
                         it.storeThread,
                         it.storeThread.isNotEmpty()
                     )
-                    else ThreadStorePartialChange.Refresh.Failure(NullPointerException("未知错误"))
+                    else ThreadStorePartialChange.Refresh.Failure(
+                        NullPointerException(App.INSTANCE.getString(R.string.error_unknown))
+                    )
                 }
                 .onStart { emit(ThreadStorePartialChange.Refresh.Start) }
                 .catch { emit(ThreadStorePartialChange.Refresh.Failure(it)) }
@@ -81,7 +85,9 @@ class ThreadStoreViewModel @Inject constructor() :
                         it.storeThread.isNotEmpty(),
                         page
                     )
-                    else ThreadStorePartialChange.LoadMore.Failure(NullPointerException("未知错误"))
+                    else ThreadStorePartialChange.LoadMore.Failure(
+                        NullPointerException(App.INSTANCE.getString(R.string.error_unknown))
+                    )
                 }
                 .onStart { emit(ThreadStorePartialChange.LoadMore.Start) }
                 .catch { emit(ThreadStorePartialChange.LoadMore.Failure(it)) }

@@ -261,7 +261,7 @@ fun PermissionSettingDialogM2(
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "拉黑范围",
+                    text = stringResource(id = R.string.dialog_permission_black_scope_title),
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colors.primary,
@@ -271,7 +271,7 @@ fun PermissionSettingDialogM2(
                 // 1. 禁止关注
                 val followChecked = currentBean.follow == 1
                 TextPref(
-                    title = "禁止TA关注我",
+                    title = stringResource(id = R.string.dialog_permission_black_follow),
                     leadingIcon = {
                         LeadingIcon {
                             AvatarIcon(
@@ -298,7 +298,7 @@ fun PermissionSettingDialogM2(
                 // 2. 禁止互动
                 val interactChecked = currentBean.interact == 1
                 TextPref(
-                    title = "禁止TA互动",
+                    title = stringResource(id = R.string.dialog_permission_black_interact),
                     leadingIcon = {
                         LeadingIcon {
                             AvatarIcon(
@@ -309,7 +309,7 @@ fun PermissionSettingDialogM2(
                         }
                     },
                     textColor = MaterialTheme.colors.onBackground,
-                    summary = "包含转,评,赞踩,@",
+                    summary = stringResource(id = R.string.dialog_permission_black_interact_summary),
                     onClick = {
                         val next = !interactChecked
                         currentBean = currentBean.copy(interact = if (next) 1 else 0)
@@ -326,7 +326,7 @@ fun PermissionSettingDialogM2(
                 // 3. 禁止私信
                 val chatChecked = currentBean.chat == 1
                 TextPref(
-                    title = "禁止TA私信",
+                    title = stringResource(id = R.string.dialog_permission_black_chat),
                     leadingIcon = {
                         LeadingIcon {
                             AvatarIcon(
@@ -356,12 +356,12 @@ fun PermissionSettingDialogM2(
                 onConfirm(currentBean)
                 onDismissRequest()
             }) {
-                Text("确定", fontWeight = FontWeight.Bold)
+                Text(stringResource(id = R.string.button_sure_default), fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismissRequest) {
-                Text("取消")
+                Text(stringResource(id = R.string.button_cancel))
             }
         }
     )

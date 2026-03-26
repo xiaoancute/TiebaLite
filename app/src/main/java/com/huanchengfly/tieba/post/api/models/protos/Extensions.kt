@@ -378,7 +378,11 @@ val Post.contentRenders: ImmutableList<PbContentRender>
 
 val User.bawuType: String?
     get() = if (is_bawu == 1) {
-        if (bawu_type == "manager") "吧主" else "小吧主"
+        if (bawu_type == "manager") {
+            App.INSTANCE.getString(R.string.label_bawu_manager)
+        } else {
+            App.INSTANCE.getString(R.string.label_bawu_helper)
+        }
     } else null
 
 val Post.subPostContents: ImmutableList<AnnotatedString>

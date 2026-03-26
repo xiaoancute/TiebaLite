@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="theme_values">
+        <item>tieba</item>
+        <item>blue</item>
+        <item>black</item>
+        <item>pink</item>
+        <item>red</item>
+        <item>purple</item>
+        <item>blue_dark</item>
+        <item>grey_dark</item>
+        <item>amoled_dark</item>
+    </string-array>
+
+    <string-array name="themeNames">
+        <item>Deep Sea Blue</item>
+        <item>Fresh Blue</item>
+        <item>Classic Black</item>
+        <item>Girl Pink</item>
+        <item>New Year Red</item>
+        <item>Starry Purple</item>
+        <item>Quiet Blue</item>
+        <item>Deep Gray</item>
+        <item>Pure Black</item>
+    </string-array>
+
+    <string-array name="dark_theme_names">
+        <item>Quiet Blue</item>
+        <item>Deep Gray</item>
+        <item>Pure Black</item>
+    </string-array>
+
+    <string-array name="dark_theme_values">
+        <item>blue_dark</item>
+        <item>grey_dark</item>
+        <item>amoled_dark</item>
+    </string-array>
+
+</resources>

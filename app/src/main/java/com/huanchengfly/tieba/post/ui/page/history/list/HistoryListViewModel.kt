@@ -1,6 +1,8 @@
 package com.huanchengfly.tieba.post.ui.page.history.list
 
 import androidx.compose.runtime.Stable
+import com.huanchengfly.tieba.post.App
+import com.huanchengfly.tieba.post.R
 import com.huanchengfly.tieba.post.api.retrofit.exception.getErrorMessage
 import com.huanchengfly.tieba.post.arch.BaseViewModel
 import com.huanchengfly.tieba.post.arch.PartialChange
@@ -104,7 +106,9 @@ private class HistoryListPartialChangeProducer(val type: Int) :
             .flowOn(Dispatchers.IO)
             .map {
                 if (it > 0) HistoryListPartialChange.Delete.Success(id)
-                else HistoryListPartialChange.Delete.Failure(IllegalStateException("未知错误"))
+                else HistoryListPartialChange.Delete.Failure(
+                    IllegalStateException(App.INSTANCE.getString(R.string.error_unknown))
+                )
             }
             .catch { emit(HistoryListPartialChange.Delete.Failure(it)) }
 }

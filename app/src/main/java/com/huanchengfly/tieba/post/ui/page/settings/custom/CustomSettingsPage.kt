@@ -142,9 +142,9 @@ fun CustomSettingsPage(
                         }
                     },
                     entries = mapOf(
-                        LauncherIcons.NEW_ICON to "新图标",
-                        LauncherIcons.NEW_ICON_INVERT to "新图标（反色）",
-                        LauncherIcons.OLD_ICON to "旧图标",
+                        LauncherIcons.NEW_ICON to stringResource(id = R.string.launcher_icon_new),
+                        LauncherIcons.NEW_ICON_INVERT to stringResource(id = R.string.launcher_icon_new_invert),
+                        LauncherIcons.OLD_ICON to stringResource(id = R.string.launcher_icon_old),
                     ),
                     icons = mapOf(
                         LauncherIcons.NEW_ICON to {
@@ -154,7 +154,7 @@ fun CustomSettingsPage(
                                         R.drawable.ic_launcher_new_round
                                     )
                                 ),
-                                contentDescription = "新图标",
+                                contentDescription = stringResource(id = R.string.launcher_icon_new),
                                 modifier = Modifier.size(Sizes.Medium)
                             )
                         },
@@ -165,7 +165,7 @@ fun CustomSettingsPage(
                                         R.drawable.ic_launcher_new_invert_round
                                     )
                                 ),
-                                contentDescription = "新图标（反色）",
+                                contentDescription = stringResource(id = R.string.launcher_icon_new_invert),
                                 modifier = Modifier.size(Sizes.Medium)
                             )
                         },
@@ -176,7 +176,7 @@ fun CustomSettingsPage(
                                         R.drawable.ic_launcher_round
                                     )
                                 ),
-                                contentDescription = "旧图标",
+                                contentDescription = stringResource(id = R.string.launcher_icon_old),
                                 modifier = Modifier.size(Sizes.Medium)
                             )
                         },

@@ -328,10 +328,28 @@ private fun TopicThreadItem(
     onClick: () -> Unit,
 ) {
     val meta = buildList {
-        if (threadInfo.forumName.isNotBlank()) add("${threadInfo.forumName}吧")
-        if (threadInfo.replyNum > 0) add("${threadInfo.replyNum.getShortNumString()} 回复")
-        if (threadInfo.agreeNum > 0) add("${threadInfo.agreeNum.getShortNumString()} 赞")
-        if (threadInfo.mediaNum.pic > 0) add("${threadInfo.mediaNum.pic} 图")
+        if (threadInfo.forumName.isNotBlank()) {
+            add(stringResource(id = R.string.title_forum, threadInfo.forumName))
+        }
+        if (threadInfo.replyNum > 0) {
+            add(
+                stringResource(
+                    id = R.string.topic_meta_reply,
+                    threadInfo.replyNum.getShortNumString()
+                )
+            )
+        }
+        if (threadInfo.agreeNum > 0) {
+            add(
+                stringResource(
+                    id = R.string.topic_meta_agree,
+                    threadInfo.agreeNum.getShortNumString()
+                )
+            )
+        }
+        if (threadInfo.mediaNum.pic > 0) {
+            add(stringResource(id = R.string.topic_meta_image, threadInfo.mediaNum.pic))
+        }
     }
     Column(
         modifier = Modifier

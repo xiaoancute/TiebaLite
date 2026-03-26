@@ -1,5 +1,7 @@
 package com.huanchengfly.tieba.post.api.retrofit.exception
 
+import com.huanchengfly.tieba.post.App
+import com.huanchengfly.tieba.post.R
 import java.io.IOException
 
 abstract class TiebaException(message: String) : IOException(message) {
@@ -10,7 +12,7 @@ abstract class TiebaException(message: String) : IOException(message) {
     }
 }
 
-object TiebaUnknownException : TiebaException("未知错误") {
+object TiebaUnknownException : TiebaException(App.INSTANCE.getString(R.string.error_unknown)) {
     override val code: Int
         get() = -1
 }

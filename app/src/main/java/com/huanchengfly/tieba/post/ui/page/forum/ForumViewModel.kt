@@ -1,6 +1,8 @@
 package com.huanchengfly.tieba.post.ui.page.forum
 
 import androidx.compose.runtime.Stable
+import com.huanchengfly.tieba.post.App
+import com.huanchengfly.tieba.post.R
 import com.huanchengfly.tieba.post.api.TiebaApi
 import com.huanchengfly.tieba.post.api.models.CommonResponse
 import com.huanchengfly.tieba.post.api.models.LikeForumResultBean
@@ -116,7 +118,9 @@ class ForumViewModel @Inject constructor() :
                             signResultBean.userInfo.allLevelInfo.last { it.score.toInt() < levelUpScore }.id.toInt(),
                             signResultBean.userInfo.levelName
                         )
-                    } else ForumPartialChange.SignIn.Failure(NullPointerException("未知错误"))
+                    } else ForumPartialChange.SignIn.Failure(
+                        NullPointerException(App.INSTANCE.getString(R.string.error_unknown))
+                    )
                 }
                 .catch { emit(ForumPartialChange.SignIn.Failure(it)) }
 

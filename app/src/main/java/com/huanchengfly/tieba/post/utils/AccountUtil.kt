@@ -276,7 +276,7 @@ object AccountUtil {
             val accountName = nextAccount.nameShow ?: nextAccount.name
             Toast.makeText(
                 context,
-                "退出登录成功，已切换至账号 $accountName",
+                context.getString(R.string.account_exit_switch_success, accountName),
                 Toast.LENGTH_SHORT
             ).show()
             return

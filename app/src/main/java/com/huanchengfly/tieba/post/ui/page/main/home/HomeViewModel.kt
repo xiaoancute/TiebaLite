@@ -2,6 +2,8 @@ package com.huanchengfly.tieba.post.ui.page.main.home
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
+import com.huanchengfly.tieba.post.App
+import com.huanchengfly.tieba.post.R
 import com.huanchengfly.tieba.post.api.TiebaApi
 import com.huanchengfly.tieba.post.api.models.CommonResponse
 import com.huanchengfly.tieba.post.api.retrofit.exception.getErrorMessage
@@ -124,7 +126,7 @@ class HomeViewModel : BaseViewModel<HomeUiIntent, HomePartialChange, HomeUiState
                 if (success) {
                     emit(HomePartialChange.TopForums.Add.Success(forum))
                 } else {
-                    emit(HomePartialChange.TopForums.Add.Failure("未知错误"))
+                    emit(HomePartialChange.TopForums.Add.Failure(App.INSTANCE.getString(R.string.error_unknown)))
                 }
             }.flowOn(Dispatchers.IO)
                 .catch { emit(HomePartialChange.TopForums.Add.Failure(it.getErrorMessage())) }
