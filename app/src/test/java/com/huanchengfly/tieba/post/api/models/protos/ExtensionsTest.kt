@@ -26,19 +26,20 @@ class ExtensionsTest {
     }
 
     @Test
-    fun pbContentType40RendersAsPlainText() {
+    fun pbContentType40RendersAsLinkText() {
         val render = listOf(
             PbContent(type = 40, text = "关键词链接", link = "https://example.com")
         ).renders.single() as TextContentRender
 
-        assertEquals("关键词链接", render.toString())
+        assertTrue(render.toString().contains("关键词链接"))
         val annotationString = render.toAnnotationString()
-        assertTrue(
+        assertEquals(
+            listOf("https://example.com"),
             annotationString.getStringAnnotations(
                 tag = "url",
                 start = 0,
                 end = annotationString.length
-            ).isEmpty()
+            ).map { it.item }
         )
     }
 }

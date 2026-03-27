@@ -28,6 +28,16 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
+private fun linkTextColor(): Color {
+    if (!App.isInitialized) return Color.Unspecified
+    return Color(
+        ThemeUtils.getColorByAttr(
+            App.INSTANCE,
+            R.attr.colorNewPrimary
+        )
+    )
+}
+
 val List<Abstract>.abstractText: String
     get() = joinToString(separator = "") {
         when (it.type) {
@@ -225,22 +235,17 @@ val List<PbContent>.renders: ImmutableList<PbContentRender>
 
         forEach {
             when (it.type) {
-                0, 9, 27, 35, 40 -> {
+                0, 9, 27, 35 -> {
                     renders.appendText(it.text)
                 }
 
-                1 -> {
+                1, 40 -> {
                     val text = buildAnnotatedString {
                         appendInlineContent("link_icon", alternateText = "🔗")
                         withAnnotation(tag = "url", annotation = it.link) {
                             withStyle(
                                 SpanStyle(
-                                    color = Color(
-                                        ThemeUtils.getColorByAttr(
-                                            App.INSTANCE,
-                                            R.attr.colorNewPrimary
-                                        )
-                                    )
+                                    color = linkTextColor()
                                 )
                             ) {
                                 append(it.text)
