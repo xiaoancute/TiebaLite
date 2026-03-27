@@ -160,6 +160,19 @@ data class ReplyArgs(
     val tbs: String? = null,
 )
 
+private typealias EditorPoster = ((() -> Unit) -> Unit)
+
+internal fun requestReplyKeyboard(
+    postToEditor: EditorPoster?,
+    requestFocus: () -> Unit,
+    showKeyboard: () -> Unit,
+) {
+    postToEditor?.invoke {
+        requestFocus()
+        showKeyboard()
+    }
+}
+
 @Composable
 private fun ReplyGateScreen(
     title: String,
@@ -476,10 +489,14 @@ internal fun ReplyPageContent(
     var startClosingAnimation by remember { mutableStateOf(false) }
 
     fun showKeyboard() {
-        editTextView?.post {
-            editTextView?.requestFocus()
-            showKeyboard(context, editTextView!!)
-        }
+        val replyEditor = editTextView
+        requestReplyKeyboard(
+            postToEditor = replyEditor?.let { editor ->
+                { task -> editor.post(task) }
+            },
+            requestFocus = { replyEditor?.requestFocus() },
+            showKeyboard = { replyEditor?.let { showKeyboard(context, it) } }
+        )
         keyboardController?.show()
     }
 
