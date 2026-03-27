@@ -16,6 +16,7 @@ import androidx.compose.material.icons.outlined.ColorLens
 import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.FontDownload
 import androidx.compose.material.icons.outlined.FormatColorFill
+import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Upcoming
 import androidx.compose.material.icons.outlined.ViewAgenda
 import androidx.compose.runtime.Composable
@@ -52,6 +53,8 @@ import com.huanchengfly.tieba.post.ui.widgets.compose.TitleCentredToolbar
 import com.huanchengfly.tieba.post.utils.AppIconUtil
 import com.huanchengfly.tieba.post.utils.LauncherIcons
 import com.huanchengfly.tieba.post.utils.ThemeUtil
+import com.huanchengfly.tieba.post.utils.applyAppLanguage
+import com.huanchengfly.tieba.post.utils.appPreferences
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.collections.immutable.persistentListOf
@@ -101,6 +104,29 @@ fun CustomSettingsPage(
                     onClick = {
                         context.goToActivity<AppFontSizeActivity>()
                     }
+                )
+            }
+            prefsItem {
+                val spec = buildAppLanguageSettingSpec()
+                ListPref(
+                    key = spec.key,
+                    title = stringResource(id = spec.titleResId),
+                    defaultValue = spec.defaultValue,
+                    leadingIcon = {
+                        LeadingIcon {
+                            AvatarIcon(
+                                icon = Icons.Outlined.Language,
+                                size = Sizes.Small,
+                                contentDescription = null,
+                            )
+                        }
+                    },
+                    entries = spec.entryResIds.mapValues { stringResource(id = it.value) },
+                    onValueChange = {
+                        context.appPreferences.appLanguage = it
+                        applyAppLanguage(it)
+                    },
+                    useSelectedAsSummary = true,
                 )
             }
             prefsItem {

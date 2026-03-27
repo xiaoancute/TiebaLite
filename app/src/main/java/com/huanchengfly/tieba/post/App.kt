@@ -47,6 +47,7 @@ import com.huanchengfly.tieba.post.utils.EmoticonManager
 import com.huanchengfly.tieba.post.utils.SharedPreferencesUtil
 import com.huanchengfly.tieba.post.utils.ThemeUtil
 import com.huanchengfly.tieba.post.utils.Util
+import com.huanchengfly.tieba.post.utils.applySavedAppLanguage
 import com.huanchengfly.tieba.post.utils.appPreferences
 import com.huanchengfly.tieba.post.utils.packageInfo
 import dagger.hilt.android.HiltAndroidApp
@@ -82,6 +83,7 @@ class App : Application(), SketchFactory {
     override fun onCreate() {
         INSTANCE = this
         super.onCreate()
+        applySavedAppLanguage(this)
         ClientUtils.init(this)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             setWebViewPath(this)

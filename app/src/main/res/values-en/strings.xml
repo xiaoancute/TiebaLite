@@ -129,6 +129,11 @@
     <string name="title_ask_permission_clipboard_copy">Allow %1$s to write to your clipboard?</string>
     <string name="title_start_app_permission">Allow %1$s to open your %2$s?</string>
     <string name="name_multi_app">App</string>
+    <string name="title_settings_app_language">App language</string>
+    <string name="settings_app_language_follow_system">Follow system</string>
+    <string name="settings_app_language_zh_hans">Simplified Chinese</string>
+    <string name="settings_app_language_zh_hant">Traditional Chinese</string>
+    <string name="settings_app_language_en">English</string>
     <string name="settings_night_mode">Night Mode Theme</string>
     <string name="settings_forum_single">Single-column forum list</string>
     <string name="title_hide_explore">Hide the Feed entry on Home</string>

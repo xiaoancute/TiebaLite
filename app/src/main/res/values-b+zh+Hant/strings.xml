@@ -129,6 +129,11 @@
     <string name="title_ask_permission_clipboard_copy">要允許 %1$s 寫入你的剪貼簿嗎？</string>
     <string name="title_start_app_permission">要允許 %1$s 開啟你的%2$s嗎？</string>
     <string name="name_multi_app">應用</string>
+    <string name="title_settings_app_language">應用語言</string>
+    <string name="settings_app_language_follow_system">跟隨系統</string>
+    <string name="settings_app_language_zh_hans">簡體中文</string>
+    <string name="settings_app_language_zh_hant">繁體中文</string>
+    <string name="settings_app_language_en">English</string>
     <string name="settings_night_mode">夜間模式主題</string>
     <string name="settings_forum_single">吧列表單欄顯示</string>
     <string name="title_hide_explore">隱藏首頁「動態」入口</string>

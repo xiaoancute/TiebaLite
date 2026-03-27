@@ -62,6 +62,11 @@ open class AppPreferencesUtils private constructor(ctx: Context) {
         key = AppIconUtil.PREF_KEY_APP_ICON
     )
 
+    var appLanguage by DataStoreDelegates.string(
+        defaultValue = AppLanguageManager.VALUE_SYSTEM,
+        key = AppLanguageManager.PREF_KEY
+    )
+
     var useThemedIcon by DataStoreDelegates.boolean(defaultValue = false)
 
     var autoSign by DataStoreDelegates.boolean(defaultValue = false, key = "auto_sign")
