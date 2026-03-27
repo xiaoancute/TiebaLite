@@ -206,7 +206,10 @@ class MainActivityV2 : BaseComposeActivity() {
                         .take(1)
                         .collect {
                             if (waitingNavCollectorToNavigate.get() && direction != null) {
-                                value.navigate(direction!!)
+                                navigateDirectionIfResumed(
+                                    currentLifecycleState = value.currentBackStackEntry?.lifecycle?.currentState,
+                                    direction = direction,
+                                ) { value.navigate(it) }
                                 waitingNavCollectorToNavigate.set(false)
                                 direction = null
                             }
@@ -220,7 +223,10 @@ class MainActivityV2 : BaseComposeActivity() {
             waitingNavCollectorToNavigate.set(true)
             this.direction = direction
         } else {
-            myNavController?.navigate(direction)
+            navigateDirectionIfResumed(
+                currentLifecycleState = myNavController?.currentBackStackEntry?.lifecycle?.currentState,
+                direction = direction,
+            ) { myNavController?.navigate(it) }
         }
     }
 
