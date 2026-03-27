@@ -141,10 +141,23 @@ fun TopicDetailPage(
                                         )
                                     }
                                     Text(
-                                        text = topic.topicName,
+                                        text = stringResource(
+                                            id = R.string.title_topic,
+                                            topic.topicName
+                                        ),
                                         style = MaterialTheme.typography.h5,
                                         fontWeight = FontWeight.Bold
                                     )
+                                    if (topic.idxNum > 0) {
+                                        Text(
+                                            text = stringResource(
+                                                id = R.string.topic_index,
+                                                topic.idxNum
+                                            ),
+                                            style = MaterialTheme.typography.caption,
+                                            color = ExtendedTheme.colors.textSecondary
+                                        )
+                                    }
                                     if (topic.topicDesc.isNotBlank()) {
                                         Text(
                                             text = topic.topicDesc,

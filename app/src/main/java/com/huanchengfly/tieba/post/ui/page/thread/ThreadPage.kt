@@ -172,6 +172,7 @@ import com.huanchengfly.tieba.post.utils.DateTimeUtils.getRelativeTimeString
 import com.huanchengfly.tieba.post.utils.HistoryUtil
 import com.huanchengfly.tieba.post.utils.StringUtil
 import com.huanchengfly.tieba.post.utils.StringUtil.getShortNumString
+import com.huanchengfly.tieba.post.utils.AccountUtil.LocalAccount
 import com.huanchengfly.tieba.post.utils.TiebaUtil
 import com.huanchengfly.tieba.post.utils.Util.getIconColorByLevel
 import com.huanchengfly.tieba.post.utils.appPreferences
@@ -255,6 +256,8 @@ fun PostAgreeBtn(
     }
 }
 
+internal fun bottomBarAgreeVerticalAlignment() = Alignment.CenterVertically
+
 @Composable
 private fun BottomBarAgreeBtn(
     hasAgreed: Boolean,
@@ -277,7 +280,7 @@ private fun BottomBarAgreeBtn(
     ) {
         Row(
             modifier = Modifier.align(Alignment.CenterVertically),
-            verticalAlignment = Alignment.Top
+            verticalAlignment = bottomBarAgreeVerticalAlignment()
         ) {
             Icon(
                 imageVector = if (hasAgreed) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
@@ -1547,6 +1550,19 @@ fun ThreadPage(
                                                 color = ExtendedTheme.colors.text,
                                                 modifier = Modifier.padding(horizontal = 8.dp),
                                             )
+                                            ThreadQuickSortRow(
+                                                currentSortType = curSortType,
+                                                onSortSelected = { sortType ->
+                                                    viewModel.send(
+                                                        ThreadUiIntent.LoadFirstPage(
+                                                            threadId = threadId,
+                                                            forumId = forumId,
+                                                            seeLz = isSeeLz,
+                                                            sortType = sortType
+                                                        )
+                                                    )
+                                                }
+                                            )
                                             Spacer(modifier = Modifier.weight(1f))
                                             Row(
                                                 verticalAlignment = Alignment.CenterVertically,
@@ -1869,6 +1885,7 @@ fun PostCard(
     onMenuDeleteClick: ((Post) -> Unit)? = null,
 ) {
     val context = LocalContext.current
+    val account = LocalAccount.current
     val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
     val post = remember(postHolder) { postHolder.get() }
@@ -1886,6 +1903,13 @@ fun PostCard(
     val agreeNum = remember(postHolder) {
         post.agree?.diffAgreeNum ?: 0L
     }
+    val actionAvailability = resolveThreadPostActionAvailability(
+        isLoggedIn = account != null,
+        hideReply = context.appPreferences.hideReply,
+        hasCopyAction = onMenuCopyClick != null,
+        hasFavoriteAction = onMenuFavoriteClick != null,
+        canDelete = canDelete(post) && onMenuDeleteClick != null,
+    )
     val menuState = rememberMenuState()
     BlockableContent(
         blocked = blocked,
@@ -1906,9 +1930,9 @@ fun PostCard(
             indication = null,
             onClick = {
                 onReplyClick(post)
-            }.takeIf { !context.appPreferences.hideReply },
+            }.takeIf { actionAvailability.canTapCardToReply },
             menuContent = {
-                if (!context.appPreferences.hideReply) {
+                if (actionAvailability.showReplyMenuItem) {
                     DropdownMenuItem(
                         onClick = {
                             onReplyClick(post)
@@ -1918,27 +1942,29 @@ fun PostCard(
                         Text(text = stringResource(id = R.string.btn_reply))
                     }
                 }
-                if (onMenuCopyClick != null) {
+                if (actionAvailability.showCopyMenuItem && onMenuCopyClick != null) {
                     DropdownMenuItem(
                         onClick = {
-                            onMenuCopyClick(post.content.plainText)
+                            onMenuCopyClick(buildPostCopyText(post))
                             menuState.expanded = false
                         }
                     ) {
                         Text(text = stringResource(id = R.string.menu_copy))
                     }
                 }
-                DropdownMenuItem(
-                    onClick = {
-                        coroutineScope.launch {
-                            TiebaUtil.reportPost(context, navigator, post.id.toString())
+                if (actionAvailability.showReportMenuItem) {
+                    DropdownMenuItem(
+                        onClick = {
+                            coroutineScope.launch {
+                                TiebaUtil.reportPost(context, navigator, post.id.toString())
+                            }
+                            menuState.expanded = false
                         }
-                        menuState.expanded = false
+                    ) {
+                        Text(text = stringResource(id = R.string.title_report))
                     }
-                ) {
-                    Text(text = stringResource(id = R.string.title_report))
                 }
-                if (onMenuFavoriteClick != null) {
+                if (actionAvailability.showFavoriteMenuItem && onMenuFavoriteClick != null) {
                     DropdownMenuItem(
                         onClick = {
                             onMenuFavoriteClick(post)
@@ -1952,7 +1978,7 @@ fun PostCard(
                         }
                     }
                 }
-                if (canDelete(post) && onMenuDeleteClick != null) {
+                if (actionAvailability.showDeleteMenuItem && onMenuDeleteClick != null) {
                     DropdownMenuItem(
                         onClick = {
                             onMenuDeleteClick(post)
@@ -2118,13 +2144,19 @@ private fun SubPostItem(
     onMenuCopyClick: ((SubPostList) -> Unit)?,
 ) {
     val context = LocalContext.current
+    val account = LocalAccount.current
     val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
+    val actionAvailability = resolveThreadSubPostActionAvailability(
+        isLoggedIn = account != null,
+        hideReply = context.appPreferences.hideReply,
+        hasCopyAction = onMenuCopyClick != null,
+    )
     val menuState = rememberMenuState()
     LongClickMenu(
         menuState = menuState,
         menuContent = {
-            if (!context.appPreferences.hideReply) {
+            if (actionAvailability.showReplyMenuItem) {
                 DropdownMenuItem(
                     onClick = {
                         onReplyClick?.invoke(subPostList.get())
@@ -2134,7 +2166,7 @@ private fun SubPostItem(
                     Text(text = stringResource(id = R.string.title_reply))
                 }
             }
-            if (onMenuCopyClick != null) {
+            if (actionAvailability.showCopyMenuItem && onMenuCopyClick != null) {
                 DropdownMenuItem(
                     onClick = {
                         onMenuCopyClick(subPostList.get())
@@ -2144,15 +2176,17 @@ private fun SubPostItem(
                     Text(text = stringResource(id = R.string.menu_copy))
                 }
             }
-            DropdownMenuItem(
-                onClick = {
-                    coroutineScope.launch {
-                        TiebaUtil.reportPost(context, navigator, subPostList.get { id }.toString())
+            if (actionAvailability.showReportMenuItem) {
+                DropdownMenuItem(
+                    onClick = {
+                        coroutineScope.launch {
+                            TiebaUtil.reportPost(context, navigator, subPostList.get { id }.toString())
+                        }
+                        menuState.expanded = false
                     }
-                    menuState.expanded = false
+                ) {
+                    Text(text = stringResource(id = R.string.title_report))
                 }
-            ) {
-                Text(text = stringResource(id = R.string.title_report))
             }
         },
         shape = RoundedCornerShape(0),
@@ -2240,6 +2274,11 @@ private fun ThreadMenu(
     onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val account = LocalAccount.current
+    val actionAvailability = resolveThreadMenuActionAvailability(
+        isLoggedIn = account != null,
+        canDelete = canDelete(),
+    )
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -2279,26 +2318,28 @@ private fun ThreadMenu(
                     modifier = Modifier.fillMaxSize()
                 )
             }
-            item {
-                ToggleButton(
-                    text = {
-                        TextWithMinWidth(
-                            text = stringResource(
-                                id = if (isCollected) R.string.title_collected else R.string.title_uncollected
-                            ),
-                            minLength = 4
-                        )
-                    },
-                    checked = isCollected,
-                    onClick = onCollectClick,
-                    icon = {
-                        Icon(
-                            imageVector = if (isCollected) Icons.Rounded.Star else Icons.Rounded.StarBorder,
-                            contentDescription = null
-                        )
-                    },
-                    modifier = Modifier.fillMaxSize()
-                )
+            if (actionAvailability.showCollectToggle) {
+                item {
+                    ToggleButton(
+                        text = {
+                            TextWithMinWidth(
+                                text = stringResource(
+                                    id = if (isCollected) R.string.title_collected else R.string.title_uncollected
+                                ),
+                                minLength = 4
+                            )
+                        },
+                        checked = isCollected,
+                        onClick = onCollectClick,
+                        icon = {
+                            Icon(
+                                imageVector = if (isCollected) Icons.Rounded.Star else Icons.Rounded.StarBorder,
+                                contentDescription = null
+                            )
+                        },
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
             }
             item {
                 ToggleButton(
@@ -2363,14 +2404,16 @@ private fun ThreadMenu(
                 onClick = onCopyLinkClick,
                 modifier = Modifier.fillMaxWidth(),
             )
-            ListMenuItem(
-                icon = Icons.Rounded.Report,
-                text = stringResource(id = R.string.title_report),
-                iconColor = ExtendedTheme.colors.text,
-                onClick = onReportClick,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            if (canDelete()) {
+            if (actionAvailability.showReportItem) {
+                ListMenuItem(
+                    icon = Icons.Rounded.Report,
+                    text = stringResource(id = R.string.title_report),
+                    iconColor = ExtendedTheme.colors.text,
+                    onClick = onReportClick,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+            if (actionAvailability.showDeleteItem) {
                 ListMenuItem(
                     icon = Icons.Rounded.Delete,
                     text = stringResource(id = R.string.title_delete),

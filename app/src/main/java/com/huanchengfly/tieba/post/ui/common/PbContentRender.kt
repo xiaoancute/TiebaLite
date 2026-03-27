@@ -48,6 +48,7 @@ import com.huanchengfly.tieba.post.ui.page.destinations.WebViewPageDestination
 import com.huanchengfly.tieba.post.ui.widgets.compose.EmoticonText
 import com.huanchengfly.tieba.post.ui.widgets.compose.NetworkImage
 import com.huanchengfly.tieba.post.ui.widgets.compose.VoicePlayer
+import com.huanchengfly.tieba.post.utils.BilibiliUtil
 import com.huanchengfly.tieba.post.utils.EmoticonUtil.emoticonString
 import com.huanchengfly.tieba.post.utils.appPreferences
 import com.huanchengfly.tieba.post.utils.launchUrl
@@ -75,8 +76,9 @@ data class TextContentRender(
 
     @Composable
     override fun Render() {
+        val annotatedText = remember(text) { BilibiliUtil.annotateVideoNumbers(text) }
         PbContentText(
-            text = text,
+            text = annotatedText,
             fontSize = 15.sp,
             style = MaterialTheme.typography.body1,
             lineSpacing = 0.8.sp
@@ -84,7 +86,7 @@ data class TextContentRender(
     }
 
     override fun toAnnotationString(): AnnotatedString {
-        return text
+        return BilibiliUtil.annotateVideoNumbers(text)
     }
 
     operator fun plus(text: String): TextContentRender {

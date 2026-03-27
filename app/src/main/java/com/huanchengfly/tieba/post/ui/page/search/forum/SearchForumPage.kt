@@ -12,8 +12,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MarkUnreadChatAlt
+import androidx.compose.material.icons.filled.PersonOutline
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
@@ -192,6 +196,7 @@ private fun SearchForumItem(
     item: SearchForumBean.ForumInfoBean,
     onClick: () -> Unit,
 ) {
+    val stats = remember(item) { buildSearchForumStats(item) }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -214,6 +219,35 @@ private fun SearchForumItem(
                 text = stringResource(id = R.string.title_forum, item.forumNameShow.orEmpty()),
                 style = MaterialTheme.typography.subtitle1
             )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                stats.forEach { stat ->
+                    val contentDescription = when (stat.type) {
+                        SearchForumStatType.CONCERN -> stringResource(
+                            id = R.string.forum_concern_num,
+                            stat.value
+                        )
+                        SearchForumStatType.POST -> stringResource(
+                            id = R.string.forum_post_num,
+                            stat.value
+                        )
+                    }
+                    Chip(
+                        text = stat.value,
+                        prefixIcon = {
+                            Icon(
+                                imageVector = when (stat.type) {
+                                    SearchForumStatType.CONCERN -> Icons.Default.PersonOutline
+                                    SearchForumStatType.POST -> Icons.Default.MarkUnreadChatAlt
+                                },
+                                contentDescription = contentDescription
+                            )
+                        },
+                        shape = MaterialTheme.shapes.small
+                    )
+                }
+            }
             if (!item.intro.isNullOrEmpty()) {
                 Text(
                     text = item.slogan.orEmpty(),

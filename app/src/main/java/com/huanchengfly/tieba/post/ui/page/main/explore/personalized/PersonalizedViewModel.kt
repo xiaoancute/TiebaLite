@@ -23,7 +23,7 @@ import com.huanchengfly.tieba.post.repository.PersonalizedRepository
 import com.huanchengfly.tieba.post.ui.models.ThreadItemData
 import com.huanchengfly.tieba.post.ui.models.distinctById
 import com.huanchengfly.tieba.post.utils.appPreferences
-import com.huanchengfly.tieba.post.utils.FollowedForumsCache
+import com.huanchengfly.tieba.post.utils.shouldKeepFollowedForumThread
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -80,7 +80,7 @@ class PersonalizedViewModel @Inject constructor() :
                         // 过滤未关注的吧
                         .filter {
                             val showFollowedOnly = App.INSTANCE.appPreferences.showFollowedOnly
-                            !showFollowedOnly || FollowedForumsCache.isFollowed(it.get { forumName })
+                            shouldKeepFollowedForumThread(showFollowedOnly, it.get { forumId })
                         }
                     val threadPersonalizedData = response.data_?.thread_personalized ?: emptyList()
                     PersonalizedPartialChange.Refresh.Success(
@@ -107,7 +107,7 @@ class PersonalizedViewModel @Inject constructor() :
                         // 过滤未关注的吧
                         .filter {
                             val showFollowedOnly = App.INSTANCE.appPreferences.showFollowedOnly
-                            !showFollowedOnly || FollowedForumsCache.isFollowed(it.get { forumName })
+                            shouldKeepFollowedForumThread(showFollowedOnly, it.get { forumId })
                         }
                     val threadPersonalizedData = response.data_?.thread_personalized ?: emptyList()
                     PersonalizedPartialChange.LoadMore.Success(

@@ -447,9 +447,16 @@ internal fun ReplyPageContent(
         if (waitUploadSuccessToSend) {
             waitUploadSuccessToSend = false
             val imageContent = it.resultList
-                .joinToString("\n") { image ->
-                    "#(pic,${image.picId},${image.picInfo.originPic.width},${image.picInfo.originPic.height})"
+                .mapNotNull { image ->
+                    val picId = image.picId
+                    val picInfo = image.picInfo
+                    if (picId == null || picInfo == null) {
+                        null
+                    } else {
+                        "#(pic,$picId,${picInfo.originPic.width},${picInfo.originPic.height})"
+                    }
                 }
+                .joinToString("\n")
             viewModel.send(
                 ReplyUiIntent.Send(
                     "${getText()}\n$imageContent",
@@ -469,9 +476,9 @@ internal fun ReplyPageContent(
     var startClosingAnimation by remember { mutableStateOf(false) }
 
     fun showKeyboard() {
-        editTextView?.apply {
-            showKeyboard(context, this)
-            requestFocus()
+        editTextView?.post {
+            editTextView?.requestFocus()
+            showKeyboard(context, editTextView!!)
         }
         keyboardController?.show()
     }

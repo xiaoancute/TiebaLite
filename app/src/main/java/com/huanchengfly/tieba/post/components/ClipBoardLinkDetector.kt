@@ -2,7 +2,6 @@ package com.huanchengfly.tieba.post.components
 
 import android.app.Activity
 import android.app.Application
-import android.net.Uri
 import android.os.Bundle
 import com.huanchengfly.tieba.post.App
 import com.huanchengfly.tieba.post.MainActivityV2
@@ -15,6 +14,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.intellij.lang.annotations.RegExp
+import java.net.URI
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 import java.util.regex.Pattern
 
 open class ClipBoardLink(
@@ -30,6 +32,52 @@ class ClipBoardThreadLink(
     url: String,
     val threadId: String,
 ) : ClipBoardLink(url)
+
+internal fun parseTiebaClipboardLink(url: String): ClipBoardLink? {
+    val uri = runCatching { URI(url) }.getOrNull() ?: return null
+    if (!isTiebaClipboardDomain(uri.host)) {
+        return null
+    }
+    val path = uri.path
+    return when {
+        path.isNullOrEmpty() -> null
+        path.startsWith("/p/") -> ClipBoardThreadLink(url, path.substring(3))
+        path.equals("/f", ignoreCase = true) || path.equals("/mo/q/m", ignoreCase = true) -> {
+            val query = parseClipboardQueryParameters(uri.rawQuery)
+            val kw = query["kw"]
+            val word = query["word"]
+            val kz = query["kz"]
+
+            when {
+                !kw.isNullOrEmpty() -> ClipBoardForumLink(url, kw)
+                !word.isNullOrEmpty() -> ClipBoardForumLink(url, word)
+                !kz.isNullOrEmpty() -> ClipBoardThreadLink(url, kz)
+                else -> null
+            }
+        }
+
+        else -> ClipBoardLink(url)
+    }
+}
+
+private fun isTiebaClipboardDomain(host: String?): Boolean {
+    return host != null && (host.equals("wapp.baidu.com", ignoreCase = true) ||
+            host.equals("tieba.baidu.com", ignoreCase = true) ||
+            host.equals("tiebac.baidu.com", ignoreCase = true))
+}
+
+private fun parseClipboardQueryParameters(rawQuery: String?): Map<String, String> {
+    if (rawQuery.isNullOrEmpty()) return emptyMap()
+    return rawQuery.split("&")
+        .mapNotNull { entry ->
+            val separatorIndex = entry.indexOf('=')
+            if (separatorIndex < 0) return@mapNotNull null
+            val key = entry.substring(0, separatorIndex)
+            val value = entry.substring(separatorIndex + 1)
+            key to URLDecoder.decode(value, StandardCharsets.UTF_8)
+        }
+        .toMap()
+}
 
 object ClipBoardLinkDetector : Application.ActivityLifecycleCallbacks {
     private val mutablePreviewInfoStateFlow = MutableStateFlow<QuickPreviewUtil.PreviewInfo?>(null)
@@ -60,12 +108,6 @@ object ClipBoardLinkDetector : Application.ActivityLifecycleCallbacks {
     private val clipBoardTimestamp: Long
         get() = App.INSTANCE.getClipBoardTimestamp()
 
-    private fun isTiebaDomain(host: String?): Boolean {
-        return host != null && (host.equals("wapp.baidu.com", ignoreCase = true) ||
-                host.equals("tieba.baidu.com", ignoreCase = true) ||
-                host.equals("tiebac.baidu.com", ignoreCase = true))
-    }
-
     override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
 
     override fun onActivityStarted(activity: Activity) {
@@ -73,25 +115,7 @@ object ClipBoardLinkDetector : Application.ActivityLifecycleCallbacks {
     }
 
     private fun parseLink(url: String): ClipBoardLink? {
-        val uri = Uri.parse(url)
-        if (!isTiebaDomain(uri.host)) {
-            return null
-        }
-        val path = uri.path
-        return when {
-            path.isNullOrEmpty() -> null
-            path.startsWith("/p/") -> ClipBoardThreadLink(url, path.substring(3))
-            path.equals("/f", ignoreCase = true) || path.equals("/mo/q/m", ignoreCase = true) -> {
-                val kw = uri.getQueryParameter("kw")
-                val word = uri.getQueryParameter("word")
-                val kz = uri.getQueryParameter("kz")
-                kw?.let { ClipBoardForumLink(url, it) }
-                    ?: (word?.let { ClipBoardForumLink(url, it) }
-                        ?: kz?.let { ClipBoardThreadLink(url, it) })
-            }
-
-            else -> ClipBoardLink(url)
-        }
+        return parseTiebaClipboardLink(url)
     }
 
     override fun onActivityResumed(activity: Activity) {}

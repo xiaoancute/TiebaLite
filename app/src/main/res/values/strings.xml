@@ -29,6 +29,8 @@
     <string name="tip_login">请先登录</string>
     <string name="text_loading">正在加载…</string>
     <string name="title_sort">倒序浏览</string>
+    <string name="title_asc">正序</string>
+    <string name="title_desc">倒序</string>
     <string name="title_see_lz">只看楼主</string>
     <string name="title_collect_on">取消收藏</string>
     <string name="title_reply">回复</string>
@@ -121,6 +123,9 @@
     <string name="summary_auto_sign_time">当前设置为 %1$s</string>
     <string name="tip_auto_sign">请允许贴吧 Lite 的自启动并忽略“电池优化”，否则可能无法正常唤醒签到。\n若使用的是 MIUI 等国产定制 UI，你还需要在系统设置中进行相应修改。</string>
     <string name="title_forum">%1$s吧</string>
+    <string name="title_topic">#%1$s#</string>
+    <string name="forum_post_num">帖子数 %1$s</string>
+    <string name="forum_concern_num">关注数 %1$s</string>
     <string name="menu_edit_info">编辑资料</string>
     <string name="button_allow">允许</string>
     <string name="button_denied">禁止</string>
@@ -152,6 +157,8 @@
     <string name="title_use_custom_tabs">使用 Custom Tabs</string>
     <string name="tip_use_custom_tab_on">非贴吧链接将使用 Custom Tabs 打开（需安装 Chrome）</string>
     <string name="tip_use_custom_tab">开启后非贴吧链接将使用 Custom Tabs 打开（需安装 Chrome）</string>
+    <string name="title_open_by_default">默认打开</string>
+    <string name="tip_open_by_default">允许在此应用中打开贴吧网页链接</string>
     <string name="title_settings_read_habit">使用习惯</string>
     <string name="settings_collect_thread_see_lz">收藏贴自动开启只看楼主</string>
     <string name="tip_collect_thread_see_lz">开启后，从收藏进入的贴子将自动切换至只看楼主</string>
@@ -410,6 +417,7 @@
     <string name="hot_topic_rank">话题榜</string>
     <string name="topic_tag_hot">热</string>
     <string name="topic_tag_new">新</string>
+    <string name="topic_index">贴吧话题榜 No.%1$d</string>
     <string name="text_topic_discuss_num">%1$s 人参与讨论</string>
     <string name="text_topic_forum_stats">%1$s 关注 · %2$s 贴子</string>
     <string name="text_topic_more_available">当前仅展示话题详情首屏内容，更多结果后续再补</string>

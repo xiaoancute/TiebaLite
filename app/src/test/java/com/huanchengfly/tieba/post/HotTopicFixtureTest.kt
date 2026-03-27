@@ -72,6 +72,49 @@ class HotTopicFixtureTest {
         assertTrue(payloadData.hasMore)
     }
 
+    @Test
+    fun topicDetailPayloadParsesTopicRankIndexWhenPresent() {
+        val payload = """
+            {
+              "no": 0,
+              "error": "success",
+              "data": {
+                "topic_info": {
+                  "topic_id": "1",
+                  "topic_name": "测试话题",
+                  "candle": "0",
+                  "topic_desc": "desc",
+                  "discuss_num": 42,
+                  "topic_image": "",
+                  "share_title": "",
+                  "share_pic": "",
+                  "is_video_topic": 0,
+                  "idx_num": 7
+                },
+                "user": {
+                  "is_login": false,
+                  "id": 0,
+                  "uid": 0,
+                  "name": "",
+                  "name_show": "",
+                  "portrait": ""
+                },
+                "tbs": "",
+                "relate_forum": [],
+                "special_topic": [],
+                "relate_thread": {
+                  "thread_list": []
+                },
+                "has_more": false
+              }
+            }
+        """.trimIndent()
+
+        val bean = json.decodeFromString<TopicDetailBean>(payload)
+
+        assertEquals(7, bean.data?.topicInfo?.idxNum)
+    }
+
     private fun loadFixture(path: String): String =
         checkNotNull(javaClass.classLoader?.getResourceAsStream(path)) {
             "missing test fixture: $path"

@@ -44,7 +44,6 @@ import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -89,6 +88,7 @@ import com.huanchengfly.tieba.post.ui.widgets.compose.Button
 import com.huanchengfly.tieba.post.ui.widgets.compose.Chip
 import com.huanchengfly.tieba.post.ui.widgets.compose.ConfirmDialog
 import com.huanchengfly.tieba.post.ui.widgets.compose.ErrorScreen
+import com.huanchengfly.tieba.post.ui.widgets.compose.LazyLoad
 import com.huanchengfly.tieba.post.ui.widgets.compose.LongClickMenu
 import com.huanchengfly.tieba.post.ui.widgets.compose.MenuState
 import com.huanchengfly.tieba.post.ui.widgets.compose.MyLazyVerticalGrid
@@ -423,7 +423,7 @@ private fun ForumItem(
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun HomePage(
-    viewModel: HomeViewModel = pageViewModel<HomeUiIntent, HomeViewModel>(listOf(HomeUiIntent.Refresh)),
+    viewModel: HomeViewModel = pageViewModel(),
     canOpenExplore: Boolean = false,
     onOpenExplore: () -> Unit = {},
 ) {
@@ -432,7 +432,7 @@ fun HomePage(
     val navigator = LocalNavigator.current
     val isLoading by viewModel.uiState.collectPartialAsState(
         prop1 = HomeUiState::isLoading,
-        initial = true
+        initial = false
     )
     val forums by viewModel.uiState.collectPartialAsState(
         prop1 = HomeUiState::forums,
@@ -465,7 +465,9 @@ fun HomePage(
     onGlobalEvent<GlobalEvent.Refresh>(
         filter = { it.key == "home" }
     ) {
-        viewModel.send(HomeUiIntent.Refresh)
+        if (isLoggedIn) {
+            viewModel.send(HomeUiIntent.Refresh)
+        }
     }
 
     var unfollowForum by remember { mutableStateOf<HomeUiState.Forum?>(null) }
@@ -486,8 +488,18 @@ fun HomePage(
         )
     }
 
-    LaunchedEffect(Unit) {
-        if (viewModel.initialized) viewModel.send(HomeUiIntent.RefreshHistory)
+    LazyLoad(
+        key = isLoggedIn,
+        loaded = !isLoggedIn || viewModel.initialized,
+    ) {
+        val startupIntents = buildHomeStartupIntents(
+            isLoggedIn = isLoggedIn,
+            initialized = viewModel.initialized
+        )
+        if (startupIntents.isNotEmpty()) {
+            viewModel.initialized = true
+            startupIntents.forEach(viewModel::send)
+        }
     }
 
     MyScaffold(
@@ -511,7 +523,11 @@ fun HomePage(
     ) { contentPaddings ->
         val pullRefreshState = rememberPullRefreshState(
             refreshing = isLoading,
-            onRefresh = { viewModel.send(HomeUiIntent.Refresh) }
+            onRefresh = {
+                if (isLoggedIn) {
+                    viewModel.send(HomeUiIntent.Refresh)
+                }
+            }
         )
         Box(
             modifier = Modifier
@@ -536,7 +552,9 @@ fun HomePage(
                         .fillMaxSize()
                         .weight(1f),
                     onReload = {
-                        viewModel.send(HomeUiIntent.Refresh)
+                        if (isLoggedIn) {
+                            viewModel.send(HomeUiIntent.Refresh)
+                        }
                     },
                     emptyScreen = {
                         EmptyScreen(

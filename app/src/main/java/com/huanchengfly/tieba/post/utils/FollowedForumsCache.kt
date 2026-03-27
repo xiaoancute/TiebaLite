@@ -2,18 +2,25 @@ package com.huanchengfly.tieba.post.utils
 
 object FollowedForumsCache {
     @Volatile
-    private var forumNames: Set<String> = emptySet()
+    private var forumIds: Set<Long> = emptySet()
 
-    fun update(names: List<String>) {
-        forumNames = names.toHashSet()
+    fun update(ids: List<Long>) {
+        forumIds = ids.toHashSet()
     }
 
     fun clear() {
-        forumNames = emptySet()
+        forumIds = emptySet()
     }
 
-    fun isFollowed(name: String?): Boolean {
-        if (name.isNullOrEmpty()) return false
-        return forumNames.contains(name)
+    fun isFollowed(id: Long?): Boolean {
+        if (id == null || id == 0L) return false
+        return forumIds.contains(id)
     }
+}
+
+internal fun shouldKeepFollowedForumThread(
+    showFollowedOnly: Boolean,
+    forumId: Long?,
+): Boolean {
+    return !showFollowedOnly || FollowedForumsCache.isFollowed(forumId)
 }

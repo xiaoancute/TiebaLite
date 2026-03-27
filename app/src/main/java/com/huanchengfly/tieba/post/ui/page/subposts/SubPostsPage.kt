@@ -213,6 +213,14 @@ internal fun SubPostsContent(
         prop1 = SubPostsUiState::hasMore,
         initial = true
     )
+    val actionIds = remember(forumId, postId, forum, post) {
+        resolveSubPostsActionIds(
+            routeForumId = forumId,
+            routePostId = postId,
+            loadedForumId = forum?.get { id },
+            loadedPostId = post?.get { id },
+        )
+    }
 
     val lazyListState = rememberLazyListState()
 
@@ -230,10 +238,10 @@ internal fun SubPostsContent(
                 val isSelfPost = post?.get { author_id } == account?.uid?.toLongOrNull()
                 viewModel.send(
                     SubPostsUiIntent.DeletePost(
-                        forumId = forumId,
+                        forumId = actionIds.forumId,
                         forumName = forum?.get { name }.orEmpty(),
                         threadId = threadId,
-                        postId = postId,
+                        postId = actionIds.postId,
                         deleteMyPost = isSelfPost,
                         tbs = anti?.get { tbs },
                     )
@@ -243,10 +251,10 @@ internal fun SubPostsContent(
                     deleteSubPost!!.get { author_id } == account?.uid?.toLongOrNull()
                 viewModel.send(
                     SubPostsUiIntent.DeletePost(
-                        forumId = forumId,
+                        forumId = actionIds.forumId,
                         forumName = forum?.get { name }.orEmpty(),
                         threadId = threadId,
-                        postId = postId,
+                        postId = actionIds.postId,
                         subPostId = deleteSubPost!!.get { id },
                         deleteMyPost = isSelfSubPost,
                         tbs = anti?.get { tbs },
@@ -321,9 +329,9 @@ internal fun SubPostsContent(
                             IconButton(onClick = {
                                 navigator.navigate(
                                     ThreadPageDestination(
-                                        forumId = forumId,
+                                        forumId = actionIds.forumId,
                                         threadId = threadId,
-                                        postId = postId
+                                        postId = actionIds.postId
                                     )
                                 )
                             }) {
@@ -368,7 +376,7 @@ internal fun SubPostsContent(
                                                     forumId = fid,
                                                     forumName = forumName,
                                                     threadId = threadId,
-                                                    postId = postId,
+                                                    postId = actionIds.postId,
                                                 )
                                             )
                                         }
@@ -401,12 +409,13 @@ internal fun SubPostsContent(
                 isLoading = isLoading,
                 onLoadMore = {
                     viewModel.send(
-                        SubPostsUiIntent.LoadMore(
-                            forumId,
-                            threadId,
-                            postId,
-//                            subPostId,
-                            page = currentPage + 1,
+                        buildSubPostsLoadMoreIntent(
+                            forumId = forumId,
+                            threadId = threadId,
+                            postId = postId,
+                            subPostId = subPostId,
+                            currentPage = currentPage,
+                            loadFromSubPost = loadFromSubPost,
                         )
                     )
                 },
@@ -432,7 +441,7 @@ internal fun SubPostsContent(
                                             SubPostsUiIntent.Agree(
                                                 forumId,
                                                 threadId,
-                                                postId,
+                                                actionIds.postId,
                                                 agree = !hasAgreed
                                             )
                                         )
@@ -440,10 +449,10 @@ internal fun SubPostsContent(
                                     onReplyClick = {
                                         showReplyDialog(
                                             ReplyArgs(
-                                                forumId = forumId,
+                                                forumId = actionIds.forumId,
                                                 forumName = forum?.get { name } ?: "",
                                                 threadId = threadId,
-                                                postId = postId,
+                                                postId = actionIds.postId,
                                                 replyUserId = it.author?.id ?: it.author_id,
                                                 replyUserName = it.author?.nameShow.takeIf { name -> !name.isNullOrEmpty() }
                                                     ?: it.author?.name,
@@ -483,7 +492,7 @@ internal fun SubPostsContent(
                     itemsIndexed(
                         items = subPosts,
                         key = { _, subPost -> subPost.id }
-                    ) { index, item ->
+                    ) { _, item ->
                         SubPostItem(
                             item = item,
                             canDelete = { it.author_id == account?.uid?.toLongOrNull() },
@@ -497,7 +506,7 @@ internal fun SubPostsContent(
                                     SubPostsUiIntent.Agree(
                                         forumId,
                                         threadId,
-                                        postId,
+                                        actionIds.postId,
                                         subPostId = it.id,
                                         agree = !hasAgreed
                                     )
@@ -506,10 +515,10 @@ internal fun SubPostsContent(
                             onReplyClick = {
                                 showReplyDialog(
                                     ReplyArgs(
-                                        forumId = forumId,
+                                        forumId = actionIds.forumId,
                                         forumName = forum?.get { name } ?: "",
                                         threadId = threadId,
-                                        postId = postId,
+                                        postId = actionIds.postId,
                                         subPostId = it.id,
                                         replyUserId = it.author?.id ?: it.author_id,
                                         replyUserName = it.author?.nameShow.takeIf { name -> !name.isNullOrEmpty() }
@@ -562,6 +571,7 @@ private fun SubPostItem(
     val (subPost, contentRenders, blocked) = item
     val context = LocalContext.current
     val navigator = LocalNavigator.current
+    val account = LocalAccount.current
     val coroutineScope = rememberCoroutineScope()
     val author = remember(subPost) { subPost.get { author }?.wrapImmutable() }
     val hasAgreed = remember(subPost) {
@@ -570,6 +580,12 @@ private fun SubPostItem(
     val agreeNum = remember(subPost) {
         subPost.get { agree?.diffAgreeNum ?: 0L }
     }
+    val actionAvailability = resolveSubPostsItemActionAvailability(
+        isLoggedIn = account != null,
+        hideReply = context.appPreferences.hideReply,
+        hasCopyAction = onMenuCopyClick != null,
+        canDelete = canDelete(subPost.get()) && onMenuDeleteClick != null,
+    )
     val menuState = rememberMenuState()
     BlockableContent(
         blocked = blocked,
@@ -582,7 +598,7 @@ private fun SubPostItem(
             menuState = menuState,
             indication = null,
             menuContent = {
-                if (!context.appPreferences.hideReply) {
+                if (actionAvailability.showReplyMenuItem) {
                     DropdownMenuItem(
                         onClick = {
                             onReplyClick(subPost.get())
@@ -592,7 +608,7 @@ private fun SubPostItem(
                         Text(text = stringResource(id = R.string.btn_reply))
                     }
                 }
-                if (onMenuCopyClick != null) {
+                if (actionAvailability.showCopyMenuItem && onMenuCopyClick != null) {
                     DropdownMenuItem(
                         onClick = {
                             onMenuCopyClick(contentRenders.joinToString("\n") { it.toString() })
@@ -602,17 +618,19 @@ private fun SubPostItem(
                         Text(text = stringResource(id = R.string.menu_copy))
                     }
                 }
-                DropdownMenuItem(
-                    onClick = {
-                        coroutineScope.launch {
-                            TiebaUtil.reportPost(context, navigator, subPost.get { id }.toString())
+                if (actionAvailability.showReportMenuItem) {
+                    DropdownMenuItem(
+                        onClick = {
+                            coroutineScope.launch {
+                                TiebaUtil.reportPost(context, navigator, subPost.get { id }.toString())
+                            }
+                            menuState.expanded = false
                         }
-                        menuState.expanded = false
+                    ) {
+                        Text(text = stringResource(id = R.string.title_report))
                     }
-                ) {
-                    Text(text = stringResource(id = R.string.title_report))
                 }
-                if (canDelete(subPost.get()) && onMenuDeleteClick != null) {
+                if (actionAvailability.showDeleteMenuItem && onMenuDeleteClick != null) {
                     DropdownMenuItem(
                         onClick = {
                             onMenuDeleteClick(subPost.get())
@@ -623,7 +641,7 @@ private fun SubPostItem(
                     }
                 }
             },
-            onClick = { onReplyClick(subPost.get()) }.takeUnless { context.appPreferences.hideReply }
+            onClick = { onReplyClick(subPost.get()) }.takeIf { actionAvailability.canTapItemToReply }
         ) {
             Card(
                 header = {

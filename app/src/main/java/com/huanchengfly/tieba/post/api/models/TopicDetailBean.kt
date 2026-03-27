@@ -65,6 +65,8 @@ data class TopicInfoBean(
     val sharePic: String,
     @SerialName("is_video_topic")
     val isVideoTopic: Int,
+    @SerialName("idx_num")
+    val idxNum: Int = 0,
 )
 
 @Serializable

@@ -153,6 +153,25 @@ fun MoreSettingsPage(
                     leadingIcon = {
                         LeadingIcon {
                             AvatarIcon(
+                                icon = ImageVector.vectorResource(id = R.drawable.ic_link),
+                                size = Sizes.Small,
+                                contentDescription = null,
+                            )
+                        }
+                    },
+                    enabled = true,
+                    title = stringResource(id = R.string.title_open_by_default),
+                    onClick = {
+                        context.startActivity(buildOpenByDefaultSettingsIntent(context.packageName))
+                    },
+                    summary = stringResource(id = R.string.tip_open_by_default)
+                )
+            }
+            prefsItem {
+                TextPref(
+                    leadingIcon = {
+                        LeadingIcon {
+                            AvatarIcon(
                                 icon = Icons.Outlined.Info,
                                 size = Sizes.Small,
                                 contentDescription = null,

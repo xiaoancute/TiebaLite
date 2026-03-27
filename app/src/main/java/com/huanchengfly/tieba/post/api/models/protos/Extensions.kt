@@ -41,7 +41,7 @@ val List<Abstract>.abstractText: String
 val ThreadInfo.abstractText: String
     get() = richAbstract.joinToString(separator = "") {
         when (it.type) {
-            0 -> it.text.replace(Regex(" {2,}"), " ")
+            0, 40 -> it.text.replace(Regex(" {2,}"), " ")
             2 -> {
                 EmoticonManager.registerEmoticon(it.text, it.c)
                 "#(${it.c})"
@@ -225,7 +225,7 @@ val List<PbContent>.renders: ImmutableList<PbContentRender>
 
         forEach {
             when (it.type) {
-                0, 9, 27 -> {
+                0, 9, 27, 35, 40 -> {
                     renders.appendText(it.text)
                 }
 
