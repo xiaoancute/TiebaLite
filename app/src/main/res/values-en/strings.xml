@@ -265,7 +265,7 @@
     <string name="text_stat_fans">Fans</string>
     <string name="title_custom_font_size">Font Size</string>
     <string name="text_singing_progress">%1$s Forum ✓</string>
-    <string name="text_singing_progress_fail">%1$s Forum × %2$s</string>
+    <string name="text_singing_progress_fail">%1$s Forum: [%2$d]%3$s</string>
     <string name="text_singing_progress_exp">%1$s Forum ✓ EXP +%2$s</string>
     <string name="title_start_sign">About to start signing in</string>
     <string name="toast_oksign_start">Sign-in started. You can check progress in notifications.</string>
@@ -274,6 +274,8 @@
     <string name="text_please_wait">Please wait…</string>
     <string name="title_loading_data">Loading Data</string>
     <string name="text_oksign_no_signable">No forums available for sign-in</string>
+    <string name="title_oksign_stop_on_failure">Stop on Failure</string>
+    <string name="summary_oksign_stop_on_failure">Stop the remaining sign-in flow when a single forum sign-in fails</string>
     <string name="title_forum_info">About This Forum</string>
     <string name="forum_portrait">Forum Avatar</string>
     <string name="settings_forum_fab_function">Floating button action on forum pages</string>

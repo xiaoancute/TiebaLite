@@ -20,9 +20,12 @@ import com.huanchengfly.tieba.post.models.SignDataBean
 import com.huanchengfly.tieba.post.pendingIntentFlagImmutable
 import com.huanchengfly.tieba.post.ui.common.theme.utils.ThemeUtils
 import com.huanchengfly.tieba.post.utils.AccountUtil
+import com.huanchengfly.tieba.post.utils.OKSignNotificationKind
+import com.huanchengfly.tieba.post.utils.OKSignNotificationSpec
 import com.huanchengfly.tieba.post.utils.ProgressListener
 import com.huanchengfly.tieba.post.utils.SingleAccountSigner
 import com.huanchengfly.tieba.post.utils.appPreferences
+import com.huanchengfly.tieba.post.utils.buildOKSignNotificationSpec
 import com.huanchengfly.tieba.post.utils.extension.addFlag
 import java.util.Calendar
 
@@ -147,42 +150,57 @@ class OKSignWorker(
                 errorMsg
             )
         } else {
-            updateProgressNotification(
-                applicationContext.getString(
-                    R.string.title_signing_progress,
-                    signData.userName,
-                    current + 1,
-                    total
-                ),
+            showFailureNotification(
                 applicationContext.getString(
                     R.string.text_singing_progress_fail,
                     signData.forumName,
+                    errorCode,
                     errorMsg
                 )
             )
         }
     }
 
-    private fun createNotification(title: String, text: String?, ongoing: Boolean): Notification {
+    private fun createNotification(
+        title: String,
+        text: String?,
+        spec: OKSignNotificationSpec,
+        intent: Intent? = null,
+    ): Notification {
         createNotificationChannel()
-        return NotificationCompat.Builder(applicationContext, OKSignWork.NOTIFICATION_CHANNEL_ID)
+        val builder = NotificationCompat.Builder(applicationContext, OKSignWork.NOTIFICATION_CHANNEL_ID)
             .setForegroundServiceBehavior(FOREGROUND_SERVICE_IMMEDIATE)
             .setContentText(text)
             .setContentTitle(title)
             .setSubText(applicationContext.getString(R.string.title_oksign))
             .setSmallIcon(R.drawable.ic_oksign)
-            .setAutoCancel(!ongoing)
-            .setOngoing(ongoing)
+            .setAutoCancel(spec.autoCancel)
+            .setOngoing(spec.ongoing)
             .setStyle(NotificationCompat.BigTextStyle())
             .setColor(ThemeUtils.getColorByAttr(applicationContext, R.attr.colorPrimary))
-            .build()
+        if (intent != null) {
+            builder.setContentIntent(
+                PendingIntent.getActivity(
+                    applicationContext,
+                    0,
+                    intent,
+                    pendingIntentFlagImmutable()
+                )
+            )
+        }
+        return builder.build().apply {
+            flags = if (spec.ongoing) {
+                flags.addFlag(NotificationCompat.FLAG_ONGOING_EVENT)
+            } else {
+                flags and NotificationCompat.FLAG_ONGOING_EVENT.inv()
+            }
+        }
     }
 
     private fun createForegroundInfo(title: String, text: String?): ForegroundInfo {
-        val notification = createNotification(title, text, ongoing = true).apply {
-            flags = flags.addFlag(NotificationCompat.FLAG_ONGOING_EVENT)
-        }
-        return ForegroundInfo(OKSignWork.NOTIFICATION_ID, notification)
+        val spec = buildOKSignNotificationSpec(OKSignNotificationKind.Progress)
+        val notification = createNotification(title, text, spec)
+        return ForegroundInfo(spec.notificationId, notification)
     }
 
     private fun updateProgressNotification(title: String, text: String?) {
@@ -197,30 +215,25 @@ class OKSignWorker(
         if (!canPostNotification()) {
             return
         }
-        val notification = createNotification(title, text, ongoing = false)
-        val finalNotification = if (intent != null) {
-            NotificationCompat.Builder(applicationContext, OKSignWork.NOTIFICATION_CHANNEL_ID)
-                .setForegroundServiceBehavior(FOREGROUND_SERVICE_IMMEDIATE)
-                .setContentText(text)
-                .setContentTitle(title)
-                .setSubText(applicationContext.getString(R.string.title_oksign))
-                .setSmallIcon(R.drawable.ic_oksign)
-                .setAutoCancel(true)
-                .setStyle(NotificationCompat.BigTextStyle())
-                .setColor(ThemeUtils.getColorByAttr(applicationContext, R.attr.colorPrimary))
-                .setContentIntent(
-                    PendingIntent.getActivity(
-                        applicationContext,
-                        0,
-                        intent,
-                        pendingIntentFlagImmutable()
-                    )
-                )
-                .build()
-        } else {
-            notification
+        val spec = buildOKSignNotificationSpec(OKSignNotificationKind.Completion)
+        val notification = createNotification(title, text, spec, intent)
+        notificationManager.notify(spec.notificationId, notification)
+    }
+
+    private fun showFailureNotification(text: String) {
+        if (!canPostNotification()) {
+            return
         }
-        notificationManager.notify(OKSignWork.NOTIFICATION_ID, finalNotification)
+        val spec = buildOKSignNotificationSpec(
+            kind = OKSignNotificationKind.Failure,
+            uniqueSeed = System.currentTimeMillis()
+        )
+        val notification = createNotification(
+            title = applicationContext.getString(R.string.title_oksign_fail),
+            text = text,
+            spec = spec
+        )
+        notificationManager.notify(spec.notificationId, notification)
     }
 
     private fun createNotificationChannel() {

@@ -10,6 +10,7 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BatteryAlert
 import androidx.compose.material.icons.outlined.BrowseGallery
+import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.OfflinePin
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.WatchLater
@@ -117,6 +118,24 @@ fun OKSignSettingsPage(
                     title = stringResource(id = R.string.title_oksign_use_official_oksign),
                     defaultChecked = true,
                     summary = stringResource(id = R.string.summary_oksign_use_official_oksign),
+                )
+            }
+            prefsItem {
+                val spec = buildOKSignStopOnFailureSettingSpec()
+                SwitchPref(
+                    leadingIcon = {
+                        LeadingIcon {
+                            AvatarIcon(
+                                icon = Icons.Outlined.Cancel,
+                                size = Sizes.Small,
+                                contentDescription = null,
+                            )
+                        }
+                    },
+                    key = spec.key,
+                    title = stringResource(id = spec.titleResId),
+                    defaultChecked = spec.defaultChecked,
+                    summary = stringResource(id = spec.summaryResId),
                 )
             }
             prefsItem {

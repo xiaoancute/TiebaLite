@@ -166,6 +166,11 @@ open class AppPreferencesUtils private constructor(ctx: Context) {
         key = "oksign_use_official_oksign"
     )
 
+    var oksignStopOnFailure by DataStoreDelegates.boolean(
+        defaultValue = true,
+        key = OKSignPreferenceKeys.STOP_ON_FAILURE
+    )
+
     var picWatermarkType by DataStoreDelegates.string(
         defaultValue = "2",
         key = "pic_watermark_type",

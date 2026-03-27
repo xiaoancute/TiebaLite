@@ -194,7 +194,22 @@ class SingleAccountSigner(
                         }
                         result = true
                     }
-                    .flatMapConcat { signFlow(it) }
+                    .flatMapConcat { signDataBean ->
+                        wrapOKSignFlowForFailurePolicy(
+                            stopOnFailure = context.appPreferences.oksignStopOnFailure,
+                            source = signFlow(signDataBean)
+                        ) { e ->
+                            result = false
+                            lastFailure = e
+                            mProgressListener?.onFailure(
+                                position,
+                                totalCount,
+                                e.getErrorCode(),
+                                e.getErrorMessage()
+                            )
+                            delay(getSignDelay())
+                        }
+                    }
             }
             .catch { e ->
                 result = false
