@@ -68,3 +68,4 @@ fastlane/readme.md
 .omx/
 .omc/
 .claude/
+.worktrees/
