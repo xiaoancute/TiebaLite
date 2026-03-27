@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -384,6 +385,7 @@ fun AppThemePage(
                                 horizontalArrangement = Arrangement.Center,
                                 modifier = Modifier
                                     .weight(1f)
+                                    .fillMaxHeight()
                                     .clip(RoundedCornerShape(6.dp))
                                     .background(
                                         color = customPrimaryColor,
@@ -414,6 +416,7 @@ fun AppThemePage(
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
+                                    .fillMaxHeight()
                                     .clip(RoundedCornerShape(6.dp))
                                     .clickable {
                                         context.goToActivity<TranslucentThemeActivity>()
@@ -430,7 +433,7 @@ fun AppThemePage(
                                     imageUri = previewImageUri,
                                     contentDescription = null,
                                     contentScale = ContentScale.Crop,
-                                    modifier = Modifier.fillMaxSize()
+                                    modifier = Modifier.fillMaxWidth()
                                 )
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
