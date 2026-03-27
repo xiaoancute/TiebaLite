@@ -3,6 +3,7 @@ package com.huanchengfly.tieba.post.api.interfaces
 import com.huanchengfly.tieba.post.api.ForumSortType
 import com.huanchengfly.tieba.post.api.SearchThreadFilter
 import com.huanchengfly.tieba.post.api.SearchThreadOrder
+import com.huanchengfly.tieba.post.api.models.FollowedForum
 import com.huanchengfly.tieba.post.api.models.*
 import com.huanchengfly.tieba.post.api.models.protos.addPost.AddPostResponse
 import com.huanchengfly.tieba.post.api.models.protos.forumGuide.ForumGuideResponse
@@ -1348,6 +1349,29 @@ interface ITiebaApi {
     fun forumGuideNewFlow(
         sortType: Int = 2
     ): Flow<ForumGuideResponse>
+
+    /**
+     * 关注吧列表
+     *
+     * **需登录**
+     *
+     * 当前实现沿用 protobuf 单次结果，返回上限仍受接口限制。
+     */
+    fun forumGuideFlow(
+        sortType: Int = 2
+    ): Flow<List<FollowedForum>>
+
+    /**
+     * 关注吧列表（完整）
+     *
+     * **需登录**
+     *
+     * 通过首页分页接口补齐 200 吧以上的关注列表，再合并签到状态等增强字段。
+     */
+    fun allForumGuideFlow(
+        forumHomeSortType: Int = 0,
+        guideSortType: Int = 2,
+    ): Flow<List<FollowedForum>>
 
 
     /**

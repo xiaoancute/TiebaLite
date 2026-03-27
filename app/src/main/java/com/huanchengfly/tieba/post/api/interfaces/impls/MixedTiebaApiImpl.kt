@@ -20,6 +20,7 @@ import com.huanchengfly.tieba.post.api.models.AgreeBean
 import com.huanchengfly.tieba.post.api.models.CheckReportBean
 import com.huanchengfly.tieba.post.api.models.CollectDataBean
 import com.huanchengfly.tieba.post.api.models.CommonResponse
+import com.huanchengfly.tieba.post.api.models.FollowedForum
 import com.huanchengfly.tieba.post.api.models.FollowBean
 import com.huanchengfly.tieba.post.api.models.ForumPageBean
 import com.huanchengfly.tieba.post.api.models.ForumRecommend
@@ -121,6 +122,7 @@ import com.huanchengfly.tieba.post.api.models.web.HotMessageListBean
 import com.huanchengfly.tieba.post.api.retrofit.ApiResult
 import com.huanchengfly.tieba.post.api.retrofit.RetrofitTiebaApi
 import com.huanchengfly.tieba.post.api.retrofit.body.MyMultipartBody
+import com.huanchengfly.tieba.post.api.retrofit.getData
 import com.huanchengfly.tieba.post.api.urlEncode
 import com.huanchengfly.tieba.post.models.DislikeBean
 import com.huanchengfly.tieba.post.models.MyInfoBean
@@ -130,7 +132,12 @@ import com.huanchengfly.tieba.post.utils.AccountUtil
 import com.huanchengfly.tieba.post.utils.CuidUtils
 import com.huanchengfly.tieba.post.utils.ImageUtil
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import okhttp3.RequestBody.Companion.asRequestBody
 import retrofit2.Call
 import java.io.File
@@ -1066,6 +1073,29 @@ object MixedTiebaApiImpl : ITiebaApi {
             ),
         )
     }
+
+    override fun forumGuideFlow(sortType: Int): Flow<List<FollowedForum>> {
+        return forumGuideNewFlow(sortType)
+            .map { it.data_?.like_forum.orEmpty().map { forum -> forum.toFollowedForum() } }
+    }
+
+    override fun allForumGuideFlow(
+        forumHomeSortType: Int,
+        guideSortType: Int,
+    ): Flow<List<FollowedForum>> = flow {
+        val pagedForums = collectAllForumHomeItems { page ->
+            forumHomeAsync(sortType = forumHomeSortType, page = page)
+                .getData()
+                .data
+                ?.likeForum
+        }
+        val guideForums = forumGuideNewFlow(sortType = guideSortType)
+            .first()
+            .data_
+            ?.like_forum
+            .orEmpty()
+        emit(mergeFollowedForums(pagedForums, guideForums))
+    }.flowOn(Dispatchers.IO)
 
     override fun frsPage(
         forumName: String,

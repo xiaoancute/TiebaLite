@@ -6,6 +6,7 @@ import com.huanchengfly.tieba.post.App
 import com.huanchengfly.tieba.post.R
 import com.huanchengfly.tieba.post.api.TiebaApi
 import com.huanchengfly.tieba.post.api.models.CommonResponse
+import com.huanchengfly.tieba.post.api.models.FollowedForum
 import com.huanchengfly.tieba.post.api.retrofit.exception.getErrorMessage
 import com.huanchengfly.tieba.post.arch.BaseViewModel
 import com.huanchengfly.tieba.post.arch.CommonUiEvent
@@ -75,21 +76,12 @@ class HomeViewModel : BaseViewModel<HomeUiIntent, HomePartialChange, HomeUiState
         private fun produceRefreshPartialChangeFlow(): Flow<HomePartialChange.Refresh> =
             HistoryUtil.getFlow(HistoryUtil.TYPE_FORUM, 0)
                 .zip(
-                    TiebaApi.getInstance().forumGuideNewFlow()
-                ) { historyForums, forumRecommend ->
-                    val forums = forumRecommend.data_?.like_forum?.map {
-                        HomeUiState.Forum(
-                            it.avatar,
-                            it.forum_id.toString(),
-                            it.forum_name,
-                            it.is_sign == 1,
-                            it.level_id.toString(),
-                            it.hot_num
-                        )
-                    } ?: emptyList()
+                    TiebaApi.getInstance().allForumGuideFlow()
+                ) { historyForums, followedForums ->
+                    val forums = followedForums.map { it.toHomeForum() }
 
                     // 添加关注列表到全局缓存
-                    FollowedForumsCache.update(forums.map { it.forumId.toLong() })
+                    FollowedForumsCache.updateAll(followedForums)
 
                     val topForums = mutableListOf<HomeUiState.Forum>()
                     val topForumsDB = LitePal.findAll(TopForum::class.java).map { it.forumId }
@@ -141,6 +133,16 @@ class HomeViewModel : BaseViewModel<HomeUiIntent, HomePartialChange, HomeUiState
 
         private fun HomeUiIntent.ToggleHistory.toPartialChangeFlow() =
             flowOf(HomePartialChange.ToggleHistory(!currentExpand))
+
+        private fun FollowedForum.toHomeForum() =
+            HomeUiState.Forum(
+                avatar = avatar,
+                forumId = forumId.toString(),
+                forumName = forumName,
+                isSign = isSign,
+                levelId = levelId.toString(),
+                hotNum = hotNum,
+            )
     }
 }
 
