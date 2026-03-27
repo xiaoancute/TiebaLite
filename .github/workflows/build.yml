@@ -24,6 +24,7 @@ jobs:
         with:
           java-version: "17"
           distribution: "zulu"
+          cache: gradle
 
       - name: Validate tag release signing config
         if: ${{ github.ref_type == 'tag' }}
@@ -60,12 +61,6 @@ jobs:
           echo keystore.password="${{ secrets.RELEASESTOREPASSWORD }}" >> keystore.properties
           echo keystore.key.alias="${{ vars.RELEASE_KEY_ALIAS }}" >> keystore.properties
           echo keystore.key.password="${{ secrets.RELEASEKEYPASSWORD }}" >> keystore.properties
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v6
-        with:
-          gradle-home-cache-cleanup: true
-          cache-read-only: ${{ github.ref != 'refs/heads/master' && github.ref != 'refs/heads/4.0-dev' }}
 
       - name: Build with Gradle
         run: ./gradlew assembleRelease
