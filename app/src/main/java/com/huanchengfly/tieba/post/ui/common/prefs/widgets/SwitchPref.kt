@@ -23,6 +23,7 @@ fun SwitchPref(
     title: String,
     modifier: Modifier = Modifier,
     summary: @Composable (value: Boolean) -> String? = { null },
+    minimalHeight: Boolean = false,
     defaultChecked: Boolean = false,  // only used if it doesn't already exist in the datastore
     onCheckedChange: ((Boolean) -> Unit)? = null,
     textColor: Color = MaterialTheme.colors.onBackground,
@@ -57,6 +58,7 @@ fun SwitchPref(
         modifier = modifier,
         textColor = textColor,
         summary = summary(checked),
+        minimalHeight = minimalHeight,
         darkenOnDisable = true,
         leadingIcon = leadingIcon,
         enabled = enabled,
@@ -95,6 +97,7 @@ fun SwitchPref(
     summary: String? = null,
     summaryOn: String? = null,
     summaryOff: String? = null,
+    minimalHeight: Boolean = false,
     defaultChecked: Boolean = false,  // only used if it doesn't already exist in the datastore
     onCheckedChange: ((Boolean) -> Unit)? = null,
     textColor: Color = MaterialTheme.colors.onBackground,
@@ -130,6 +133,7 @@ fun SwitchPref(
         modifier = modifier,
         textColor = textColor,
         summary = (if (checked) summaryOn else summaryOff) ?: summary,
+        minimalHeight = minimalHeight,
         darkenOnDisable = true,
         leadingIcon = leadingIcon,
         enabled = enabled,

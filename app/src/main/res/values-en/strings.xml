@@ -113,8 +113,8 @@
     <string name="tip_empty">Nothing here</string>
     <string name="title_auto_sign">Auto Sign-in</string>
     <string name="summary_auto_sign">When enabled, one-tap sign-in will run on schedule every day</string>
-    <string name="summary_platform_support">Mainline support currently targets Android 10 and above. Android 9 and below only receive minimal maintenance and are no longer the focus of recovery compatibility work.</string>
-    <string name="summary_reading_first_scope">The current recovery branch focuses on public browsing and reading: search, forum pages, thread pages, and hot rankings are prioritized; login, sign-in, and notifications move forward cautiously; posting/replying is not guaranteed to be stable.</string>
+    <string name="summary_platform_support">Mainline support targets Android 10+. Android 9 and below only receive minimal maintenance.</string>
+    <string name="summary_reading_first_scope">Browsing first: search, forums, threads, and hot rankings come first; login, sign-in, and notifications move cautiously; posting and replying are not yet promised stable.</string>
     <string name="summary_auto_sign_on">Auto sign-in is enabled</string>
     <string name="summary_auto_sign_experimental">Experimental capability. Test with a throwaway account before enabling it long term.</string>
     <string name="summary_auto_sign_experimental_locked">Auto sign-in is currently classified as experimental. Please enable experimental features from the About page first.</string>
@@ -395,7 +395,7 @@
     <string name="summary_settings_habit">The best feature is the one that fits your habits</string>
     <string name="summary_settings_oksign">One-tap sign-in settings</string>
     <string name="summary_settings_oksign_revival">Manual sign-in: %1$s · Auto sign-in: %2$s</string>
-    <string name="summary_revival_status">Public browsing: %1$s; login/sign-in/notifications: %2$s; auto sign-in: %3$s</string>
+    <string name="summary_revival_status">Public browsing: %1$s · Account flow: %2$s · Auto sign-in: %3$s</string>
     <string name="summary_public_browse_priority_home">Public browsing first: search, forum pages, and thread pages are the mainline for now. Account-related entries will be labeled separately with capability status.</string>
     <string name="summary_public_browse_priority_explore_logged_out">Recommendations and hot rankings are part of public browsing; the followed feed only appears after login.</string>
     <string name="summary_public_browse_priority_explore_logged_in">Recommendations and hot rankings are part of public browsing; the followed feed is still an account-adjacent entry.</string>

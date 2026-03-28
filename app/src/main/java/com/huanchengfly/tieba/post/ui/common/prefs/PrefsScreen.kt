@@ -1,15 +1,20 @@
 package com.huanchengfly.tieba.post.ui.common.prefs
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.datastore.core.DataStore
@@ -31,17 +36,29 @@ fun PrefsScreen(
     modifier: Modifier = Modifier,
     dividerThickness: Dp = 1.dp, // 0 for no divider
     dividerIndent: Dp = 0.dp, // indents on both sides
+    contentPadding: PaddingValues = PaddingValues(bottom = 16.dp),
     content: PrefsScope.() -> Unit
 ) {
     LocalPrefsDataStore = staticCompositionLocalOf { dataStore }
     val prefsScope = PrefsScopeImpl().apply(content)
+    val layoutDirection = LocalLayoutDirection.current
+    val navigationBarPadding = WindowInsets.navigationBars.asPaddingValues()
+    val mergedContentPadding = PaddingValues(
+        start = contentPadding.calculateLeftPadding(layoutDirection),
+        top = contentPadding.calculateTopPadding(),
+        end = contentPadding.calculateRightPadding(layoutDirection),
+        bottom = contentPadding.calculateBottomPadding() + navigationBarPadding.calculateBottomPadding()
+    )
 
     // Now the dataStore can be accessed by calling LocalPrefsDataStore.current from any child Pref
     CompositionLocalProvider(LocalPrefsDataStore provides dataStore) {
         Container {
             Column {
                 Spacer(modifier = Modifier.height(12.dp))
-                LazyColumn(modifier = modifier.fillMaxSize()) {
+                LazyColumn(
+                    modifier = modifier.fillMaxSize(),
+                    contentPadding = mergedContentPadding
+                ) {
 
                     items(prefsScope.prefsItems.size) { index ->
                         prefsScope.getPrefsItem(index)()

@@ -47,6 +47,7 @@ fun ListPref(
     title: String,
     modifier: Modifier = Modifier,
     summary: String? = null,
+    minimalHeight: Boolean = false,
     defaultValue: String? = null,
     onValueChange: ((String) -> Unit)? = null,
     useSelectedAsSummary: Boolean = false,
@@ -87,6 +88,7 @@ fun ListPref(
             useSelectedAsSummary && selected == null -> "Not Set"
             else -> summary
         },
+        minimalHeight = minimalHeight,
         leadingIcon = leadingIcon,
         modifier = modifier,
         textColor = textColor,
