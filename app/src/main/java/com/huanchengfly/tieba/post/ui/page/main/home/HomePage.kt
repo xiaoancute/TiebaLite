@@ -821,8 +821,9 @@ fun EmptyScreen(
                 composition = composition,
                 iterations = LottieConstants.IterateForever,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(2f)
+                    .align(Alignment.CenterHorizontally)
+                    .fillMaxWidth(0.72f)
+                    .aspectRatio(1.55f)
             )
         },
         message = {

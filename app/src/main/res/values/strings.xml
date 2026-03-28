@@ -115,8 +115,8 @@
     <string name="tip_empty">这里什么都没有</string>
     <string name="title_auto_sign">自动签到</string>
     <string name="summary_auto_sign">开启后，将每天定时运行一键签到</string>
-    <string name="summary_platform_support">当前主支持 Android 10 及以上。Android 9 及以下仅保持最低维护，不再作为复活适配中心。</string>
-    <string name="summary_reading_first_scope">当前复活分支以公开浏览和阅读为主：搜索、吧页、帖子页、热榜优先保证可用；登录、签到、通知保守推进；发帖/回帖不作稳定承诺。</string>
+    <string name="summary_platform_support">主支持 Android 10 及以上；Android 9 及以下仅做最低维护。</string>
+    <string name="summary_reading_first_scope">浏览优先：先保搜索、吧页、帖子页和热榜；登录、签到、通知谨慎推进；发帖/回帖暂不承诺稳定。</string>
     <string name="summary_auto_sign_on">自动签到已开启</string>
     <string name="summary_auto_sign_experimental">实验性能力，建议先用测试号验证后再长期启用</string>
     <string name="summary_auto_sign_experimental_locked">自动签到目前归为实验性能力，请先到“关于”页开启实验性功能</string>
@@ -403,7 +403,7 @@
     <string name="summary_settings_habit">万般功能不如自己顺手</string>
     <string name="summary_settings_oksign">一键签到功能设定</string>
     <string name="summary_settings_oksign_revival">手动签到：%1$s · 自动签到：%2$s</string>
-    <string name="summary_revival_status">公开浏览：%1$s；登录/签到/通知：%2$s；自动签到：%3$s</string>
+    <string name="summary_revival_status">公开浏览：%1$s · 账号能力：%2$s · 自动签到：%3$s</string>
     <string name="summary_public_browse_priority_home">公开浏览优先：搜索、吧页、帖子页是当前主线，账号相关入口会单独标注能力状态。</string>
     <string name="summary_public_browse_priority_explore_logged_out">推荐与热榜属于公开浏览主线；关注流需要登录后才会出现。</string>
     <string name="summary_public_browse_priority_explore_logged_in">推荐与热榜属于公开浏览主线；关注流仍属于账号附属入口。</string>

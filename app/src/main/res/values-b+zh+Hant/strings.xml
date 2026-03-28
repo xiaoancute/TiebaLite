@@ -113,8 +113,8 @@
     <string name="tip_empty">這裡什麼都沒有</string>
     <string name="title_auto_sign">自動簽到</string>
     <string name="summary_auto_sign">開啟後，將每天定時執行一鍵簽到</string>
-    <string name="summary_platform_support">目前主要支援 Android 10 及以上。Android 9 及以下僅維持最低維護，不再作為復活適配中心。</string>
-    <string name="summary_reading_first_scope">目前復活分支以公開瀏覽和閱讀為主：搜尋、吧頁、貼子頁、熱榜優先保證可用；登入、簽到、通知保守推進；發貼/回貼不作穩定承諾。</string>
+    <string name="summary_platform_support">主支援 Android 10 及以上；Android 9 及以下僅作最低維護。</string>
+    <string name="summary_reading_first_scope">瀏覽優先：先保搜尋、吧頁、貼子頁和熱榜；登入、簽到、通知謹慎推進；發貼/回貼暫不承諾穩定。</string>
     <string name="summary_auto_sign_on">自動簽到已開啟</string>
     <string name="summary_auto_sign_experimental">實驗性能力，建議先用測試號驗證後再長期啟用</string>
     <string name="summary_auto_sign_experimental_locked">自動簽到目前歸為實驗性能力，請先到「關於」頁開啟實驗性功能</string>
@@ -395,7 +395,7 @@
     <string name="summary_settings_habit">萬般功能不如自己順手</string>
     <string name="summary_settings_oksign">一鍵簽到功能設定</string>
     <string name="summary_settings_oksign_revival">手動簽到：%1$s · 自動簽到：%2$s</string>
-    <string name="summary_revival_status">公開瀏覽：%1$s；登入/簽到/通知：%2$s；自動簽到：%3$s</string>
+    <string name="summary_revival_status">公開瀏覽：%1$s · 帳號能力：%2$s · 自動簽到：%3$s</string>
     <string name="summary_public_browse_priority_home">公開瀏覽優先：搜尋、吧頁、貼子頁是目前主線，帳號相關入口會單獨標註能力狀態。</string>
     <string name="summary_public_browse_priority_explore_logged_out">推薦與熱榜屬於公開瀏覽主線；關注流需要登入後才會出現。</string>
     <string name="summary_public_browse_priority_explore_logged_in">推薦與熱榜屬於公開瀏覽主線；關注流仍屬於帳號附屬入口。</string>

@@ -92,6 +92,7 @@ fun CustomSettingsPage(
             prefsItem {
                 TextPref(
                     title = stringResource(id = R.string.title_custom_font_size),
+                    minimalHeight = true,
                     leadingIcon = {
                         LeadingIcon {
                             AvatarIcon(
@@ -111,6 +112,7 @@ fun CustomSettingsPage(
                 ListPref(
                     key = spec.key,
                     title = stringResource(id = spec.titleResId),
+                    minimalHeight = true,
                     defaultValue = spec.defaultValue,
                     leadingIcon = {
                         LeadingIcon {
@@ -135,6 +137,7 @@ fun CustomSettingsPage(
                 ListPref(
                     key = "dark_theme",
                     title = stringResource(id = R.string.settings_night_mode),
+                    minimalHeight = true,
                     defaultValue = ThemeUtil.THEME_AMOLED_DARK,
                     leadingIcon = {
                         LeadingIcon {
@@ -157,6 +160,7 @@ fun CustomSettingsPage(
                 ListPref(
                     key = "app_icon",
                     title = stringResource(id = R.string.settings_app_icon),
+                    minimalHeight = true,
                     defaultValue = LauncherIcons.DEFAULT_ICON,
                     leadingIcon = {
                         LeadingIcon {
@@ -231,6 +235,7 @@ fun CustomSettingsPage(
                     SwitchPref(
                         key = "useThemedIcon",
                         title = stringResource(id = R.string.title_settings_use_themed_icon),
+                        minimalHeight = true,
                         defaultChecked = false,
                         enabled = isCurrentSupportThemedIcon,
                         leadingIcon = {
@@ -253,6 +258,7 @@ fun CustomSettingsPage(
                 SwitchPref(
                     key = "follow_system_night",
                     title = stringResource(id = R.string.title_settings_follow_system_night),
+                    minimalHeight = true,
                     defaultChecked = true,
                 ) {
                     LeadingIcon {
@@ -301,6 +307,7 @@ fun CustomSettingsPage(
                 SwitchPref(
                     key = "listSingle",
                     title = stringResource(id = R.string.settings_forum_single),
+                    minimalHeight = true,
                     defaultChecked = false,
                 ) {
                     LeadingIcon {
@@ -316,6 +323,7 @@ fun CustomSettingsPage(
                 SwitchPref(
                     key = "hideExplore",
                     title = stringResource(id = R.string.title_hide_explore),
+                    minimalHeight = true,
                     defaultChecked = false,
                 ) {
                     LeadingIcon {
