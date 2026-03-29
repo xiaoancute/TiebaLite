@@ -140,6 +140,11 @@ open class AppPreferencesUtils private constructor(ctx: Context) {
 
     var homePageShowHistoryForum by DataStoreDelegates.boolean(defaultValue = true)
 
+    var homePageShowContinueReading by DataStoreDelegates.boolean(
+        defaultValue = true,
+        key = "home_page_show_continue_reading"
+    )
+
     var imageDarkenWhenNightMode by DataStoreDelegates.boolean(defaultValue = true)
 
     var imageLoadType by DataStoreDelegates.string(
@@ -182,6 +187,11 @@ open class AppPreferencesUtils private constructor(ctx: Context) {
     )
 
     var radius by DataStoreDelegates.int(defaultValue = 8)
+
+    var rememberThreadProgress by DataStoreDelegates.boolean(
+        defaultValue = true,
+        key = "remember_thread_progress"
+    )
 
     var signDay by DataStoreDelegates.int(defaultValue = -1, key = "sign_day")
 

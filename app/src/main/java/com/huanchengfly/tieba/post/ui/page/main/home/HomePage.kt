@@ -81,7 +81,9 @@ import com.huanchengfly.tieba.post.ui.common.theme.compose.pullRefreshIndicator
 import com.huanchengfly.tieba.post.ui.page.LocalNavigator
 import com.huanchengfly.tieba.post.ui.page.destinations.ForumPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.LoginPageDestination
+import com.huanchengfly.tieba.post.ui.page.destinations.ReadingWorkbenchPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.SearchPageDestination
+import com.huanchengfly.tieba.post.ui.page.destinations.ThreadPageDestination
 import com.huanchengfly.tieba.post.ui.widgets.compose.ActionItem
 import com.huanchengfly.tieba.post.ui.widgets.compose.Avatar
 import com.huanchengfly.tieba.post.ui.widgets.compose.Button
@@ -446,6 +448,10 @@ fun HomePage(
         prop1 = HomeUiState::historyForums,
         initial = persistentListOf()
     )
+    val continueReading by viewModel.uiState.collectPartialAsState(
+        prop1 = HomeUiState::continueReading,
+        initial = persistentListOf()
+    )
     val expandHistoryForum by viewModel.uiState.collectPartialAsState(
         prop1 = HomeUiState::expandHistoryForum,
         initial = true
@@ -455,9 +461,14 @@ fun HomePage(
         initial = null
     )
     val isLoggedIn = remember(account) { account != null }
-    val isEmpty by remember { derivedStateOf { forums.isEmpty() } }
+    val isEmpty by remember { derivedStateOf { forums.isEmpty() && continueReading.isEmpty() } }
     val hasTopForum by remember { derivedStateOf { topForums.isNotEmpty() } }
     val showHistoryForum by remember { derivedStateOf { context.appPreferences.homePageShowHistoryForum && historyForums.isNotEmpty() } }
+    val showContinueReading by remember {
+        derivedStateOf {
+            context.appPreferences.homePageShowContinueReading && continueReading.isNotEmpty()
+        }
+    }
     var listSingle by remember { mutableStateOf(context.appPreferences.listSingle) }
     val isError by remember { derivedStateOf { error != null } }
     val gridCells by remember { derivedStateOf { getGridCells(context, listSingle) } }
@@ -575,6 +586,80 @@ fun HomePage(
                         contentPadding = PaddingValues(bottom = 12.dp),
                         modifier = Modifier.fillMaxSize(),
                     ) {
+                        if (showContinueReading) {
+                            item(key = "ContinueReading", span = { GridItemSpan(maxLineSpan) }) {
+                                Column {
+                                    Row(
+                                        verticalAlignment = CenterVertically,
+                                        modifier = Modifier.padding(vertical = 8.dp)
+                                    ) {
+                                        Header(
+                                            text = stringResource(id = R.string.title_continue_reading),
+                                            invert = true
+                                        )
+                                        Spacer(modifier = Modifier.weight(1f))
+                                        TextButton(
+                                            onClick = { navigator.navigate(ReadingWorkbenchPageDestination) }
+                                        ) {
+                                            Text(text = stringResource(id = R.string.title_reading_workbench))
+                                        }
+                                    }
+                                    LazyRow(
+                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        items(
+                                            continueReading,
+                                            key = { it.threadId }
+                                        ) { item ->
+                                            Column(
+                                                modifier = Modifier
+                                                    .width(220.dp)
+                                                    .clip(RoundedCornerShape(16.dp))
+                                                    .background(ExtendedTheme.colors.chip)
+                                                    .clickable {
+                                                        navigator.navigate(
+                                                            ThreadPageDestination(
+                                                                threadId = item.threadId,
+                                                                postId = item.postId,
+                                                                seeLz = item.seeLz,
+                                                            )
+                                                        )
+                                                    }
+                                                    .padding(14.dp),
+                                                verticalArrangement = Arrangement.spacedBy(6.dp),
+                                            ) {
+                                                Text(
+                                                    text = item.title,
+                                                    fontWeight = FontWeight.Bold,
+                                                    maxLines = 2,
+                                                    color = ExtendedTheme.colors.onChip,
+                                                )
+                                                Text(
+                                                    text = buildString {
+                                                        if (!item.forumName.isNullOrBlank()) {
+                                                            append(item.forumName)
+                                                        }
+                                                        if (item.floor > 0) {
+                                                            if (isNotEmpty()) append(" · ")
+                                                            append(
+                                                                context.getString(
+                                                                    R.string.label_reading_floor,
+                                                                    item.floor
+                                                                )
+                                                            )
+                                                        }
+                                                    },
+                                                    fontSize = 12.sp,
+                                                    color = ExtendedTheme.colors.onChip.copy(alpha = 0.8f),
+                                                    maxLines = 1,
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                         if (showHistoryForum) {
                             item(key = "HistoryForums", span = { GridItemSpan(maxLineSpan) }) {
                                 val rotate by animateFloatAsState(

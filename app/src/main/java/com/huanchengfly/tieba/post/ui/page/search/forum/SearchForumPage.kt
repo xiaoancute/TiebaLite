@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
@@ -25,9 +26,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.huanchengfly.tieba.post.R
@@ -39,15 +43,23 @@ import com.huanchengfly.tieba.post.ui.common.theme.compose.ExtendedTheme
 import com.huanchengfly.tieba.post.ui.common.theme.compose.pullRefreshIndicator
 import com.huanchengfly.tieba.post.ui.page.LocalNavigator
 import com.huanchengfly.tieba.post.ui.page.destinations.ForumPageDestination
+import com.huanchengfly.tieba.post.ui.page.reading.buildSearchForumReadingTargetCandidate
+import com.huanchengfly.tieba.post.ui.page.reading.isInLocalFavorite
+import com.huanchengfly.tieba.post.ui.page.reading.isInReadLater
 import com.huanchengfly.tieba.post.ui.page.search.SearchUiEvent
+import com.huanchengfly.tieba.post.ui.page.reading.toggleLocalFavorite
+import com.huanchengfly.tieba.post.ui.page.reading.toggleReadLater
 import com.huanchengfly.tieba.post.ui.widgets.compose.Avatar
 import com.huanchengfly.tieba.post.ui.widgets.compose.Chip
 import com.huanchengfly.tieba.post.ui.widgets.compose.ErrorScreen
 import com.huanchengfly.tieba.post.ui.widgets.compose.LazyLoad
+import com.huanchengfly.tieba.post.ui.widgets.compose.LongClickMenu
 import com.huanchengfly.tieba.post.ui.widgets.compose.LocalShouldLoad
 import com.huanchengfly.tieba.post.ui.widgets.compose.MyLazyColumn
 import com.huanchengfly.tieba.post.ui.widgets.compose.Sizes
+import com.huanchengfly.tieba.post.ui.widgets.compose.rememberMenuState
 import com.huanchengfly.tieba.post.ui.widgets.compose.states.StateScreen
+import com.huanchengfly.tieba.post.toastShort
 import kotlinx.collections.immutable.persistentListOf
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
@@ -197,63 +209,123 @@ private fun SearchForumItem(
     onClick: () -> Unit,
 ) {
     val stats = remember(item) { buildSearchForumStats(item) }
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        Avatar(
-            data = item.avatar,
-            size = Sizes.Medium,
-            contentDescription = item.forumNameShow
-        )
-        Column(
-            modifier = Modifier
-                .weight(1f),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                text = stringResource(id = R.string.title_forum, item.forumNameShow.orEmpty()),
-                style = MaterialTheme.typography.subtitle1
-            )
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                stats.forEach { stat ->
-                    val contentDescription = when (stat.type) {
-                        SearchForumStatType.CONCERN -> stringResource(
-                            id = R.string.forum_concern_num,
-                            stat.value
+    val context = LocalContext.current
+    val target = remember(item) { buildSearchForumReadingTargetCandidate(item) }
+    var isInReadLater by remember(target) { mutableStateOf(target?.isInReadLater() == true) }
+    var isInLocalFavorite by remember(target) { mutableStateOf(target?.isInLocalFavorite() == true) }
+    val menuState = rememberMenuState()
+
+    LongClickMenu(
+        menuState = menuState,
+        onClick = onClick,
+        menuContent = {
+            if (target != null) {
+                DropdownMenuItem(
+                    onClick = {
+                        isInReadLater = target.toggleReadLater()
+                        context.toastShort(
+                            if (isInReadLater) {
+                                R.string.message_added_to_read_later
+                            } else {
+                                R.string.message_removed_from_read_later
+                            }
                         )
-                        SearchForumStatType.POST -> stringResource(
-                            id = R.string.forum_post_num,
-                            stat.value
-                        )
+                        menuState.expanded = false
                     }
-                    Chip(
-                        text = stat.value,
-                        prefixIcon = {
-                            Icon(
-                                imageVector = when (stat.type) {
-                                    SearchForumStatType.CONCERN -> Icons.Default.PersonOutline
-                                    SearchForumStatType.POST -> Icons.Default.MarkUnreadChatAlt
-                                },
-                                contentDescription = contentDescription
-                            )
-                        },
-                        shape = MaterialTheme.shapes.small
+                ) {
+                    Text(
+                        text = stringResource(
+                            id = if (isInReadLater) {
+                                R.string.action_remove_read_later
+                            } else {
+                                R.string.action_add_read_later
+                            }
+                        )
+                    )
+                }
+                DropdownMenuItem(
+                    onClick = {
+                        isInLocalFavorite = target.toggleLocalFavorite()
+                        context.toastShort(
+                            if (isInLocalFavorite) {
+                                R.string.message_added_to_local_favorite
+                            } else {
+                                R.string.message_removed_from_local_favorite
+                            }
+                        )
+                        menuState.expanded = false
+                    }
+                ) {
+                    Text(
+                        text = stringResource(
+                            id = if (isInLocalFavorite) {
+                                R.string.action_remove_local_favorite
+                            } else {
+                                R.string.action_add_local_favorite
+                            }
+                        )
                     )
                 }
             }
-            if (!item.intro.isNullOrEmpty()) {
+        }
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Avatar(
+                data = item.avatar,
+                size = Sizes.Medium,
+                contentDescription = item.forumNameShow
+            )
+            Column(
+                modifier = Modifier
+                    .weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 Text(
-                    text = item.slogan.orEmpty(),
-                    style = MaterialTheme.typography.body2,
-                    maxLines = 1
+                    text = stringResource(id = R.string.title_forum, item.forumNameShow.orEmpty()),
+                    style = MaterialTheme.typography.subtitle1
                 )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    stats.forEach { stat ->
+                        val contentDescription = when (stat.type) {
+                            SearchForumStatType.CONCERN -> stringResource(
+                                id = R.string.forum_concern_num,
+                                stat.value
+                            )
+                            SearchForumStatType.POST -> stringResource(
+                                id = R.string.forum_post_num,
+                                stat.value
+                            )
+                        }
+                        Chip(
+                            text = stat.value,
+                            prefixIcon = {
+                                Icon(
+                                    imageVector = when (stat.type) {
+                                        SearchForumStatType.CONCERN -> Icons.Default.PersonOutline
+                                        SearchForumStatType.POST -> Icons.Default.MarkUnreadChatAlt
+                                    },
+                                    contentDescription = contentDescription
+                                )
+                            },
+                            shape = MaterialTheme.shapes.small
+                        )
+                    }
+                }
+                if (!item.intro.isNullOrEmpty()) {
+                    Text(
+                        text = item.slogan.orEmpty(),
+                        style = MaterialTheme.typography.body2,
+                        maxLines = 1
+                    )
+                }
             }
         }
     }

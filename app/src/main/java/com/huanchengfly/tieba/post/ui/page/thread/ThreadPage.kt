@@ -82,8 +82,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -170,6 +172,9 @@ import com.huanchengfly.tieba.post.ui.widgets.compose.rememberMenuState
 import com.huanchengfly.tieba.post.ui.widgets.compose.states.StateScreen
 import com.huanchengfly.tieba.post.utils.DateTimeUtils.getRelativeTimeString
 import com.huanchengfly.tieba.post.utils.HistoryUtil
+import com.huanchengfly.tieba.post.utils.LocalFavoriteUtil
+import com.huanchengfly.tieba.post.utils.ReadLaterUtil
+import com.huanchengfly.tieba.post.utils.ReadingProgressUtil
 import com.huanchengfly.tieba.post.utils.StringUtil
 import com.huanchengfly.tieba.post.utils.StringUtil.getShortNumString
 import com.huanchengfly.tieba.post.utils.AccountUtil.LocalAccount
@@ -507,14 +512,32 @@ fun ThreadPage(
     scrollToReply: Boolean = false,
     viewModel: ThreadViewModel = pageViewModel(),
 ) {
+    val context = LocalContext.current
+    val rememberThreadProgress = context.appPreferences.rememberThreadProgress
+    val resumeState = remember(threadId, postId, seeLz, rememberThreadProgress) {
+        resolveThreadResumeState(
+            initialPostId = postId,
+            initialSeeLz = seeLz,
+            rememberProgress = rememberThreadProgress,
+            savedProgress = ReadingProgressUtil.get(threadId)?.let {
+                SavedThreadProgress(
+                    postId = it.postId,
+                    seeLz = it.seeLz,
+                )
+            },
+        )
+    }
+    val initialPostId = resumeState.postId
+    val initialSeeLz = resumeState.seeLz
+
     LazyLoad(loaded = viewModel.initialized) {
         viewModel.send(
             ThreadUiIntent.Init(
                 threadId,
                 forumId,
-                postId,
+                initialPostId,
                 threadInfo,
-                seeLz,
+                initialSeeLz,
                 sortType
             )
         )
@@ -522,9 +545,9 @@ fun ThreadPage(
             ThreadUiIntent.Load(
                 threadId,
                 page = 0,
-                postId = postId,
+                postId = initialPostId,
                 forumId = forumId,
-                seeLz = seeLz,
+                seeLz = initialSeeLz,
                 sortType = sortType,
                 from = from
             )
@@ -602,7 +625,7 @@ fun ThreadPage(
     )
     val isSeeLz by viewModel.uiState.collectPartialAsState(
         prop1 = ThreadUiState::seeLz,
-        initial = seeLz
+        initial = initialSeeLz
     )
     val curSortType by viewModel.uiState.collectPartialAsState(
         prop1 = ThreadUiState::sortType,
@@ -709,8 +732,9 @@ fun ThreadPage(
         derivedStateOf { lastVisibilityPost?.get { id } ?: 0L }
     }
     val coroutineScope = rememberCoroutineScope()
-    val context = LocalContext.current
     val isAiConfigured = remember { context.appPreferences.isAiConfigured }
+    var isInReadLater by remember(threadId) { mutableStateOf(ReadLaterUtil.hasThread(threadId)) }
+    var isInLocalFavorite by remember(threadId) { mutableStateOf(LocalFavoriteUtil.hasThread(threadId)) }
     val openBottomSheet = {
         coroutineScope.launch {
             bottomSheetState.show()
@@ -892,7 +916,7 @@ fun ThreadPage(
     )
 
     LaunchedEffect(Unit) {
-        if (from == ThreadPageFrom.FROM_STORE && extra is ThreadPageFromStoreExtra && extra.maxPid != postId) {
+        if (from == ThreadPageFrom.FROM_STORE && extra is ThreadPageFromStoreExtra && extra.maxPid != initialPostId) {
             val result = scaffoldState.snackbarHostState.showSnackbar(
                 context.getString(R.string.message_store_thread_update, extra.maxFloor),
                 context.getString(R.string.button_load_new),
@@ -905,7 +929,7 @@ fun ThreadPage(
                         page = 0,
                         postId = extra.maxPid,
                         forumId = forumId,
-                        seeLz = seeLz,
+                        seeLz = initialSeeLz,
                         sortType = sortType
                     )
                 )
@@ -935,6 +959,20 @@ fun ThreadPage(
                             ),
                             async = true
                         )
+                        if (context.appPreferences.rememberThreadProgress && lastVisibilityPostId != 0L) {
+                            ReadingProgressUtil.save(
+                                com.huanchengfly.tieba.post.models.database.ReadingProgress(
+                                    threadId = threadId,
+                                    threadTitle = threadTitle,
+                                    forumName = forum?.get { name },
+                                    authorName = author?.get { nameShow },
+                                    authorAvatar = StringUtil.getAvatarUrl(author?.get { portrait }),
+                                    postId = lastVisibilityPostId,
+                                    floor = lastVisibilityPost?.get { floor } ?: 0,
+                                    seeLz = isSeeLz,
+                                )
+                            )
+                        }
                         savedHistory = true
                         Log.i("ThreadPage", "saveHistory $lastVisibilityPostId")
                     }
@@ -1165,9 +1203,9 @@ fun ThreadPage(
                     ThreadUiIntent.Load(
                         threadId,
                         page = 0,
-                        postId = postId,
+                        postId = initialPostId,
                         forumId = forumId,
-                        seeLz = seeLz,
+                        seeLz = initialSeeLz,
                         sortType = sortType
                     )
                 )
@@ -1285,6 +1323,8 @@ fun ThreadPage(
                         ThreadMenu(
                             isSeeLz = isSeeLz,
                             isCollected = isCollected,
+                            isInReadLater = isInReadLater,
+                            isInLocalFavorite = isInLocalFavorite,
                             isDesc = curSortType == ThreadSortType.SORT_TYPE_DESC,
                             canDelete = { author?.get { id } == user.get { id } },
                             onSeeLzClick = {
@@ -1335,6 +1375,66 @@ fun ThreadPage(
                                     )
                                 )
                                 closeBottomSheet()
+                            },
+                            onReadLaterClick = {
+                                closeBottomSheet()
+                                if (threadTitle.isBlank()) {
+                                    context.toastShort(R.string.toast_load_failed)
+                                    return@ThreadMenu
+                                }
+                                if (isInReadLater) {
+                                    ReadLaterUtil.removeThread(threadId)
+                                    isInReadLater = false
+                                    coroutineScope.launch {
+                                        scaffoldState.snackbarHostState.showSnackbar(
+                                            context.getString(R.string.message_removed_from_read_later)
+                                        )
+                                    }
+                                } else {
+                                    ReadLaterUtil.saveThread(
+                                        threadId = threadId,
+                                        title = threadTitle,
+                                        forumName = forum?.get { name },
+                                        username = author?.get { nameShow },
+                                        avatar = StringUtil.getAvatarUrl(author?.get { portrait }),
+                                    )
+                                    isInReadLater = true
+                                    coroutineScope.launch {
+                                        scaffoldState.snackbarHostState.showSnackbar(
+                                            context.getString(R.string.message_added_to_read_later)
+                                        )
+                                    }
+                                }
+                            },
+                            onLocalFavoriteClick = {
+                                closeBottomSheet()
+                                if (threadTitle.isBlank()) {
+                                    context.toastShort(R.string.toast_load_failed)
+                                    return@ThreadMenu
+                                }
+                                if (isInLocalFavorite) {
+                                    LocalFavoriteUtil.removeThread(threadId)
+                                    isInLocalFavorite = false
+                                    coroutineScope.launch {
+                                        scaffoldState.snackbarHostState.showSnackbar(
+                                            context.getString(R.string.message_removed_from_local_favorite)
+                                        )
+                                    }
+                                } else {
+                                    LocalFavoriteUtil.saveThread(
+                                        threadId = threadId,
+                                        title = threadTitle,
+                                        forumName = forum?.get { name },
+                                        username = author?.get { nameShow },
+                                        avatar = StringUtil.getAvatarUrl(author?.get { portrait }),
+                                    )
+                                    isInLocalFavorite = true
+                                    coroutineScope.launch {
+                                        scaffoldState.snackbarHostState.showSnackbar(
+                                            context.getString(R.string.message_added_to_local_favorite)
+                                        )
+                                    }
+                                }
                             },
                             isAiConfigured = isAiConfigured,
                             onAiSummaryClick = {
@@ -2259,12 +2359,16 @@ fun UserNameText(
 private fun ThreadMenu(
     isSeeLz: Boolean,
     isCollected: Boolean,
+    isInReadLater: Boolean,
+    isInLocalFavorite: Boolean,
     isDesc: Boolean,
     isAiConfigured: Boolean,
     canDelete: () -> Boolean,
     onSeeLzClick: () -> Unit,
     onCollectClick: () -> Unit,
     onDescClick: () -> Unit,
+    onReadLaterClick: () -> Unit,
+    onLocalFavoriteClick: () -> Unit,
     onAiSummaryClick: () -> Unit,
     onAiSettingsClick: () -> Unit,
     onJumpPageClick: () -> Unit,
@@ -2388,6 +2492,32 @@ private fun ThreadMenu(
                 text = stringResource(id = R.string.title_jump_page),
                 iconColor = ExtendedTheme.colors.text,
                 onClick = onJumpPageClick,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            ListMenuItem(
+                icon = ImageVector.vectorResource(R.drawable.ic_outline_watch_later_24),
+                text = stringResource(
+                    id = if (isInReadLater) {
+                        R.string.action_remove_read_later
+                    } else {
+                        R.string.action_add_read_later
+                    }
+                ),
+                iconColor = ExtendedTheme.colors.text,
+                onClick = onReadLaterClick,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            ListMenuItem(
+                icon = ImageVector.vectorResource(R.drawable.ic_favorite),
+                text = stringResource(
+                    id = if (isInLocalFavorite) {
+                        R.string.action_remove_local_favorite
+                    } else {
+                        R.string.action_add_local_favorite
+                    }
+                ),
+                iconColor = ExtendedTheme.colors.text,
+                onClick = onLocalFavoriteClick,
                 modifier = Modifier.fillMaxWidth(),
             )
             ListMenuItem(

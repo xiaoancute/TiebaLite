@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
@@ -161,6 +162,7 @@ fun SearchThreadList(
     onMainPostClick: (SearchThreadBean.MainPost) -> Unit = {},
     hideForum: Boolean = false,
     searchKeyword: String? = null,
+    itemMenuContent: (@Composable ColumnScope.(SearchThreadBean.ThreadInfoBean) -> Unit)? = null,
     header: LazyListScope.() -> Unit = {},
 ) {
     MyLazyColumn(
@@ -180,7 +182,8 @@ fun SearchThreadList(
                 onQuotePostClick = onQuotePostClick,
                 onMainPostClick = onMainPostClick,
                 hideForum = hideForum,
-                searchKeyword = searchKeyword
+                searchKeyword = searchKeyword,
+                menuContent = itemMenuContent?.let { menu -> { menu(item) } }
             )
         }
     }
@@ -232,91 +235,109 @@ fun SearchThreadItem(
     onMainPostClick: (SearchThreadBean.MainPost) -> Unit = {},
     hideForum: Boolean = false,
     searchKeyword: String? = null,
+    menuContent: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
-    Card(
-        modifier = modifier,
-        header = {
-            SearchThreadUserHeader(
-                user = item.user,
-                time = item.time,
-                onClick = { onUserClick(item.user) }
-            )
-        },
-        content = {
-            ThreadContent(
-                title = item.title,
-                abstractText = item.content,
-                showTitle = item.mainPost == null && item.title.isNotBlank(),
-                showAbstract = item.content.isNotBlank(),
-                maxLines = 2,
-                highlightKeywords = (searchKeyword?.split(" ") ?: emptyList()).toImmutableList(),
-            )
-            if (item.mainPost != null) {
-                if (item.postInfo != null) {
-                    QuotePostCard(
-                        quotePostInfo = item.postInfo,
-                        mainPost = item.mainPost,
-                        onMainPostClick = onMainPostClick,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(ExtendedTheme.colors.floorCard)
-                            .clickable {
-                                onQuotePostClick(item.postInfo)
-                            },
-                        medias = item.media.toImmutableList(),
-                        keyword = searchKeyword
-                    )
+    val cardContent: @Composable () -> Unit = {
+        Card(
+            modifier = modifier,
+            header = {
+                SearchThreadUserHeader(
+                    user = item.user,
+                    time = item.time,
+                    onClick = { onUserClick(item.user) }
+                )
+            },
+            content = {
+                ThreadContent(
+                    title = item.title,
+                    abstractText = item.content,
+                    showTitle = item.mainPost == null && item.title.isNotBlank(),
+                    showAbstract = item.content.isNotBlank(),
+                    maxLines = 2,
+                    highlightKeywords = (searchKeyword?.split(" ") ?: emptyList()).toImmutableList(),
+                )
+                if (item.mainPost != null) {
+                    if (item.postInfo != null) {
+                        QuotePostCard(
+                            quotePostInfo = item.postInfo,
+                            mainPost = item.mainPost,
+                            onMainPostClick = onMainPostClick,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(ExtendedTheme.colors.floorCard)
+                                .clickable {
+                                    onQuotePostClick(item.postInfo)
+                                },
+                            medias = item.media.toImmutableList(),
+                            keyword = searchKeyword
+                        )
+                    } else {
+                        MainPostCard(
+                            mainPost = item.mainPost,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(ExtendedTheme.colors.floorCard)
+                                .clickable {
+                                    onMainPostClick(item.mainPost)
+                                },
+                            medias = item.media.toImmutableList(),
+                            keyword = searchKeyword
+                        )
+                    }
                 } else {
-                    MainPostCard(
-                        mainPost = item.mainPost,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(ExtendedTheme.colors.floorCard)
-                            .clickable {
-                                onMainPostClick(item.mainPost)
-                            },
-                        medias = item.media.toImmutableList(),
-                        keyword = searchKeyword
+                    SearchMedia(medias = item.media.toImmutableList())
+                }
+                if (!hideForum && item.forumName.isNotEmpty()) {
+                    ForumInfoChip(
+                        imageUriProvider = { item.forumInfo.avatar },
+                        nameProvider = { item.forumName }
+                    ) {
+                        onForumClick(item.forumInfo)
+                    }
+                }
+            },
+            action = {
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    ThreadReplyBtn(
+                        replyNum = item.postNum,
+                        onClick = {},
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    ThreadAgreeBtn(
+                        hasAgree = false,
+                        agreeNum = item.likeNum,
+                        onClick = {},
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    ThreadShareBtn(
+                        shareNum = item.shareNum,
+                        onClick = {},
+                        modifier = Modifier.weight(1f)
                     )
                 }
+            },
+            onClick = if (menuContent == null) {
+                { onClick(item) }
             } else {
-                SearchMedia(medias = item.media.toImmutableList())
-            }
-            if (!hideForum && item.forumName.isNotEmpty()) {
-                ForumInfoChip(
-                    imageUriProvider = { item.forumInfo.avatar },
-                    nameProvider = { item.forumName }
-                ) {
-                    onForumClick(item.forumInfo)
-                }
-            }
-        },
-        action = {
-            Row(modifier = Modifier.fillMaxWidth()) {
-                ThreadReplyBtn(
-                    replyNum = item.postNum,
-                    onClick = {},
-                    modifier = Modifier.weight(1f)
-                )
+                null
+            },
+        )
+    }
 
-                ThreadAgreeBtn(
-                    hasAgree = false,
-                    agreeNum = item.likeNum,
-                    onClick = {},
-                    modifier = Modifier.weight(1f)
-                )
-
-                ThreadShareBtn(
-                    shareNum = item.shareNum,
-                    onClick = {},
-                    modifier = Modifier.weight(1f)
-                )
-            }
-        },
-        onClick = { onClick(item) },
-    )
+    if (menuContent != null) {
+        LongClickMenu(
+            menuContent = menuContent,
+            onClick = { onClick(item) }
+        ) {
+            cardContent()
+        }
+    } else {
+        cardContent()
+    }
 }
 
 @Composable

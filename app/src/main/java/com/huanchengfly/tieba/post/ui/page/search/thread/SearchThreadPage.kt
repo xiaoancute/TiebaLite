@@ -1,9 +1,12 @@
 package com.huanchengfly.tieba.post.ui.page.search.thread
 
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Text
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
@@ -11,20 +14,29 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.huanchengfly.tieba.post.R
+import com.huanchengfly.tieba.post.api.models.SearchThreadBean
 import com.huanchengfly.tieba.post.arch.collectPartialAsState
 import com.huanchengfly.tieba.post.arch.onGlobalEvent
 import com.huanchengfly.tieba.post.arch.pageViewModel
+import com.huanchengfly.tieba.post.toastShort
 import com.huanchengfly.tieba.post.ui.common.theme.compose.ExtendedTheme
 import com.huanchengfly.tieba.post.ui.common.theme.compose.pullRefreshIndicator
 import com.huanchengfly.tieba.post.ui.page.LocalNavigator
 import com.huanchengfly.tieba.post.ui.page.destinations.ForumPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.ThreadPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.UserProfilePageDestination
+import com.huanchengfly.tieba.post.ui.page.reading.buildSearchThreadReadingTargetCandidate
+import com.huanchengfly.tieba.post.ui.page.reading.isInLocalFavorite
+import com.huanchengfly.tieba.post.ui.page.reading.isInReadLater
+import com.huanchengfly.tieba.post.ui.page.reading.toggleLocalFavorite
+import com.huanchengfly.tieba.post.ui.page.reading.toggleReadLater
 import com.huanchengfly.tieba.post.ui.page.search.SearchUiEvent
 import com.huanchengfly.tieba.post.ui.widgets.compose.ErrorScreen
 import com.huanchengfly.tieba.post.ui.widgets.compose.LazyLoad
@@ -32,7 +44,6 @@ import com.huanchengfly.tieba.post.ui.widgets.compose.LoadMoreLayout
 import com.huanchengfly.tieba.post.ui.widgets.compose.LocalShouldLoad
 import com.huanchengfly.tieba.post.ui.widgets.compose.SearchThreadList
 import com.huanchengfly.tieba.post.ui.widgets.compose.states.StateScreen
-import com.huanchengfly.tieba.post.toastShort
 import kotlinx.collections.immutable.persistentListOf
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -168,6 +179,9 @@ fun SearchThreadPage(
                         )
                     },
                     searchKeyword = keyword,
+                    itemMenuContent = { item ->
+                        SearchThreadReadingMenu(item)
+                    },
                 )
 
                 PullRefreshIndicator(
@@ -179,5 +193,64 @@ fun SearchThreadPage(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun ColumnScope.SearchThreadReadingMenu(
+    item: SearchThreadBean.ThreadInfoBean,
+) {
+    val context = LocalContext.current
+    val target = remember(item) { buildSearchThreadReadingTargetCandidate(item) }
+    var isInReadLater by remember(target) { mutableStateOf(target?.isInReadLater() == true) }
+    var isInLocalFavorite by remember(target) { mutableStateOf(target?.isInLocalFavorite() == true) }
+
+    if (target == null) {
+        return
+    }
+
+    DropdownMenuItem(
+        onClick = {
+            isInReadLater = target.toggleReadLater()
+            context.toastShort(
+                if (isInReadLater) {
+                    R.string.message_added_to_read_later
+                } else {
+                    R.string.message_removed_from_read_later
+                }
+            )
+        }
+    ) {
+        Text(
+            text = context.getString(
+                if (isInReadLater) {
+                    R.string.action_remove_read_later
+                } else {
+                    R.string.action_add_read_later
+                }
+            )
+        )
+    }
+    DropdownMenuItem(
+        onClick = {
+            isInLocalFavorite = target.toggleLocalFavorite()
+            context.toastShort(
+                if (isInLocalFavorite) {
+                    R.string.message_added_to_local_favorite
+                } else {
+                    R.string.message_removed_from_local_favorite
+                }
+            )
+        }
+    ) {
+        Text(
+            text = context.getString(
+                if (isInLocalFavorite) {
+                    R.string.action_remove_local_favorite
+                } else {
+                    R.string.action_add_local_favorite
+                }
+            )
+        )
     }
 }

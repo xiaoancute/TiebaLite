@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <litepal>
     <dbname value="tblite" />
-    <version value="38" />
+    <version value="39" />
     <list>
         <mapping class="com.huanchengfly.tieba.post.models.database.Account" />
         <mapping class="com.huanchengfly.tieba.post.models.database.Draft" />
@@ -10,5 +10,8 @@
         <mapping class="com.huanchengfly.tieba.post.models.database.TopForum" />
         <mapping class="com.huanchengfly.tieba.post.models.database.SearchHistory" />
         <mapping class="com.huanchengfly.tieba.post.models.database.SearchPostHistory" />
+        <mapping class="com.huanchengfly.tieba.post.models.database.ReadLaterItem" />
+        <mapping class="com.huanchengfly.tieba.post.models.database.LocalFavoriteItem" />
+        <mapping class="com.huanchengfly.tieba.post.models.database.ReadingProgress" />
     </list>
 </litepal>

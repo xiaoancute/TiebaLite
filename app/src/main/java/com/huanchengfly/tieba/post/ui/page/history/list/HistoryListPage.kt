@@ -14,6 +14,9 @@ import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -31,7 +34,12 @@ import com.huanchengfly.tieba.post.ui.common.theme.compose.ExtendedTheme
 import com.huanchengfly.tieba.post.ui.page.LocalNavigator
 import com.huanchengfly.tieba.post.ui.page.destinations.ForumPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.ThreadPageDestination
+import com.huanchengfly.tieba.post.ui.page.reading.buildHistoryReadingTargetCandidate
+import com.huanchengfly.tieba.post.ui.page.reading.isInLocalFavorite
+import com.huanchengfly.tieba.post.ui.page.reading.isInReadLater
 import com.huanchengfly.tieba.post.ui.page.thread.ThreadPageFrom
+import com.huanchengfly.tieba.post.ui.page.reading.toggleLocalFavorite
+import com.huanchengfly.tieba.post.ui.page.reading.toggleReadLater
 import com.huanchengfly.tieba.post.ui.widgets.compose.Avatar
 import com.huanchengfly.tieba.post.ui.widgets.compose.Chip
 import com.huanchengfly.tieba.post.ui.widgets.compose.LazyLoad
@@ -44,6 +52,7 @@ import com.huanchengfly.tieba.post.ui.widgets.compose.UserHeader
 import com.huanchengfly.tieba.post.ui.widgets.compose.rememberMenuState
 import com.huanchengfly.tieba.post.utils.DateTimeUtils
 import com.huanchengfly.tieba.post.utils.HistoryUtil
+import com.huanchengfly.tieba.post.toastShort
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -211,9 +220,61 @@ private fun HistoryItem(
     onClick: (History) -> Unit = {},
     onDelete: (History) -> Unit = {},
 ) {
+    val context = LocalContext.current
+    val target = remember(info) { buildHistoryReadingTargetCandidate(info) }
+    var isInReadLater by remember(target) { mutableStateOf(target?.isInReadLater() == true) }
+    var isInLocalFavorite by remember(target) { mutableStateOf(target?.isInLocalFavorite() == true) }
     val menuState = rememberMenuState()
     LongClickMenu(
         menuContent = {
+            if (target != null) {
+                DropdownMenuItem(
+                    onClick = {
+                        isInReadLater = target.toggleReadLater()
+                        context.toastShort(
+                            if (isInReadLater) {
+                                R.string.message_added_to_read_later
+                            } else {
+                                R.string.message_removed_from_read_later
+                            }
+                        )
+                        menuState.expanded = false
+                    }
+                ) {
+                    Text(
+                        text = stringResource(
+                            id = if (isInReadLater) {
+                                R.string.action_remove_read_later
+                            } else {
+                                R.string.action_add_read_later
+                            }
+                        )
+                    )
+                }
+                DropdownMenuItem(
+                    onClick = {
+                        isInLocalFavorite = target.toggleLocalFavorite()
+                        context.toastShort(
+                            if (isInLocalFavorite) {
+                                R.string.message_added_to_local_favorite
+                            } else {
+                                R.string.message_removed_from_local_favorite
+                            }
+                        )
+                        menuState.expanded = false
+                    }
+                ) {
+                    Text(
+                        text = stringResource(
+                            id = if (isInLocalFavorite) {
+                                R.string.action_remove_local_favorite
+                            } else {
+                                R.string.action_add_local_favorite
+                            }
+                        )
+                    )
+                }
+            }
             DropdownMenuItem(onClick = {
                 onDelete(info)
                 menuState.expanded = false

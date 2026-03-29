@@ -293,6 +293,40 @@ fun HabitSettingsPage(
                 )
             }
             prefsItem {
+                SwitchPref(
+                    key = "home_page_show_continue_reading",
+                    title = stringResource(id = R.string.settings_home_page_show_continue_reading),
+                    defaultChecked = true,
+                    leadingIcon = {
+                        LeadingIcon {
+                            AvatarIcon(
+                                icon = Icons.Outlined.WatchLater,
+                                size = Sizes.Small,
+                                contentDescription = null,
+                            )
+                        }
+                    },
+                )
+            }
+            prefsItem {
+                SwitchPref(
+                    key = "remember_thread_progress",
+                    title = stringResource(id = R.string.settings_remember_thread_progress),
+                    defaultChecked = true,
+                    leadingIcon = {
+                        LeadingIcon {
+                            AvatarIcon(
+                                icon = Icons.Outlined.StarOutline,
+                                size = Sizes.Small,
+                                contentDescription = null,
+                            )
+                        }
+                    },
+                    summaryOn = stringResource(id = R.string.summary_remember_thread_progress_on),
+                    summaryOff = stringResource(id = R.string.summary_remember_thread_progress)
+                )
+            }
+            prefsItem {
                 TextPref(
                     title = stringResource(id = R.string.title_post_or_reply_warning_pref),
                     summary = stringResource(id = R.string.summary_post_or_reply_warning_locked),

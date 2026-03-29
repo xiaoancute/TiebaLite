@@ -20,6 +20,7 @@ import com.huanchengfly.tieba.post.models.database.TopForum
 import com.huanchengfly.tieba.post.utils.AccountUtil
 import com.huanchengfly.tieba.post.utils.HistoryUtil
 import com.huanchengfly.tieba.post.utils.FollowedForumsCache
+import com.huanchengfly.tieba.post.utils.ReadingProgressUtil
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -27,6 +28,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flow
@@ -74,11 +76,36 @@ class HomeViewModel : BaseViewModel<HomeUiIntent, HomePartialChange, HomeUiState
 
         @Suppress("USELESS_CAST")
         private fun produceRefreshPartialChangeFlow(): Flow<HomePartialChange.Refresh> =
-            HistoryUtil.getFlow(HistoryUtil.TYPE_FORUM, 0)
-                .zip(
-                    TiebaApi.getInstance().allForumGuideFlow()
-                ) { historyForums, followedForums ->
+            combine(
+                HistoryUtil.getFlow(HistoryUtil.TYPE_FORUM, 0),
+                ReadingProgressUtil.getFlow(0),
+                TiebaApi.getInstance().allForumGuideFlow(),
+            ) { historyForums, readingProgress, followedForums ->
                     val forums = followedForums.map { it.toHomeForum() }
+                    val progressByThreadId = readingProgress.associateBy { it.threadId }
+                    val continueReading = buildContinueReadingEntries(
+                        entries = progressByThreadId.values.map {
+                            ContinueReadingEntryCandidate(
+                                threadId = it.threadId,
+                                title = it.threadTitle,
+                                postId = it.postId,
+                                timestamp = it.timestamp,
+                            )
+                        },
+                        limit = 10,
+                    ).mapNotNull { candidate ->
+                        progressByThreadId[candidate.threadId]?.let {
+                            HomeUiState.ContinueReadingItem(
+                                threadId = it.threadId,
+                                title = it.threadTitle,
+                                forumName = it.forumName,
+                                postId = it.postId,
+                                floor = it.floor,
+                                seeLz = it.seeLz,
+                                timestamp = it.timestamp,
+                            )
+                        }
+                    }
 
                     // 添加关注列表到全局缓存
                     FollowedForumsCache.updateAll(followedForums)
@@ -89,7 +116,8 @@ class HomeViewModel : BaseViewModel<HomeUiIntent, HomePartialChange, HomeUiState
                     HomePartialChange.Refresh.Success(
                         forums,
                         topForums,
-                        historyForums
+                        historyForums,
+                        continueReading,
                     ) as HomePartialChange.Refresh
                 }
                 .onStart { emit(HomePartialChange.Refresh.Start) }
@@ -97,8 +125,38 @@ class HomeViewModel : BaseViewModel<HomeUiIntent, HomePartialChange, HomeUiState
 
         @Suppress("USELESS_CAST")
         private fun produceRefreshHistoryPartialChangeFlow(): Flow<HomePartialChange.RefreshHistory> =
-            HistoryUtil.getFlow(HistoryUtil.TYPE_FORUM, 0)
-                .map { HomePartialChange.RefreshHistory.Success(it) as HomePartialChange.RefreshHistory }
+            combine(
+                HistoryUtil.getFlow(HistoryUtil.TYPE_FORUM, 0),
+                ReadingProgressUtil.getFlow(0),
+            ) { historyForums, readingProgress ->
+                val progressByThreadId = readingProgress.associateBy { it.threadId }
+                HomePartialChange.RefreshHistory.Success(
+                    historyForums = historyForums,
+                    continueReading = buildContinueReadingEntries(
+                        entries = progressByThreadId.values.map {
+                            ContinueReadingEntryCandidate(
+                                threadId = it.threadId,
+                                title = it.threadTitle,
+                                postId = it.postId,
+                                timestamp = it.timestamp,
+                            )
+                        },
+                        limit = 10,
+                    ).mapNotNull { candidate ->
+                        progressByThreadId[candidate.threadId]?.let {
+                            HomeUiState.ContinueReadingItem(
+                                threadId = it.threadId,
+                                title = it.threadTitle,
+                                forumName = it.forumName,
+                                postId = it.postId,
+                                floor = it.floor,
+                                seeLz = it.seeLz,
+                                timestamp = it.timestamp,
+                            )
+                        }
+                    },
+                ) as HomePartialChange.RefreshHistory
+            }
                 .catch { emit(HomePartialChange.RefreshHistory.Failure(it)) }
 
         private fun HomeUiIntent.TopForums.Delete.toPartialChangeFlow() =
@@ -191,6 +249,7 @@ sealed interface HomePartialChange : PartialChange<HomeUiState> {
                     forums = forums.toImmutableList(),
                     topForums = topForums.toImmutableList(),
                     historyForums = historyForums.toImmutableList(),
+                    continueReading = continueReading.toImmutableList(),
                     error = null
                 )
 
@@ -204,6 +263,7 @@ sealed interface HomePartialChange : PartialChange<HomeUiState> {
             val forums: List<HomeUiState.Forum>,
             val topForums: List<HomeUiState.Forum>,
             val historyForums: List<History>,
+            val continueReading: List<HomeUiState.ContinueReadingItem>,
         ) : Refresh()
 
         data class Failure(
@@ -216,6 +276,7 @@ sealed interface HomePartialChange : PartialChange<HomeUiState> {
             when (this) {
                 is Success -> oldState.copy(
                     historyForums = historyForums.toImmutableList(),
+                    continueReading = continueReading.toImmutableList(),
                 )
 
                 else -> oldState
@@ -223,6 +284,7 @@ sealed interface HomePartialChange : PartialChange<HomeUiState> {
 
         data class Success(
             val historyForums: List<History>,
+            val continueReading: List<HomeUiState.ContinueReadingItem>,
         ) : RefreshHistory()
 
         data class Failure(
@@ -278,6 +340,7 @@ data class HomeUiState(
     val forums: ImmutableList<Forum> = persistentListOf(),
     val topForums: ImmutableList<Forum> = persistentListOf(),
     val historyForums: ImmutableList<History> = persistentListOf(),
+    val continueReading: ImmutableList<ContinueReadingItem> = persistentListOf(),
     val expandHistoryForum: Boolean = true,
     val error: Throwable? = null,
 ) : UiState {
@@ -289,6 +352,17 @@ data class HomeUiState(
         val isSign: Boolean,
         val levelId: String,
         val hotNum: Int,
+    )
+
+    @Immutable
+    data class ContinueReadingItem(
+        val threadId: Long,
+        val title: String,
+        val forumName: String?,
+        val postId: Long,
+        val floor: Int,
+        val seeLz: Boolean,
+        val timestamp: Long,
     )
 }
 

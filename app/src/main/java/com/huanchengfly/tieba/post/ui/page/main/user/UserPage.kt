@@ -60,6 +60,7 @@ import com.huanchengfly.tieba.post.ui.page.destinations.AppThemePageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.HistoryPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.LoginPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.NotificationsPageDestination
+import com.huanchengfly.tieba.post.ui.page.destinations.ReadingWorkbenchPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.SettingsPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.ThreadStorePageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.UserProfilePageDestination
@@ -357,6 +358,13 @@ fun UserPage(
                     text = stringResource(id = R.string.title_history),
                     onClick = {
                         navigator.navigate(HistoryPageDestination)
+                    }
+                )
+                ListMenuItem(
+                    icon = ImageVector.vectorResource(id = R.drawable.ic_outline_watch_later_24),
+                    text = stringResource(id = R.string.title_reading_workbench),
+                    onClick = {
+                        navigator.navigate(ReadingWorkbenchPageDestination)
                     }
                 )
                 ListMenuItem(

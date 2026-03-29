@@ -100,6 +100,11 @@ import com.huanchengfly.tieba.post.ui.page.destinations.ForumSearchPostPageDesti
 import com.huanchengfly.tieba.post.ui.page.forum.threadlist.ForumThreadListPage
 import com.huanchengfly.tieba.post.ui.page.forum.threadlist.ForumThreadListType
 import com.huanchengfly.tieba.post.ui.page.forum.threadlist.ForumThreadListUiEvent
+import com.huanchengfly.tieba.post.ui.page.reading.buildForumReadingTargetCandidate
+import com.huanchengfly.tieba.post.ui.page.reading.isInLocalFavorite
+import com.huanchengfly.tieba.post.ui.page.reading.isInReadLater
+import com.huanchengfly.tieba.post.ui.page.reading.toggleLocalFavorite
+import com.huanchengfly.tieba.post.ui.page.reading.toggleReadLater
 import com.huanchengfly.tieba.post.ui.widgets.compose.Avatar
 import com.huanchengfly.tieba.post.ui.widgets.compose.AvatarPlaceholder
 import com.huanchengfly.tieba.post.ui.widgets.compose.BackNavigationIcon
@@ -123,6 +128,8 @@ import com.huanchengfly.tieba.post.ui.widgets.compose.rememberMenuState
 import com.huanchengfly.tieba.post.ui.widgets.compose.states.StateScreen
 import com.huanchengfly.tieba.post.utils.AccountUtil.LocalAccount
 import com.huanchengfly.tieba.post.utils.HistoryUtil
+import com.huanchengfly.tieba.post.utils.LocalFavoriteUtil
+import com.huanchengfly.tieba.post.utils.ReadLaterUtil
 import com.huanchengfly.tieba.post.utils.StringUtil.getShortNumString
 import com.huanchengfly.tieba.post.utils.TiebaUtil
 import com.huanchengfly.tieba.post.utils.appPreferences
@@ -462,6 +469,14 @@ fun ForumPage(
             )
         )
     }
+    val forumReadingTarget = remember(forumName, forumInfo?.get { avatar }) {
+        buildForumReadingTargetCandidate(
+            forumName = forumName,
+            avatar = forumInfo?.get { avatar }
+        )
+    }
+    var isInReadLater by remember(forumName) { mutableStateOf(ReadLaterUtil.hasForum(forumName)) }
+    var isInLocalFavorite by remember(forumName) { mutableStateOf(LocalFavoriteUtil.hasForum(forumName)) }
 
     val density = LocalDensity.current
 
@@ -545,6 +560,62 @@ fun ForumPage(
                         forumName = forumName,
                         showTitle = !isShowTopBarArea,
                         menuContent = {
+                            if (forumReadingTarget != null) {
+                                DropdownMenuItem(
+                                    onClick = {
+                                        isInReadLater = forumReadingTarget.toggleReadLater()
+                                        coroutineScope.launch {
+                                            snackbarHostState.showSnackbar(
+                                                context.getString(
+                                                    if (isInReadLater) {
+                                                        R.string.message_added_to_read_later
+                                                    } else {
+                                                        R.string.message_removed_from_read_later
+                                                    }
+                                                )
+                                            )
+                                        }
+                                        dismiss()
+                                    }
+                                ) {
+                                    Text(
+                                        text = stringResource(
+                                            id = if (isInReadLater) {
+                                                R.string.action_remove_read_later
+                                            } else {
+                                                R.string.action_add_read_later
+                                            }
+                                        )
+                                    )
+                                }
+                                DropdownMenuItem(
+                                    onClick = {
+                                        isInLocalFavorite = forumReadingTarget.toggleLocalFavorite()
+                                        coroutineScope.launch {
+                                            snackbarHostState.showSnackbar(
+                                                context.getString(
+                                                    if (isInLocalFavorite) {
+                                                        R.string.message_added_to_local_favorite
+                                                    } else {
+                                                        R.string.message_removed_from_local_favorite
+                                                    }
+                                                )
+                                            )
+                                        }
+                                        dismiss()
+                                    }
+                                ) {
+                                    Text(
+                                        text = stringResource(
+                                            id = if (isInLocalFavorite) {
+                                                R.string.action_remove_local_favorite
+                                            } else {
+                                                R.string.action_add_local_favorite
+                                            }
+                                        )
+                                    )
+                                }
+                            }
                             DropdownMenuItem(
                                 onClick = {
                                     shareForum(context, forumName)
