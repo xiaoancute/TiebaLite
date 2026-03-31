@@ -190,8 +190,8 @@ dependencies {
     debugImplementation(compose.ui.tooling)
 
     // UI Tests
-    androidTestImplementation(compose.ui.test.junit4)
-    debugRuntimeOnly(compose.ui.test.manifest)
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.6.0")
+    debugRuntimeOnly("androidx.compose.ui:ui-test-manifest:1.6.0")
 
     implementation(androidx.constraintlayout.compose)
 

@@ -266,7 +266,7 @@ private fun ForumItemMenuContent(
             } else {
                 onAddTopForum()
             }
-            menuState.expanded = false
+            menuState.dismiss(consumeNextClick = true)
         }
     ) {
         if (isTopForum) {
@@ -278,7 +278,7 @@ private fun ForumItemMenuContent(
     DropdownMenuItem(
         onClick = {
             onCopyName()
-            menuState.expanded = false
+            menuState.dismiss(consumeNextClick = true)
         }
     ) {
         Text(text = stringResource(id = R.string.title_copy_forum_name))
@@ -286,7 +286,7 @@ private fun ForumItemMenuContent(
     DropdownMenuItem(
         onClick = {
             onUnfollow()
-            menuState.expanded = false
+            menuState.dismiss(consumeNextClick = true)
         }
     ) {
         Text(text = stringResource(id = R.string.button_unfollow))

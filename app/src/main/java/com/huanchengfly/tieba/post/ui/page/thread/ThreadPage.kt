@@ -2036,7 +2036,7 @@ fun PostCard(
                     DropdownMenuItem(
                         onClick = {
                             onReplyClick(post)
-                            menuState.expanded = false
+                            menuState.dismiss(consumeNextClick = true)
                         }
                     ) {
                         Text(text = stringResource(id = R.string.btn_reply))
@@ -2046,7 +2046,7 @@ fun PostCard(
                     DropdownMenuItem(
                         onClick = {
                             onMenuCopyClick(buildPostCopyText(post))
-                            menuState.expanded = false
+                            menuState.dismiss(consumeNextClick = true)
                         }
                     ) {
                         Text(text = stringResource(id = R.string.menu_copy))
@@ -2058,7 +2058,7 @@ fun PostCard(
                             coroutineScope.launch {
                                 TiebaUtil.reportPost(context, navigator, post.id.toString())
                             }
-                            menuState.expanded = false
+                            menuState.dismiss(consumeNextClick = true)
                         }
                     ) {
                         Text(text = stringResource(id = R.string.title_report))
@@ -2068,7 +2068,7 @@ fun PostCard(
                     DropdownMenuItem(
                         onClick = {
                             onMenuFavoriteClick(post)
-                            menuState.expanded = false
+                            menuState.dismiss(consumeNextClick = true)
                         }
                     ) {
                         if (isCollected(post)) {
@@ -2082,7 +2082,7 @@ fun PostCard(
                     DropdownMenuItem(
                         onClick = {
                             onMenuDeleteClick(post)
-                            menuState.expanded = false
+                            menuState.dismiss(consumeNextClick = true)
                         }
                     ) {
                         Text(text = stringResource(id = R.string.title_delete))
@@ -2260,7 +2260,7 @@ private fun SubPostItem(
                 DropdownMenuItem(
                     onClick = {
                         onReplyClick?.invoke(subPostList.get())
-                        menuState.expanded = false
+                        menuState.dismiss(consumeNextClick = true)
                     }
                 ) {
                     Text(text = stringResource(id = R.string.title_reply))
@@ -2270,7 +2270,7 @@ private fun SubPostItem(
                 DropdownMenuItem(
                     onClick = {
                         onMenuCopyClick(subPostList.get())
-                        menuState.expanded = false
+                        menuState.dismiss(consumeNextClick = true)
                     }
                 ) {
                     Text(text = stringResource(id = R.string.menu_copy))
@@ -2282,7 +2282,7 @@ private fun SubPostItem(
                         coroutineScope.launch {
                             TiebaUtil.reportPost(context, navigator, subPostList.get { id }.toString())
                         }
-                        menuState.expanded = false
+                        menuState.dismiss(consumeNextClick = true)
                     }
                 ) {
                     Text(text = stringResource(id = R.string.title_report))

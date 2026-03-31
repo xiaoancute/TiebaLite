@@ -41,7 +41,7 @@ class MenuScope(
 ) {
     fun dismiss() {
         onDismiss?.invoke()
-        menuState.expanded = false
+        menuState.dismiss()
     }
 }
 
@@ -135,9 +135,12 @@ fun LongClickMenu(
                 indication = indication,
                 enabled = enabled,
                 onLongClick = {
-                    menuState.expanded = true
+                    menuState.show()
                 }
             ) {
+                if (menuState.expanded || menuState.consumeNextClick()) {
+                    return@combinedClickable
+                }
                 onClick?.invoke()
             }
     ) {
@@ -153,7 +156,7 @@ fun LongClickMenu(
         ) {
             DropdownMenu(
                 expanded = menuState.expanded,
-                onDismissRequest = { menuState.expanded = false },
+                onDismissRequest = { menuState.dismiss(consumeNextClick = true) },
                 modifier = Modifier.background(color = ExtendedTheme.colors.menuBackground)
             ) {
                 ProvideContentColor(color = ExtendedTheme.colors.text) {
@@ -175,17 +178,26 @@ fun rememberMenuState(): MenuState {
 @Stable
 class MenuState internal constructor() {
     private var _expanded by mutableStateOf(false)
+    private var _consumeNextClick by mutableStateOf(false)
 
     fun toggle() {
         expanded = !expanded
     }
 
     fun show() {
+        _consumeNextClick = false
         expanded = true
     }
 
-    fun dismiss() {
+    fun dismiss(consumeNextClick: Boolean = false) {
+        _consumeNextClick = consumeNextClick
         expanded = false
+    }
+
+    fun consumeNextClick(): Boolean {
+        val shouldConsume = _consumeNextClick
+        _consumeNextClick = false
+        return shouldConsume
     }
 
     var expanded: Boolean

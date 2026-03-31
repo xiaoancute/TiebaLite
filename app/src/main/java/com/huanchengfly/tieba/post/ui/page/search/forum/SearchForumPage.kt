@@ -2,7 +2,6 @@ package com.huanchengfly.tieba.post.ui.page.search.forum
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,6 +38,7 @@ import com.huanchengfly.tieba.post.api.models.SearchForumBean
 import com.huanchengfly.tieba.post.arch.collectPartialAsState
 import com.huanchengfly.tieba.post.arch.onGlobalEvent
 import com.huanchengfly.tieba.post.arch.pageViewModel
+import com.huanchengfly.tieba.post.toastShort
 import com.huanchengfly.tieba.post.ui.common.theme.compose.ExtendedTheme
 import com.huanchengfly.tieba.post.ui.common.theme.compose.pullRefreshIndicator
 import com.huanchengfly.tieba.post.ui.page.LocalNavigator
@@ -46,20 +46,19 @@ import com.huanchengfly.tieba.post.ui.page.destinations.ForumPageDestination
 import com.huanchengfly.tieba.post.ui.page.reading.buildSearchForumReadingTargetCandidate
 import com.huanchengfly.tieba.post.ui.page.reading.isInLocalFavorite
 import com.huanchengfly.tieba.post.ui.page.reading.isInReadLater
-import com.huanchengfly.tieba.post.ui.page.search.SearchUiEvent
 import com.huanchengfly.tieba.post.ui.page.reading.toggleLocalFavorite
 import com.huanchengfly.tieba.post.ui.page.reading.toggleReadLater
+import com.huanchengfly.tieba.post.ui.page.search.SearchUiEvent
 import com.huanchengfly.tieba.post.ui.widgets.compose.Avatar
 import com.huanchengfly.tieba.post.ui.widgets.compose.Chip
 import com.huanchengfly.tieba.post.ui.widgets.compose.ErrorScreen
 import com.huanchengfly.tieba.post.ui.widgets.compose.LazyLoad
-import com.huanchengfly.tieba.post.ui.widgets.compose.LongClickMenu
 import com.huanchengfly.tieba.post.ui.widgets.compose.LocalShouldLoad
+import com.huanchengfly.tieba.post.ui.widgets.compose.LongClickMenu
 import com.huanchengfly.tieba.post.ui.widgets.compose.MyLazyColumn
 import com.huanchengfly.tieba.post.ui.widgets.compose.Sizes
 import com.huanchengfly.tieba.post.ui.widgets.compose.rememberMenuState
 import com.huanchengfly.tieba.post.ui.widgets.compose.states.StateScreen
-import com.huanchengfly.tieba.post.toastShort
 import kotlinx.collections.immutable.persistentListOf
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
@@ -200,7 +199,6 @@ fun SearchForumPage(
             )
         }
     }
-
 }
 
 @Composable
@@ -208,6 +206,7 @@ private fun SearchForumItem(
     item: SearchForumBean.ForumInfoBean,
     onClick: () -> Unit,
 ) {
+    val displayName = remember(item) { item.displayName() }
     val stats = remember(item) { buildSearchForumStats(item) }
     val context = LocalContext.current
     val target = remember(item) { buildSearchForumReadingTargetCandidate(item) }
@@ -230,7 +229,7 @@ private fun SearchForumItem(
                                 R.string.message_removed_from_read_later
                             }
                         )
-                        menuState.expanded = false
+                        menuState.dismiss(consumeNextClick = true)
                     }
                 ) {
                     Text(
@@ -253,7 +252,7 @@ private fun SearchForumItem(
                                 R.string.message_removed_from_local_favorite
                             }
                         )
-                        menuState.expanded = false
+                        menuState.dismiss(consumeNextClick = true)
                     }
                 ) {
                     Text(
@@ -279,15 +278,14 @@ private fun SearchForumItem(
             Avatar(
                 data = item.avatar,
                 size = Sizes.Medium,
-                contentDescription = item.forumNameShow
+                contentDescription = displayName
             )
             Column(
-                modifier = Modifier
-                    .weight(1f),
+                modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = stringResource(id = R.string.title_forum, item.forumNameShow.orEmpty()),
+                    text = stringResource(id = R.string.title_forum, displayName),
                     style = MaterialTheme.typography.subtitle1
                 )
                 Row(
@@ -319,9 +317,9 @@ private fun SearchForumItem(
                         )
                     }
                 }
-                if (!item.intro.isNullOrEmpty()) {
+                item.preferredSummaryText()?.let { summary ->
                     Text(
-                        text = item.slogan.orEmpty(),
+                        text = summary,
                         style = MaterialTheme.typography.body2,
                         maxLines = 1
                     )

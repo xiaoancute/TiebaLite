@@ -37,9 +37,7 @@ object TiebaUtil {
         val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clipData = ClipData.newPlainText("Tieba Lite", text).setIsSensitive(isSensitive)
         cm.setPrimaryClip(clipData)
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
-            context.toastShort(toast)
-        }
+        context.toastShort(toast)
     }
 
     fun initAutoSign(context: Context) {

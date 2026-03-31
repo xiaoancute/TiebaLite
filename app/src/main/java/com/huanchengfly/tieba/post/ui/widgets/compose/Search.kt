@@ -45,6 +45,8 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -430,6 +432,13 @@ fun SearchBox(
 ) {
     val isKeywordNotEmpty = remember(keyword) { keyword.isNotEmpty() }
     var isFocused by remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
+    val softwareKeyboardController = LocalSoftwareKeyboardController.current
+    val submitKeyword = {
+        focusManager.clearFocus(force = true)
+        softwareKeyboardController?.hide()
+        onKeywordSubmit(keyword)
+    }
     Surface(
         modifier = modifier,
         shape = shape,
@@ -454,7 +463,7 @@ fun SearchBox(
                 ),
                 keyboardActions = KeyboardActions(
                     onSearch = {
-                        onKeywordSubmit(keyword)
+                        submitKeyword()
                     }
                 ),
                 placeholder = placeholder,
@@ -497,7 +506,7 @@ fun SearchBox(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = rememberRipple(bounded = false, 24.dp),
                             role = Role.Button
-                        ) { onKeywordSubmit(keyword) },
+                        ) { submitKeyword() },
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(

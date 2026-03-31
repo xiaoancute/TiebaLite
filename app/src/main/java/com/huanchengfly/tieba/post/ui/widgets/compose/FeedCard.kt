@@ -394,13 +394,17 @@ private fun MediaPlaceholder(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
 ) {
+    val clickableModifier = if (onClick != null) {
+        Modifier.clickable(onClick = onClick)
+    } else {
+        Modifier
+    }
+
     Row(
         modifier = modifier
             .clip(RoundedCornerShape(6.dp))
             .background(ExtendedTheme.colors.chip)
-            .clickable(
-                enabled = onClick != null
-            ) { onClick?.invoke() }
+            .then(clickableModifier)
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)

@@ -37,6 +37,11 @@ fun Chip(
         if (invertColor) ExtendedTheme.colors.invertChipContent else ExtendedTheme.colors.onChip
     val backgroundColor =
         if (invertColor) ExtendedTheme.colors.invertChipBackground else ExtendedTheme.colors.chip
+    val clickableModifier = if (onClick != null) {
+        Modifier.clickable(onClick = onClick)
+    } else {
+        Modifier
+    }
 
     val animatedColor by animateColorAsState(targetValue = color, label = "ChipColor")
     val animatedBackgroundColor by animateColorAsState(
@@ -49,9 +54,7 @@ fun Chip(
             modifier = modifier
                 .clip(shape)
                 .background(color = animatedBackgroundColor)
-                .clickable(enabled = onClick != null) {
-                    onClick?.invoke()
-                }
+                .then(clickableModifier)
                 .padding(horizontal = 16.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)

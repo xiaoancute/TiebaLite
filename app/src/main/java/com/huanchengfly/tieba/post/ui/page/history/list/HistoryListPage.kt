@@ -277,7 +277,7 @@ private fun HistoryItem(
             }
             DropdownMenuItem(onClick = {
                 onDelete(info)
-                menuState.expanded = false
+                menuState.dismiss(consumeNextClick = true)
             }) {
                 Text(text = stringResource(id = R.string.title_delete))
             }

@@ -55,7 +55,6 @@ import com.huanchengfly.tieba.post.ui.common.theme.compose.ExtendedTheme
 import com.huanchengfly.tieba.post.ui.common.theme.compose.threadBottomBar
 import com.huanchengfly.tieba.post.ui.page.LocalNavigator
 import com.huanchengfly.tieba.post.ui.page.ProvideNavigator
-import com.huanchengfly.tieba.post.ui.page.destinations.CopyTextDialogPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.ThreadPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.UserProfilePageDestination
 import com.huanchengfly.tieba.post.ui.page.reply.ReplyArgs
@@ -155,6 +154,7 @@ internal fun SubPostsContent(
     isSheet: Boolean = false,
     onNavigateUp: () -> Unit = {},
 ) {
+    val context = LocalContext.current
     val navigator = LocalNavigator.current
     val account = LocalAccount.current
 
@@ -461,9 +461,7 @@ internal fun SubPostsContent(
                                         )
                                     },
                                     onMenuCopyClick = {
-                                        navigator.navigate(
-                                            CopyTextDialogPageDestination(it)
-                                        )
+                                        TiebaUtil.copyText(context, it)
                                     },
                                 ) {
                                     deleteSubPost = null
@@ -528,10 +526,7 @@ internal fun SubPostsContent(
                                 )
                             },
                             onMenuCopyClick = {
-                                navigator.navigate(
-                                    CopyTextDialogPageDestination(it)
-                                )
-//                                TiebaUtil.copyText(context, it)
+                                TiebaUtil.copyText(context, it)
                             },
                             onMenuDeleteClick = {
                                 deleteSubPost = it.wrapImmutable()
@@ -602,7 +597,7 @@ private fun SubPostItem(
                     DropdownMenuItem(
                         onClick = {
                             onReplyClick(subPost.get())
-                            menuState.expanded = false
+                            menuState.dismiss(consumeNextClick = true)
                         }
                     ) {
                         Text(text = stringResource(id = R.string.btn_reply))
@@ -612,7 +607,7 @@ private fun SubPostItem(
                     DropdownMenuItem(
                         onClick = {
                             onMenuCopyClick(contentRenders.joinToString("\n") { it.toString() })
-                            menuState.expanded = false
+                            menuState.dismiss(consumeNextClick = true)
                         }
                     ) {
                         Text(text = stringResource(id = R.string.menu_copy))
@@ -624,7 +619,7 @@ private fun SubPostItem(
                             coroutineScope.launch {
                                 TiebaUtil.reportPost(context, navigator, subPost.get { id }.toString())
                             }
-                            menuState.expanded = false
+                            menuState.dismiss(consumeNextClick = true)
                         }
                     ) {
                         Text(text = stringResource(id = R.string.title_report))
@@ -634,7 +629,7 @@ private fun SubPostItem(
                     DropdownMenuItem(
                         onClick = {
                             onMenuDeleteClick(subPost.get())
-                            menuState.expanded = false
+                            menuState.dismiss(consumeNextClick = true)
                         }
                     ) {
                         Text(text = stringResource(id = R.string.title_delete))
