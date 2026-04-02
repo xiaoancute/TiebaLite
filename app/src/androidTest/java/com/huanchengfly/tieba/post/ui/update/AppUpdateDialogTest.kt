@@ -44,7 +44,12 @@ class AppUpdateDialogTest {
             }
         }
 
-        composeRule.onNodeWithText("4.0.0-recovery.12").assertIsDisplayed()
+        composeRule.onNodeWithText(
+            composeRule.activity.getString(
+                R.string.title_dialog_update,
+                "4.0.0-recovery.12"
+            )
+        ).assertIsDisplayed()
         composeRule.onNodeWithText(
             composeRule.activity.getString(R.string.button_download_update)
         ).assertIsDisplayed()
