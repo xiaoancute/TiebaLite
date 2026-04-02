@@ -167,6 +167,26 @@ fun MoreSettingsPage(
                     summary = stringResource(id = R.string.tip_open_by_default)
                 )
             }
+            val updateSettingSpec = buildAutoCheckUpdateSettingSpec()
+            prefsItem {
+                SwitchPref(
+                    leadingIcon = {
+                        LeadingIcon {
+                            AvatarIcon(
+                                icon = Icons.Outlined.BugReport,
+                                size = Sizes.Small,
+                                contentDescription = null,
+                            )
+                        }
+                    },
+                    key = updateSettingSpec.key,
+                    title = stringResource(id = updateSettingSpec.titleResId),
+                    defaultChecked = updateSettingSpec.defaultChecked,
+                    summary = {
+                        stringResource(id = updateSettingSpec.summaryResId)
+                    },
+                )
+            }
             prefsItem {
                 TextPref(
                     leadingIcon = {

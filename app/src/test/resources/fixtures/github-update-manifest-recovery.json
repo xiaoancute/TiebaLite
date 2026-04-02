@@ -1,0 +1,13 @@
+{
+  "repo": "xiaoancute/TiebaLite",
+  "channel": "recovery",
+  "versionCode": 390109,
+  "versionName": "4.0.0-recovery.12",
+  "tagName": "v4.0.0-recovery.12",
+  "publishedAt": "2026-04-01T12:00:00Z",
+  "prerelease": true,
+  "changelog": "## Changes\n- Fix startup checks",
+  "apkName": "release-4.0.0-recovery.12.apk",
+  "apkUrl": "https://example.com/release-4.0.0-recovery.12.apk",
+  "sha256": "abc123"
+}

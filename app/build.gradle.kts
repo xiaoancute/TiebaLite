@@ -44,6 +44,12 @@ android {
         targetSdk = 34
         versionCode = applicationVersionCode
         versionName = applicationVersionName
+        buildConfigField("int", "APP_VERSION_CODE", applicationVersionCode.toString())
+        buildConfigField(
+            "String",
+            "UPDATE_CHANNEL",
+            "\"${if (isPerVersion) property.preReleaseName else "stable"}\""
+        )
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true

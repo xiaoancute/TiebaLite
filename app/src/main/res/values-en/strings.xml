@@ -102,6 +102,14 @@
     <string name="tip_cache">Current cache size: %1$s</string>
     <string name="tip_no_little_tail">You have not set a signature yet</string>
     <string name="title_dialog_update">New version found %1$s</string>
+    <string name="button_check_update">Check for updates</string>
+    <string name="button_download_update">Download update</string>
+    <string name="button_ignore_this_version">Ignore this version</string>
+    <string name="button_remind_later">Remind me later</string>
+    <string name="label_update_channel">Channel: %1$s</string>
+    <string name="label_update_published_at">Published: %1$s</string>
+    <string name="message_update_already_latest">You already have the latest version</string>
+    <string name="toast_update_check_failed">Failed to check for updates</string>
     <string name="tip_no_permission">Permission not granted, some features may be unavailable</string>
     <string name="toast_read_selected_image_failed">Unable to read the selected image, please choose again</string>
     <string name="toast_download_app_private_path">Shared storage permission not granted, file will be saved to %1$s</string>
@@ -157,6 +165,10 @@
     <string name="title_use_custom_tabs">Use Custom Tabs</string>
     <string name="tip_use_custom_tab_on">Non-Tieba links will open in Custom Tabs (Chrome required)</string>
     <string name="tip_use_custom_tab">When enabled, non-Tieba links will open in Custom Tabs (Chrome required)</string>
+    <string name="title_open_by_default">Open by default</string>
+    <string name="tip_open_by_default">Allow Tieba web links to open in this app</string>
+    <string name="title_auto_check_app_update">Automatically check for app updates</string>
+    <string name="tip_auto_check_app_update">Silently check whether the current channel has a new version when the app starts</string>
     <string name="title_settings_read_habit">Reading Habits</string>
     <string name="settings_collect_thread_see_lz">Open favorites in author-only mode</string>
     <string name="tip_collect_thread_see_lz">When enabled, threads opened from favorites will automatically switch to author-only mode</string>

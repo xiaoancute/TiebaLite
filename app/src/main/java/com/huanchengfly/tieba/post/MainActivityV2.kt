@@ -77,6 +77,7 @@ import com.huanchengfly.tieba.post.ui.common.theme.compose.ExtendedTheme
 import com.huanchengfly.tieba.post.ui.page.NavGraphs
 import com.huanchengfly.tieba.post.ui.page.destinations.ForumPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.ThreadPageDestination
+import com.huanchengfly.tieba.post.ui.update.AppUpdateEntryPoint
 import com.huanchengfly.tieba.post.ui.utils.DevicePosture
 import com.huanchengfly.tieba.post.ui.utils.isBookPosture
 import com.huanchengfly.tieba.post.ui.utils.isSeparating
@@ -445,6 +446,7 @@ class MainActivityV2 : BaseComposeActivity() {
     override fun Content() {
         val okSignAlertDialogState = rememberDialogState()
         ClipBoardDetectDialog()
+        AppUpdateEntryPoint()
         AlertDialog(
             dialogState = okSignAlertDialogState,
             title = { Text(text = stringResource(id = R.string.title_dialog_oksign_battery_optimization)) },

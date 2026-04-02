@@ -102,6 +102,14 @@
     <string name="tip_cache">目前共有快取 %1$s</string>
     <string name="tip_no_little_tail">你還沒有設定小尾巴</string>
     <string name="title_dialog_update">發現新版本 %1$s</string>
+    <string name="button_check_update">檢查更新</string>
+    <string name="button_download_update">下載更新</string>
+    <string name="button_ignore_this_version">忽略此版本</string>
+    <string name="button_remind_later">以後提醒</string>
+    <string name="label_update_channel">更新通道：%1$s</string>
+    <string name="label_update_published_at">發佈時間：%1$s</string>
+    <string name="message_update_already_latest">目前已是最新版本</string>
+    <string name="toast_update_check_failed">檢查更新失敗</string>
     <string name="tip_no_permission">權限未授予，部分功能可能無法使用</string>
     <string name="toast_read_selected_image_failed">無法讀取所選圖片，請重新選擇</string>
     <string name="toast_download_app_private_path">未授予共享儲存權限，檔案將儲存到 %1$s</string>
@@ -157,6 +165,10 @@
     <string name="title_use_custom_tabs">使用 Custom Tabs</string>
     <string name="tip_use_custom_tab_on">非貼吧連結將使用 Custom Tabs 開啟（需安裝 Chrome）</string>
     <string name="tip_use_custom_tab">開啟後非貼吧連結將使用 Custom Tabs 開啟（需安裝 Chrome）</string>
+    <string name="title_open_by_default">預設開啟</string>
+    <string name="tip_open_by_default">允許在此應用程式中開啟貼吧網頁連結</string>
+    <string name="title_auto_check_app_update">自動檢查應用更新</string>
+    <string name="tip_auto_check_app_update">啟動應用時靜默檢查目前通道是否有新版本</string>
     <string name="title_settings_read_habit">使用習慣</string>
     <string name="settings_collect_thread_see_lz">收藏貼自動開啟只看樓主</string>
     <string name="tip_collect_thread_see_lz">開啟後，從收藏進入的貼子將自動切換至只看樓主</string>
