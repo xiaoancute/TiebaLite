@@ -104,10 +104,9 @@ jobs:
           printf '\n\n## Auto-generated Changes\n\n' >> .github/release-notes/.out/release-notes.md
           cat .github/release-notes/.out/generated-notes.md >> .github/release-notes/.out/release-notes.md
 
-      - name: Publish GitHub prerelease
+      - name: Generate update manifest
         if: ${{ github.ref_type == 'tag' }}
         env:
-          GH_TOKEN: ${{ github.token }}
           TAG_NAME: ${{ github.ref_name }}
         run: |
           shopt -s nullglob
@@ -117,14 +116,38 @@ jobs:
             exit 1
           fi
 
+          mkdir -p .github/release-notes/.out
+          bash .github/scripts/generate-update-json.sh \
+            --repo "${GITHUB_REPOSITORY}" \
+            --channel "recovery" \
+            --tag "${TAG_NAME}" \
+            --version-code "${{ steps.read_output_metadata.outputs.version_code }}" \
+            --version-name "${{ steps.read_output_metadata.outputs.version_name }}" \
+            --apk "${files[0]}" \
+            --notes .github/release-notes/.out/release-notes.md \
+            --output .github/release-notes/.out/update.json
+
+      - name: Publish GitHub prerelease
+        if: ${{ github.ref_type == 'tag' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          shopt -s nullglob
+          assets=(./app/build/outputs/apk/release/*.apk .github/release-notes/.out/update.json)
+          if [ "${#assets[@]}" -eq 0 ]; then
+            echo "::error title=Missing release asset::No release APK was produced."
+            exit 1
+          fi
+
           if gh release view "${TAG_NAME}" >/dev/null 2>&1; then
             gh release edit "${TAG_NAME}" \
               --title "${TAG_NAME}" \
               --notes-file .github/release-notes/.out/release-notes.md \
               --prerelease
-            gh release upload "${TAG_NAME}" "${files[@]}" --clobber
+            gh release upload "${TAG_NAME}" "${assets[@]}" --clobber
           else
-            gh release create "${TAG_NAME}" "${files[@]}" \
+            gh release create "${TAG_NAME}" "${assets[@]}" \
               --verify-tag \
               --title "${TAG_NAME}" \
               --notes-file .github/release-notes/.out/release-notes.md \
