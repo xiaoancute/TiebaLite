@@ -21,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.huanchengfly.tieba.post.BuildConfig
 import com.huanchengfly.tieba.post.R
+import com.huanchengfly.tieba.post.arch.emitGlobalEvent
 import com.huanchengfly.tieba.post.revival.RevivalFeatureRegistry
 import com.huanchengfly.tieba.post.toastShort
 import com.huanchengfly.tieba.post.ui.common.theme.compose.ExtendedTheme
@@ -51,6 +53,7 @@ fun AboutPage(
     navigator: DestinationsNavigator,
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     var lastClickTime by remember { mutableLongStateOf(0L) }
     var clickCount by remember { mutableIntStateOf(0) }
 
@@ -103,7 +106,26 @@ fun AboutPage(
                         contentColor = ExtendedTheme.colors.text
                     ),
                     onClick = {
-                        launchUrl(context, navigator, "https://github.com/HuanCheng65/TiebaLite")
+                        coroutineScope.emitGlobalEvent(buildManualCheckAppUpdateEvent())
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.button_check_update),
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                TextButton(
+                    shape = RoundedCornerShape(100),
+                    colors = ButtonDefaults.textButtonColors(
+                        backgroundColor = ExtendedTheme.colors.text.copy(
+                            alpha = 0.1f
+                        ),
+                        contentColor = ExtendedTheme.colors.text
+                    ),
+                    onClick = {
+                        launchUrl(context, navigator, ABOUT_SOURCE_CODE_URL)
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {

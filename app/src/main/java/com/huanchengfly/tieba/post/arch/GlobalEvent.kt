@@ -55,6 +55,10 @@ sealed interface GlobalEvent : UiEvent {
         val resultCode: Int,
         val intent: Intent?,
     ) : GlobalEvent
+
+    data class CheckAppUpdate(
+        val manual: Boolean,
+    ) : GlobalEvent
 }
 
 private val globalEventSharedFlow: MutableSharedFlow<UiEvent> by lazy(mode = LazyThreadSafetyMode.SYNCHRONIZED) {

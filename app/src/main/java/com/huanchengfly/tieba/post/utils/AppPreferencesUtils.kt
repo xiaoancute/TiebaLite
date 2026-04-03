@@ -15,6 +15,7 @@ import com.huanchengfly.tieba.post.getFloat
 import com.huanchengfly.tieba.post.getInt
 import com.huanchengfly.tieba.post.getLong
 import com.huanchengfly.tieba.post.getString
+import com.huanchengfly.tieba.post.update.AppUpdateConfig
 import com.huanchengfly.tieba.post.utils.ThemeUtil.TRANSLUCENT_THEME_LIGHT
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -82,6 +83,21 @@ open class AppPreferencesUtils private constructor(ctx: Context) {
 
     var checkCIUpdate by DataStoreDelegates.boolean(
         defaultValue = false
+    )
+
+    var autoCheckAppUpdate by DataStoreDelegates.boolean(
+        defaultValue = true,
+        key = AppUpdateConfig.AUTO_CHECK_PREF_KEY
+    )
+
+    var ignoredUpdateVersionCode by DataStoreDelegates.int(
+        defaultValue = 0,
+        key = AppUpdateConfig.IGNORED_VERSION_CODE_PREF_KEY
+    )
+
+    var lastAppUpdateCheckAt by DataStoreDelegates.long(
+        defaultValue = 0L,
+        key = AppUpdateConfig.LAST_CHECK_AT_PREF_KEY
     )
 
     var collectThreadSeeLz by DataStoreDelegates.boolean(
