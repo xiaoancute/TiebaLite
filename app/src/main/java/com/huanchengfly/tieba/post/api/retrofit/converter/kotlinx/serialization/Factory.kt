@@ -19,15 +19,19 @@ internal class Factory(
         annotations: Array<out Annotation>,
         retrofit: Retrofit,
     ): Converter<ResponseBody, *>? {
-        val delegate: Converter<ResponseBody, *> =
-            retrofit.nextResponseBodyConverter<Any>(this, type, annotations)
         val loader = runCatching { serializer.serializer(type) }.getOrNull()
-        return Converter { body: ResponseBody ->
-            loader?.let { serializer.fromResponseBody(it, body) } ?: run {
-                Log.d("Serializer", "Failed to deserialize, falling back to delegate.")
-                delegate.convert(body)
+        if (loader != null) {
+            return Converter { body: ResponseBody ->
+                serializer.fromResponseBody(loader, body)
             }
         }
+
+        val delegate = runCatching {
+            retrofit.nextResponseBodyConverter<Any>(this, type, annotations)
+        }.getOrNull() ?: return null
+
+        Log.d("Serializer", "Falling back to delegate converter for $type.")
+        return Converter { body: ResponseBody -> delegate.convert(body) }
     }
 }
 
