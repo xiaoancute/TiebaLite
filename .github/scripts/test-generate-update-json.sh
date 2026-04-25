@@ -30,6 +30,6 @@ bash .github/scripts/generate-update-json.sh \
 jq -e '.repo == "xiaoancute/TiebaLite"' "${output_path}" >/dev/null
 jq -e '.channel == "recovery"' "${output_path}" >/dev/null
 jq -e '.versionCode == 390109' "${output_path}" >/dev/null
-jq -e '.apkName == "release-4.0.0-recovery.12(390109).apk"' "${output_path}" >/dev/null
+jq -e '.apkName == "release-4.0.0-recovery.12.390109.apk"' "${output_path}" >/dev/null
 jq -e '.apkUrl | contains("/releases/download/v4.0.0-recovery.12/")' "${output_path}" >/dev/null
 jq -e '.sha256 | length > 0' "${output_path}" >/dev/null

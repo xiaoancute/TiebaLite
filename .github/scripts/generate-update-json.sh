@@ -24,6 +24,13 @@ Usage: generate-update-json.sh \
 EOF
 }
 
+github_release_asset_name() {
+  local name="$1"
+  name="${name//(/.}"
+  name="${name//)/}"
+  printf '%s' "${name}"
+}
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --repo)
@@ -88,7 +95,7 @@ if [[ ! -f "${notes}" ]]; then
   exit 1
 fi
 
-apk_name="$(basename "${apk}")"
+apk_name="$(github_release_asset_name "$(basename "${apk}")")"
 apk_url="https://github.com/${repo}/releases/download/${tag}/${apk_name}"
 sha256="$(sha256sum "${apk}" | awk '{print $1}')"
 published_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
