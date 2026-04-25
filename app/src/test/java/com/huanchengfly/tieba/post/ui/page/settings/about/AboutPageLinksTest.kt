@@ -14,4 +14,17 @@ class AboutPageLinksTest {
     fun manualUpdateEventRequestsInteractiveCheck() {
         assertEquals(GlobalEvent.CheckAppUpdate(manual = true), buildManualCheckAppUpdateEvent())
     }
+
+    @Test
+    fun previewVersionParserTurnsRecoveryChannelIntoDisplayParts() {
+        assertEquals(
+            PreviewVersion(baseVersion = "4.0.0", previewVersion = "14"),
+            parsePreviewVersion("4.0.0-recovery.14")
+        )
+    }
+
+    @Test
+    fun previewVersionParserLeavesStableVersionUntouched() {
+        assertEquals(null, parsePreviewVersion("4.0.0"))
+    }
 }

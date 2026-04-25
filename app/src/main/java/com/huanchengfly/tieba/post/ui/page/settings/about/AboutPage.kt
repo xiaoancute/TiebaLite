@@ -54,6 +54,7 @@ fun AboutPage(
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+    val displayVersionName = displayVersionName(versionName = BuildConfig.VERSION_NAME)
     var lastClickTime by remember { mutableLongStateOf(0L) }
     var clickCount by remember { mutableIntStateOf(0) }
 
@@ -133,7 +134,7 @@ fun AboutPage(
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = stringResource(id = R.string.tip_about, BuildConfig.VERSION_NAME),
+                    text = stringResource(id = R.string.tip_about, displayVersionName),
                     style = MaterialTheme.typography.caption,
                     color = ExtendedTheme.colors.textSecondary,
                     modifier = Modifier.clickable(
@@ -170,5 +171,32 @@ fun AboutPage(
             )
             Spacer(modifier = Modifier.height(48.dp))
         }
+    }
+}
+
+internal data class PreviewVersion(
+    val baseVersion: String,
+    val previewVersion: String,
+)
+
+internal fun parsePreviewVersion(versionName: String): PreviewVersion? {
+    val match = Regex("""^(.+)-recovery\.(\d+)$""").matchEntire(versionName) ?: return null
+    return PreviewVersion(
+        baseVersion = match.groupValues[1],
+        previewVersion = match.groupValues[2],
+    )
+}
+
+@Composable
+private fun displayVersionName(versionName: String): String {
+    val previewVersion = remember(versionName) { parsePreviewVersion(versionName) }
+    return if (previewVersion == null) {
+        versionName
+    } else {
+        stringResource(
+            id = R.string.label_preview_version,
+            previewVersion.baseVersion,
+            previewVersion.previewVersion
+        )
     }
 }

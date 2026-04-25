@@ -1,17 +1,17 @@
-# TiebaLite Recovery Prerelease
+# TiebaLite Preview Release
 
-This prerelease tracks the current recovery branch of TiebaLite.
+This preview release tracks the actively maintained TiebaLite 4.0 line.
 
-## Recovery Positioning
+## Release Positioning
 
 - Current goal: reading-first usability
 - Primary Android support: 10+
-- Stable mainline: public browsing
+- Mainline experience: browsing, search, and thread reading
 - Guarded paths: login, notifications, manual sign
 - Not promised stable: posting, replying, auto sign
 
 ## Notes
 
-- This release is a recovery prerelease, not a full Tieba replacement.
-- Public browsing is the intended daily-use path for this build.
+- This build is intended as a reading-first Tieba client.
+- Browsing is the intended daily-use path for this release.
 - Account-heavy flows remain conservative until they are verified with real account evidence.

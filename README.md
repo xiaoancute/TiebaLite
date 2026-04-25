@@ -1,12 +1,12 @@
 # TiebaLite
 
-非官方百度贴吧客户端，正在复活中。
+面向阅读体验的非官方百度贴吧客户端。
 
-An unofficial Baidu Tieba client, currently being revived.
+An unofficial Baidu Tieba client focused on reading and browsing.
 
 ## 当前状态
 
-这是一个**阅读优先**的客户端，不是完整的贴吧替代品。
+这是一个**阅读优先**的客户端，主要体验围绕浏览、搜索、帖子阅读和本地阅读辅助功能持续维护。
 
 **能用的：**
 - 首页、动态、热榜、全局搜索
@@ -19,10 +19,10 @@ An unofficial Baidu Tieba client, currently being revived.
 **能用但需登录：**
 - 登录、通知、手动签到
 
-**实验性（有风险提示）：**
+**高风险功能（有风险提示）：**
 - 回帖、自动签到
 
-**不承诺的：**
+**暂不承诺的：**
 - 发帖完整闭环
 - Android 15/16 target SDK 适配
 
@@ -50,7 +50,7 @@ scripts/check-android-env.sh
 
 ## 文档
 
-- 功能分级与能力边界：[docs/feature-status.md](docs/feature-status.md)
+- 功能现状说明：[docs/feature-status.md](docs/feature-status.md)
 
 ## 相关项目
 
