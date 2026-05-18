@@ -78,9 +78,6 @@ class ForumRepository @Inject constructor(
         subClassifyId: Int?,
         forceNew: Boolean = false
     ): ForumPageResult {
-        // tabId == -1 is a private cache-disambiguator passed by legacy essence wrappers.
-        // It never flows into the protobuf request (MixedTiebaApiImpl gates on isEssence first).
-        // Removed once Task 7 deletes the legacy wrappers.
         var cacheKey: CacheKey? = null
         var cached: ForumCache? = null
         val cacheable = if (isEssence) (subClassifyId ?: 0) == 0 else sortType == ForumSortType.BY_REPLY
@@ -186,22 +183,6 @@ class ForumRepository @Inject constructor(
         subClassifyId = subClassifyId,
         forceNew = false,
     ).second
-
-    suspend fun loadPage(forum: String, page: Int, sortType: Int, forceNew: Boolean): ThreadItemList =
-        loadByTab(forum, page, sortType, tabId = 0, isEssence = false, subClassifyId = null, forceNew = forceNew)
-
-    // Essence: isEssence=true 已表达"精华", 不再用旧的 sortType=-1 哨兵.
-    // tabId=-1 在缓存里与默认 tabId=0 区分,避免老 wrapper 路径下两种结果互相覆盖.
-    suspend fun loadGoodPage(forum: String, page: Int, goodClassifyId: Int?, forceNew: Boolean): ThreadItemList =
-        loadByTab(forum, page, sortType = 0, tabId = -1, isEssence = true, subClassifyId = goodClassifyId ?: 0, forceNew = forceNew)
-
-    suspend fun loadMorePage(forum: String, page: Int, sortType: Int): ThreadItemList =
-        loadMoreByTab(forum, page, sortType, tabId = 0, isEssence = false, subClassifyId = null)
-
-    // Essence: isEssence=true 已表达"精华", 不再用旧的 sortType=-1 哨兵.
-    // tabId=-1 在缓存里与默认 tabId=0 区分,避免老 wrapper 路径下两种结果互相覆盖.
-    suspend fun loadMoreGood(forum: String, page: Int, goodClassifyId: Int?): ThreadItemList =
-        loadMoreByTab(forum, page, sortType = 0, tabId = -1, isEssence = true, subClassifyId = goodClassifyId ?: 0)
 
     suspend fun threadList(forumId: Long, forumName: String, page: Int, sortType: Int, threadIds: List<Long>): List<ThreadItem> {
         return networkDataSource
