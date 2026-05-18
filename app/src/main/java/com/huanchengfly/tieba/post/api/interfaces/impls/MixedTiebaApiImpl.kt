@@ -1033,8 +1033,14 @@ object MixedTiebaApiImpl : ITiebaApi {
         page: Int,
         loadType: Int,
         sortType: Int,
-        goodClassifyId: Int?
+        tabId: Int,
+        isEssence: Boolean,
+        subClassifyId: Int?
     ): Flow<FrsPageResponse> {
+        // TODO(impl): tabId 进哪个 protobuf 字段需抓包对照网页接口确认。
+        // 先按 `cid` 试; 若不通改 `category_id`。精华 tab 沿用旧路径(is_good=1 + cid=class_id)。
+        val cidValue: Int = if (isEssence) (subClassifyId ?: 0) else tabId
+
         return RetrofitTiebaApi.OFFICIAL_PROTOBUF_TIEBA_V12_API.frsPageFlow(
             buildProtobufRequestBody(
                 FrsPageRequest(
@@ -1043,13 +1049,13 @@ object MixedTiebaApiImpl : ITiebaApi {
                         app_pos = buildAppPosInfo(),
                         call_from = 0,
                         category_id = 0,
-                        cid = goodClassifyId ?: 0,
+                        cid = cidValue,
                         common = buildCommonRequest(clientVersion = ClientVersion.TIEBA_V12),
                         ctime = 0,
                         data_size = 0,
                         hot_thread_id = 0,
-                        is_default_navtab = 0,
-                        is_good = if (goodClassifyId != null) 1 else 0,
+                        is_default_navtab = if (tabId == 0 && !isEssence) 1 else 0,
+                        is_good = if (isEssence) 1 else 0,
                         is_selection = 0,
                         kw = forumName.urlEncode(),
                         last_click_tid = 0,
