@@ -147,6 +147,7 @@ class ForumRepository @Inject constructor(
         tabId = 0, isEssence = false, subClassifyId = null, forceNew = forceNew
     ).second
 
+    // Essence: isEssence=true 已表达"精华", 不再用旧的 sortType=-1 哨兵.
     suspend fun loadGoodPage(forum: String, page: Int, goodClassifyId: Int?, forceNew: Boolean): ThreadItemList = frsPage(
         forumName = forum, page = page, loadType = 1, sortType = 0,
         tabId = 0, isEssence = true, subClassifyId = goodClassifyId ?: 0, forceNew = forceNew
@@ -157,6 +158,7 @@ class ForumRepository @Inject constructor(
         tabId = 0, isEssence = false, subClassifyId = null, forceNew = false
     ).second
 
+    // Essence: isEssence=true 已表达"精华", 不再用旧的 sortType=-1 哨兵.
     suspend fun loadMoreGood(forum: String, page: Int, goodClassifyId: Int?): ThreadItemList = frsPage(
         forumName = forum, page = page, loadType = 2, sortType = 0,
         tabId = 0, isEssence = true, subClassifyId = goodClassifyId ?: 0, forceNew = false

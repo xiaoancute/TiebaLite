@@ -1037,7 +1037,7 @@ object MixedTiebaApiImpl : ITiebaApi {
         isEssence: Boolean,
         subClassifyId: Int?
     ): Flow<FrsPageResponse> {
-        // TODO(impl): tabId 进哪个 protobuf 字段需抓包对照网页接口确认。
+        // TODO(impl): 抓包对照网页接口确认 tabId 字段位置 + is_default_navtab 取值在 fallback 路径下是否需 0/1。
         // 先按 `cid` 试; 若不通改 `category_id`。精华 tab 沿用旧路径(is_good=1 + cid=class_id)。
         val cidValue: Int = if (isEssence) (subClassifyId ?: 0) else tabId
 
@@ -1054,7 +1054,7 @@ object MixedTiebaApiImpl : ITiebaApi {
                         ctime = 0,
                         data_size = 0,
                         hot_thread_id = 0,
-                        is_default_navtab = if (tabId == 0 && !isEssence) 1 else 0,
+                        is_default_navtab = 0, // TODO(Task 5/6): set to 1 only when fallback NavTab is in play; for now keep legacy 0 for callers that haven't migrated.
                         is_good = if (isEssence) 1 else 0,
                         is_selection = 0,
                         kw = forumName.urlEncode(),
