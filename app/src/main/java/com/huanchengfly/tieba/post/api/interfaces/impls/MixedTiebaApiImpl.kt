@@ -1037,10 +1037,11 @@ object MixedTiebaApiImpl : ITiebaApi {
         isEssence: Boolean,
         subClassifyId: Int?
     ): Flow<FrsPageResponse> {
-        // TODO(impl): 抓包对照网页接口确认 tabId 字段位置 + is_default_navtab 取值在 fallback 路径下是否需 0/1。
-        // 先按 `cid` 试; 若不通改 `category_id`。精华 tab 沿用旧路径(is_good=1 + cid=class_id)。
-        val cidValue: Int = if (isEssence) (subClassifyId ?: 0) else tabId
-
+        // TODO(待抓包): tabId 进哪个 protobuf 字段不明 — 实测 `cid` / `category_id` 都不对
+        // (装机时把它写进 cid 或 category_id 会让本来工作的 tab 也变空)。
+        // 暂不把 tabId 写进任何请求字段, 服务端按 is_good + is_default_navtab 默认返流;
+        // 后果: 非精华自定义 tab(视频/吧主推荐) 会回退到跟默认热门一样, 不分化。
+        // 待用 mitmproxy 抓官方 App "切 NavTab" 时的真实 c/f/frs/page 请求, 对比字段后修正。
         return RetrofitTiebaApi.OFFICIAL_PROTOBUF_TIEBA_V12_API.frsPageFlow(
             buildProtobufRequestBody(
                 FrsPageRequest(
@@ -1049,12 +1050,12 @@ object MixedTiebaApiImpl : ITiebaApi {
                         app_pos = buildAppPosInfo(),
                         call_from = 0,
                         category_id = 0,
-                        cid = cidValue,
+                        cid = if (isEssence) (subClassifyId ?: 0) else 0,
                         common = buildCommonRequest(clientVersion = ClientVersion.TIEBA_V12),
                         ctime = 0,
                         data_size = 0,
                         hot_thread_id = 0,
-                        is_default_navtab = 0, // TODO(Task 8 抓包): 实测哪个语义对 — 是否应在 fallback (tabId=0 且非精华) 时置 1。
+                        is_default_navtab = if (tabId == 0 && !isEssence) 1 else 0,
                         is_good = if (isEssence) 1 else 0,
                         is_selection = 0,
                         kw = forumName.urlEncode(),
