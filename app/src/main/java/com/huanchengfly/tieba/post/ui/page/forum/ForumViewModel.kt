@@ -22,7 +22,6 @@ import com.huanchengfly.tieba.post.ui.models.settings.ForumSortType
 import com.huanchengfly.tieba.post.ui.page.Destination
 import com.huanchengfly.tieba.post.ui.page.TB_LITE_DOMAIN
 import com.huanchengfly.tieba.post.ui.page.forum.threadlist.ForumThreadListUiEvent
-import com.huanchengfly.tieba.post.ui.page.forum.threadlist.ForumType
 import com.huanchengfly.tieba.post.ui.widgets.compose.video.util.set
 import com.huanchengfly.tieba.post.utils.TiebaUtil
 import com.huanchengfly.tieba.post.utils.requestPinShortcut
@@ -74,38 +73,38 @@ class ForumViewModel @Inject constructor(
         recordHistory(forumData)
     }
 
-    fun onGoodClassifyChanged(classifyId: Int) {
-        _uiState.set { copy(goodClassifyId = classifyId) }
+    fun onSubClassifyChanged(tabId: Int, classifyId: Int) {
+        _uiState.set { copy(subClassifyId = classifyId) }
         launchInVM {
-            sendUiEvent(ForumUiEvent.ScrollToTop(isGood = true))
-            emitGlobalEventSuspend(ForumThreadListUiEvent.ClassifyChanged(classifyId))
+            sendUiEvent(ForumUiEvent.ScrollToTop(tabId = tabId))
+            emitGlobalEventSuspend(ForumThreadListUiEvent.ClassifyChanged(tabId, classifyId))
         }
     }
 
     fun onSortTypeChanged(@ForumSortType sortType: Int) {
         launchInVM {
             forumRepo.saveSortType(forumName, sortType)
-            sendUiEvent(ForumUiEvent.ScrollToTop(isGood = false))
+            // 排序变化是吧级别广播; ScrollToTop 由 UI 主动按 currentTab 触发,这里不发
             delay(200) // wait ScrollToTop animation
             emitGlobalEventSuspend(ForumThreadListUiEvent.SortTypeChanged(sortType))
         }
     }
 
-    fun onRefreshClicked(isGood: Boolean) {
+    fun onRefreshClicked(tabId: Int) {
         launchInVM {
-            sendUiEvent(ForumUiEvent.ScrollToTop(isGood))
+            sendUiEvent(ForumUiEvent.ScrollToTop(tabId))
             delay(200) // wait ScrollToTop animation
-            emitGlobalEventSuspend(ForumThreadListUiEvent.Refresh(isGood))
+            emitGlobalEventSuspend(ForumThreadListUiEvent.Refresh(tabId))
         }
     }
 
-    fun onFabClicked(@ForumFAB fab: Int, isGood: Boolean) {
+    fun onFabClicked(@ForumFAB fab: Int, currentTabId: Int) {
         when (fab) {
             ForumFAB.POST -> sendUiEvent(ForumUiEvent.AddThread(forumId = currentState.forum?.id))
 
-            ForumFAB.REFRESH -> onRefreshClicked(isGood)
+            ForumFAB.REFRESH -> onRefreshClicked(currentTabId)
 
-            ForumFAB.BACK_TO_TOP -> sendUiEvent(ForumUiEvent.ScrollToTop(isGood))
+            ForumFAB.BACK_TO_TOP -> sendUiEvent(ForumUiEvent.ScrollToTop(currentTabId))
 
             ForumFAB.HIDE -> throw IllegalStateException("Incorrect Compose state")
         }
@@ -210,7 +209,7 @@ class ForumViewModel @Inject constructor(
 
 data class ForumUiState(
     val forum: ForumData? = null,
-    val goodClassifyId: Int? = null,
+    val subClassifyId: Int? = null,
     val error: Throwable? = null
 )
 
@@ -218,9 +217,8 @@ sealed interface ForumUiEvent : UiEvent {
 
     data class AddThread(val forumId: Long?) : ForumUiEvent
 
-    data class ScrollToTop(val type: ForumType) : ForumUiEvent {
-        constructor(isGood: Boolean) : this(type = if (isGood) ForumType.Good else ForumType.Latest)
-    }
+    /** 由 UI 层把要滚回顶部的 tab 指明. */
+    data class ScrollToTop(val tabId: Int) : ForumUiEvent
 
     sealed interface SignIn : ForumUiEvent {
         data class Success(val signBonusPoint: Int, val userSignRank: Int) : SignIn
