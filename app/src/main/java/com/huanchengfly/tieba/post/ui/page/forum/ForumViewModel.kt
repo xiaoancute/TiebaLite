@@ -81,10 +81,10 @@ class ForumViewModel @Inject constructor(
         }
     }
 
-    fun onSortTypeChanged(@ForumSortType sortType: Int) {
+    fun onSortTypeChanged(@ForumSortType sortType: Int, currentTabId: Int) {
         launchInVM {
             forumRepo.saveSortType(forumName, sortType)
-            // 排序变化是吧级别广播; ScrollToTop 由 UI 主动按 currentTab 触发,这里不发
+            sendUiEvent(ForumUiEvent.ScrollToTop(tabId = currentTabId))
             delay(200) // wait ScrollToTop animation
             emitGlobalEventSuspend(ForumThreadListUiEvent.SortTypeChanged(sortType))
         }

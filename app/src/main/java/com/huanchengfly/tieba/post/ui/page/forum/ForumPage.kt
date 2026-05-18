@@ -266,7 +266,7 @@ fun ForumPage(
         createThreadClickListeners(onNavigate = navigator::navigateDebounced)
     }
     val forumThreadPages = remember(threadClickListeners, navTabs) {
-        navTabs.map { tab ->
+        navTabs.mapIndexed { index, tab ->
             movableContentOf<Modifier, PaddingValues, ForumData> { modifier, contentPadding, forum ->
                 ForumThreadList(
                     modifier = modifier,
@@ -276,7 +276,7 @@ fun ForumPage(
                     tab = tab,
                     forumRuleTitle = forum.forumRuleTitle.takeUnless { tab.isEssence },
                     contentPadding = contentPadding,
-                    listState = listStates[navTabs.indexOf(tab)]
+                    listState = listStates[index]
                 )
             }
         }
@@ -385,7 +385,11 @@ fun ForumPage(
                     navTabs = navTabs,
                     pagerState = pagerState,
                     sortType = sortType,
-                    onSortTypeChanged = viewModel::onSortTypeChanged
+                    onSortTypeChanged = { newSort ->
+                        val currentTabId = navTabs.getOrNull(pagerState.currentPage)?.tabId
+                            ?: NavTab.FALLBACK_TAB_ID
+                        viewModel.onSortTypeChanged(newSort, currentTabId = currentTabId)
+                    },
                 )
 
                 val currentTab = navTabs.getOrNull(pagerState.currentPage)
