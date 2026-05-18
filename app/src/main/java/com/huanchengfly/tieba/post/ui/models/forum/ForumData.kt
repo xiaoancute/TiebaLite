@@ -25,6 +25,7 @@ typealias GoodClassify = Pair<String, Int>
     val threads: Int,
     val posts: Int,
     val goodClassifies: List<GoodClassify>?,
+    val navTabs: List<NavTab> = emptyList(),
 ) {
 
     val levelProgress: Float
@@ -46,7 +47,8 @@ typealias GoodClassify = Pair<String, Int>
         members: Int = this.members,
         threads: Int = this.threads,
         posts: Int = this.posts,
-        goodClassifies: List<GoodClassify>? = this.goodClassifies
+        goodClassifies: List<GoodClassify>? = this.goodClassifies,
+        navTabs: List<NavTab> = this.navTabs,
     ) = ForumData(
         id = this.id,
         avatar = avatar,
@@ -65,6 +67,7 @@ typealias GoodClassify = Pair<String, Int>
         members = members,
         threads = threads,
         posts = posts,
-        goodClassifies = goodClassifies
+        goodClassifies = goodClassifies,
+        navTabs = navTabs,
     )
 }
