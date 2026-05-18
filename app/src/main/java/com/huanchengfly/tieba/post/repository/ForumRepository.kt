@@ -43,11 +43,8 @@ private typealias ForumPageResult  = Triple<ForumData, ThreadItemList, List<Foru
 private data class ForumCache(
     val forum: ForumData,
     val managers: List<ForumManager>?,
-    val normal: ThreadItemList?,
-    val good: ThreadItemList?
-) {
-    fun getItemsByType(isGood: Boolean): ThreadItemList? = if (isGood) good else normal
-}
+    val tabResults: Map<Int, ThreadItemList>,
+)
 
 @Singleton
 class ForumRepository @Inject constructor(
@@ -76,24 +73,26 @@ class ForumRepository @Inject constructor(
         page: Int,
         loadType: Int,
         sortType: Int,
-        goodClassifyId: Int?,
+        tabId: Int,
+        isEssence: Boolean,
+        subClassifyId: Int?,
         forceNew: Boolean = false
     ): ForumPageResult {
-        var key: CacheKey? = null
+        var cacheKey: CacheKey? = null
         var cached: ForumCache? = null
-        val cacheable = if (sortType == -1) (goodClassifyId ?: 0) == 0 else sortType == ForumSortType.BY_REPLY
+        val cacheable = if (isEssence) (subClassifyId ?: 0) == 0 else sortType == ForumSortType.BY_REPLY
 
         // Load first page from lru cache if possible
         if (page == 1 && cacheable && loadType == 1) {
-            key = forumName
-            cached = cache[key]
-            val typedItemList = cached?.getItemsByType(isGood = goodClassifyId != null)
+            cacheKey = forumName
+            cached = cache[cacheKey]
+            val typedItemList = cached?.tabResults?.get(tabId)
             if (!forceNew && typedItemList != null) {
                 return ForumPageResult(cached.forum, typedItemList, cached.managers)
             }
         }
 
-        val data = networkDataSource.frsPage(forumName, page, loadType, sortType, goodClassifyId)
+        val data = networkDataSource.frsPage(forumName, page, loadType, sortType, tabId, isEssence, subClassifyId)
         val forumData = data.toData()
         var forumManagers: List<ForumManager>? = null
         val showBothName = habitSettings.first().showBothName
@@ -104,21 +103,29 @@ class ForumRepository @Inject constructor(
         )
 
         // is result cacheable
-        if (key != null) {
+        if (cacheKey != null) {
             forumManagers = data.getManagers(habit = habitSettings.first())
-            val normalThreads = if (sortType != -1) typedThreads else cached?.normal
-            val goodThreads = if (sortType == -1) typedThreads else cached?.good
-            cache.put(key, ForumCache(forumData, forumManagers, normal = normalThreads, good = goodThreads))
+            // Re-read at write time so a concurrent miss for a different tab doesn't
+            // clobber its result with our pre-network `cached` snapshot.
+            val latest = cache[cacheKey]
+            val mergedResults = (latest?.tabResults ?: emptyMap()) + (tabId to typedThreads)
+            cache.put(cacheKey, ForumCache(forumData, forumManagers, tabResults = mergedResults))
         }
         return ForumPageResult(forumData, typedThreads, forumManagers)
     }
 
     suspend fun loadForumInfo(forumName: String, forceNew: Boolean = true): ForumData {
-        return frsPage(forumName, page = 1, loadType = 1, sortType = 0, null, forceNew).first
+        return frsPage(
+            forumName = forumName, page = 1, loadType = 1, sortType = 0,
+            tabId = 0, isEssence = false, subClassifyId = null, forceNew = forceNew
+        ).first
     }
 
     suspend fun loadForumDetail(forumName: String): ForumDetail {
-        val (forumData, _, managers) = frsPage(forumName, page = 1, loadType = 1, sortType = 0, null)
+        val (forumData, _, managers) = frsPage(
+            forumName = forumName, page = 1, loadType = 1, sortType = 0,
+            tabId = 0, isEssence = false, subClassifyId = null
+        )
         val detail = networkDataSource.loadForumDetail(forumData.id)
 
         return ForumDetail(
@@ -134,40 +141,47 @@ class ForumRepository @Inject constructor(
         )
     }
 
-    suspend fun loadPage(forum: String, page: Int, sortType: Int, forceNew: Boolean): ThreadItemList = frsPage(
+    /**
+     * 按 NavTab 拉一页帖子.
+     *
+     * @param tabId `0` 表示默认 tab (含 fallback "全部"); 非 0 时尊重网页 tab id.
+     * @param isEssence true 时表示"精华类" tab; [subClassifyId] 在此情形下生效.
+     */
+    suspend fun loadByTab(
+        forum: String,
+        page: Int,
+        sortType: Int,
+        tabId: Int,
+        isEssence: Boolean,
+        subClassifyId: Int?,
+        forceNew: Boolean,
+    ): ThreadItemList = frsPage(
         forumName = forum,
         page = page,
         loadType = 1,
         sortType = sortType,
-        goodClassifyId = null,
-        forceNew = forceNew
+        tabId = tabId,
+        isEssence = isEssence,
+        subClassifyId = subClassifyId,
+        forceNew = forceNew,
     ).second
 
-    suspend fun loadGoodPage(forum: String, page: Int, goodClassifyId: Int?, forceNew: Boolean): ThreadItemList = frsPage(
-        forumName = forum,
-        page = page,
-        loadType = 1,
-        sortType = -1,
-        goodClassifyId = goodClassifyId ?: 0,
-        forceNew = forceNew
-    ).second
-
-    suspend fun loadMorePage(forum: String, page: Int, sortType: Int): ThreadItemList = frsPage(
+    suspend fun loadMoreByTab(
+        forum: String,
+        page: Int,
+        sortType: Int,
+        tabId: Int,
+        isEssence: Boolean,
+        subClassifyId: Int?,
+    ): ThreadItemList = frsPage(
         forumName = forum,
         page = page,
         loadType = 2,
         sortType = sortType,
-        goodClassifyId = null,
-        forceNew = false
-    ).second
-
-    suspend fun loadMoreGood(forum: String, page: Int, goodClassifyId: Int?): ThreadItemList = frsPage(
-        forumName = forum,
-        page = page,
-        loadType = 2,
-        sortType = -1,
-        goodClassifyId = goodClassifyId ?: 0,
-        forceNew = false
+        tabId = tabId,
+        isEssence = isEssence,
+        subClassifyId = subClassifyId,
+        forceNew = false,
     ).second
 
     suspend fun threadList(forumId: Long, forumName: String, page: Int, sortType: Int, threadIds: List<Long>): List<ThreadItem> {
@@ -301,7 +315,8 @@ private fun FrsPageResponseData.toData(): ForumData = forum!!.let {
         posts = it.post_num,
         goodClassifies = it.good_classify
             .takeUnless { c -> c.size <= 1 }
-            ?.map { c -> GoodClassify(c.class_name, c.class_id) }
+            ?.map { c -> GoodClassify(c.class_name, c.class_id) },
+        navTabs = nav_tab_info.toNavTabs(),
     )
 }
 

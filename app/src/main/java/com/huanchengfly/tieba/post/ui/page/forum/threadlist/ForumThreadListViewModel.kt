@@ -14,6 +14,7 @@ import com.huanchengfly.tieba.post.repository.PbPageRepository
 import com.huanchengfly.tieba.post.repository.user.SettingsRepository
 import com.huanchengfly.tieba.post.ui.models.Like
 import com.huanchengfly.tieba.post.ui.models.ThreadItem
+import com.huanchengfly.tieba.post.ui.models.forum.NavTab
 import com.huanchengfly.tieba.post.ui.models.settings.ForumSortType
 import com.huanchengfly.tieba.post.ui.page.forum.threadlist.ForumThreadListViewModel.Companion.ForumVMFactory
 import com.huanchengfly.tieba.post.ui.page.main.explore.concern.ConcernViewModel.Companion.updateLikeStatus
@@ -35,7 +36,7 @@ import kotlin.math.min
 class ForumThreadListViewModel @AssistedInject constructor(
     @Assisted val forumName: String,
     @Assisted val forumId: Long,
-    @Assisted val type: ForumType,
+    @Assisted val tab: NavTab,
     private val forumRepo: ForumRepository,
     private val threadRepo: PbPageRepository,
     settingsRepo: SettingsRepository,
@@ -51,8 +52,9 @@ class ForumThreadListViewModel @AssistedInject constructor(
         }
     }
 
+    // 排序流仅在"非精华类" tab 出现; 精华类沿用旧约定 sortType=0
     private val sortTypeFlow: Flow<Int>? =
-        if (type == ForumType.Latest) forumRepo.getSortType(forumName) else null
+        if (!tab.isEssence) forumRepo.getSortType(forumName) else null
 
     override fun createInitialState(): ForumThreadListUiState = ForumThreadListUiState(isRefreshing = true)
 
@@ -61,56 +63,57 @@ class ForumThreadListViewModel @AssistedInject constructor(
         .stateInViewModel(initialValue = true)
 
     init {
-        launchInVM {
-            loadInternal(sortType = null, classifyId = null)
-        }
+        launchInVM { loadInternal(sortType = null, subClassifyId = null) }
     }
 
-    private suspend fun loadInternal(sortType: Int?, classifyId: Int?, forceNew: Boolean = false) {
+    private suspend fun loadInternal(sortType: Int?, subClassifyId: Int?, forceNew: Boolean = false) {
         _uiState.update { it.copy(isRefreshing = true) }
-        val data = if (type == ForumType.Latest) {
-            val sort = sortType ?: sortTypeFlow!!.first()
-            forumRepo.loadPage(forumName, page = 1, sortType = sort, forceNew)
-        } else {
-            forumRepo.loadGoodPage(forumName, page = 1, classifyId, forceNew)
-        }
+        val effectiveSort = sortType ?: sortTypeFlow?.first() ?: 0
+        val data = forumRepo.loadByTab(
+            forum = forumName,
+            page = 1,
+            sortType = effectiveSort,
+            tabId = tab.tabId,
+            isEssence = tab.isEssence,
+            subClassifyId = subClassifyId,
+            forceNew = forceNew,
+        )
         _uiState.update {
             ForumThreadListUiState(
-                goodClassifyId = it.goodClassifyId,
+                subClassifyId = it.subClassifyId,
                 threads = data.threads,
                 threadIds = data.threadIds,
                 currentPage = 1,
-                hasMore = data.hasMore
+                hasMore = data.hasMore,
             )
         }
     }
 
-    fun onClassifyIdChanged(classifyId: Int) {
-        val state = _uiState.updateAndGet { it.copy(goodClassifyId = classifyId) }
+    /** 仅在精华类 tab 有意义; 由 ForumViewModel 在用户选了子分类 chip 后调用. */
+    fun onSubClassifyIdChanged(classifyId: Int) {
+        if (!tab.isEssence) return
+        val state = _uiState.updateAndGet { it.copy(subClassifyId = classifyId) }
         if (state.isRefreshing) return
         launchInVM {
-            // Load cached result if id classifyId is 0
-            loadInternal(sortType = null, classifyId, forceNew = classifyId != 0)
+            // 当 classifyId == 0 时复用缓存; 否则强制新拉.
+            loadInternal(sortType = null, subClassifyId = classifyId, forceNew = classifyId != 0)
         }
     }
 
     fun onSortTypeChanged(@ForumSortType sortType: Int?) {
         if (currentState.isRefreshing) return
-        launchInVM {
-            // Load cached result
-            loadInternal(sortType = sortType, classifyId = null, forceNew = false)
-        }
+        launchInVM { loadInternal(sortType = sortType, subClassifyId = null, forceNew = false) }
     }
 
     fun onRefresh() {
         if (currentState.isRefreshing) return
         launchInVM {
-            if (type == ForumType.Latest) {
-                loadInternal(sortType = sortTypeFlow!!.first(), classifyId = null, forceNew = true)
-            } else {
-                val currentClassifyId = currentState.goodClassifyId ?: 0
-                loadInternal(sortType = null, classifyId = currentClassifyId, forceNew = true)
-            }
+            val currentClassify = currentState.subClassifyId
+            loadInternal(
+                sortType = sortTypeFlow?.first(),
+                subClassifyId = if (tab.isEssence) (currentClassify ?: 0) else null,
+                forceNew = true,
+            )
         }
     }
 
@@ -119,11 +122,11 @@ class ForumThreadListViewModel @AssistedInject constructor(
         if (state.isLoadingMore) return else _uiState.update { it.copy(isLoadingMore = true) }
 
         launchInVM {
-            val sortType = if (type == ForumType.Latest) sortTypeFlow!!.first() else 0
+            val effectiveSort = sortTypeFlow?.first() ?: 0
             if (state.threadIds.isNotEmpty()) {
                 val size = min(state.threadIds.size, 30)
                 val threadIds = state.threadIds.subList(0, size)
-                val newList = forumRepo.threadList(forumId, forumName, state.currentPage, sortType, threadIds)
+                val newList = forumRepo.threadList(forumId, forumName, state.currentPage, effectiveSort, threadIds)
                 val threadList = (state.threads + newList).distinctById()
 
                 _uiState.update {
@@ -137,11 +140,14 @@ class ForumThreadListViewModel @AssistedInject constructor(
                 }
             } else {
                 val page = state.currentPage + 1
-                val data = if (type == ForumType.Latest) {
-                    forumRepo.loadMorePage(forumName, page, sortType)
-                } else {
-                    forumRepo.loadMoreGood(forumName, page, state.goodClassifyId)
-                }
+                val data = forumRepo.loadMoreByTab(
+                    forum = forumName,
+                    page = page,
+                    sortType = effectiveSort,
+                    tabId = tab.tabId,
+                    isEssence = tab.isEssence,
+                    subClassifyId = if (tab.isEssence) state.subClassifyId else null,
+                )
                 val threadList = (state.threads + data.threads).distinctById()
                 _uiState.update {
                     it.copy(
@@ -185,36 +191,28 @@ class ForumThreadListViewModel @AssistedInject constructor(
 
         @AssistedFactory
         interface ForumVMFactory {
-            fun create(forumName: String, forumId: Long, type: ForumType): ForumThreadListViewModel
+            fun create(forumName: String, forumId: Long, tab: NavTab): ForumThreadListViewModel
         }
     }
-}
-
-enum class ForumType {
-    Latest, Good
 }
 
 data class ForumThreadListUiState(
     val isRefreshing: Boolean = false,
     val isLoadingMore: Boolean = false,
-    val goodClassifyId: Int? = null,
+    val subClassifyId: Int? = null,
     val threads: List<ThreadItem> = emptyList(),
     val threadIds: List<Long> = emptyList(),
     val currentPage: Int = 1,
     val hasMore: Boolean = true,
-    val error: Throwable? = null
+    val error: Throwable? = null,
 ) : UiState
 
 sealed interface ForumThreadListUiEvent : UiEvent {
+    data class SortTypeChanged(val sortType: Int) : ForumThreadListUiEvent
 
-    data class SortTypeChanged(val sortType: Int): ForumThreadListUiEvent
+    /** 子分类切换. `tabId` 用于让监听方过滤"这个事件归我吗". */
+    data class ClassifyChanged(val tabId: Int, val subClassifyId: Int) : ForumThreadListUiEvent
 
-    data class ClassifyChanged(val goodClassifyId: Int) : ForumThreadListUiEvent
-
-    data class Refresh(
-        val type: ForumType,
-    ) : ForumThreadListUiEvent {
-
-        constructor(isGood: Boolean) : this(if (isGood) ForumType.Good else ForumType.Latest)
-    }
+    /** 刷新当前主 tab. `tabId` 用于过滤"事件归我吗". */
+    data class Refresh(val tabId: Int) : ForumThreadListUiEvent
 }

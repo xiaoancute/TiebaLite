@@ -90,6 +90,7 @@ import com.huanchengfly.tieba.post.ui.common.theme.compose.clickableNoIndication
 import com.huanchengfly.tieba.post.ui.common.windowsizeclass.isWindowHeightCompact
 import com.huanchengfly.tieba.post.ui.models.forum.ForumData
 import com.huanchengfly.tieba.post.ui.models.forum.GoodClassify
+import com.huanchengfly.tieba.post.ui.models.forum.NavTab
 import com.huanchengfly.tieba.post.ui.models.settings.ForumFAB
 import com.huanchengfly.tieba.post.ui.page.Destination
 import com.huanchengfly.tieba.post.ui.page.Destination.ForumDetail
@@ -97,7 +98,6 @@ import com.huanchengfly.tieba.post.ui.page.Destination.ForumSearchPost
 import com.huanchengfly.tieba.post.ui.page.ProvideNavigator
 import com.huanchengfly.tieba.post.ui.page.forum.threadlist.ForumThreadList
 import com.huanchengfly.tieba.post.ui.page.forum.threadlist.ForumThreadListUiEvent
-import com.huanchengfly.tieba.post.ui.page.forum.threadlist.ForumType
 import com.huanchengfly.tieba.post.ui.page.main.explore.createThreadClickListeners
 import com.huanchengfly.tieba.post.ui.page.photoview.PhotoViewActivity
 import com.huanchengfly.tieba.post.ui.page.thread.ThreadLikeUiEvent
@@ -180,8 +180,26 @@ fun ForumPage(
         }
     }
 
-    val pagerState = rememberPagerState { ForumType.entries.size }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val forumData = uiState.forum
+
+    val forumDataNavTabs = forumData?.navTabs
+    val navTabs = remember(forumDataNavTabs) {
+        forumDataNavTabs.orEmpty().ifEmpty { listOf(NavTab.Fallback) }
+    }
+    val pagerState = rememberPagerState(pageCount = { navTabs.size })
     val listStates = rememberPagerListStates(pagerState.pageCount)
+
+    // First composition runs with forumData=null → navTabs=[Fallback] (size 1, initialPage=0).
+    // Once real navTabs arrive, jump to the protocol-marked default tab.
+    LaunchedEffect(forumData?.id) {
+        if (forumData != null) {
+            val defaultIdx = navTabs.indexOfFirst { it.isDefault }.coerceAtLeast(0)
+            if (defaultIdx != pagerState.currentPage) {
+                pagerState.scrollToPage(defaultIdx)
+            }
+        }
+    }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val scrollOrientationConnection = rememberScrollOrientationConnection()
 
@@ -216,7 +234,8 @@ fun ForumPage(
             is ForumUiEvent.PinShortcut.Failure -> getString(R.string.toast_send_to_desktop_failed, it.errorMsg)
 
             is ForumUiEvent.ScrollToTop -> {
-                listStates[it.type.ordinal].scrollToItem(0)
+                val idx = navTabs.indexOfFirst { t -> t.tabId == it.tabId }.coerceAtLeast(0)
+                listStates[idx].scrollToItem(0)
                 scrollBehavior.state.contentOffset = 0f
                 scrollBehavior.state.heightOffset = 0f
             }
@@ -237,9 +256,6 @@ fun ForumPage(
         onShowSnackbarShort(it.toMessage(context))
     }
 
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val forumData = uiState.forum
-
     val unlikeDialogState = rememberDialogState()
     if (unlikeDialogState.show) {
         ConfirmDialog(
@@ -254,30 +270,27 @@ fun ForumPage(
     val threadClickListeners = remember(navigator) {
         createThreadClickListeners(onNavigate = navigator::navigateDebounced)
     }
-    val forumThreadPages = remember(threadClickListeners) {
-        ForumType.entries.map { forumType ->
+    val forumThreadPages = remember(threadClickListeners, navTabs) {
+        navTabs.mapIndexed { index, tab ->
             movableContentOf<Modifier, PaddingValues, ForumData> { modifier, contentPadding, forum ->
                 ForumThreadList(
                     modifier = modifier,
                     threadClickListeners = threadClickListeners,
                     forumId = forum.id,
                     forumName = forum.name,
-                    forumRuleTitle = forum.forumRuleTitle.takeUnless { forumType == ForumType.Good },
-                    type = forumType,
+                    tab = tab,
+                    forumRuleTitle = forum.forumRuleTitle.takeUnless { tab.isEssence },
                     contentPadding = contentPadding,
-                    listState = listStates[forumType.ordinal]
+                    listState = listStates[index]
                 )
             }
         }
     }
 
     onGlobalEvent<GlobalEvent.AddThreadSuccess>() {
+        val currentTabId = navTabs.getOrNull(pagerState.currentPage)?.tabId ?: NavTab.FALLBACK_TAB_ID
         coroutineScope.launch {
-            emitGlobalEventSuspend(
-                ForumThreadListUiEvent.Refresh(
-                    isGood = pagerState.currentPage == TAB_FORUM_GOOD,
-                )
-            )
+            emitGlobalEventSuspend(ForumThreadListUiEvent.Refresh(tabId = currentTabId))
         }
     }
 
@@ -374,19 +387,31 @@ fun ForumPage(
                 val sortType by viewModel.sortType.collectAsStateWithLifecycle()
                 ForumTab(
                     modifier = Modifier.fillMaxWidth(),
+                    navTabs = navTabs,
                     pagerState = pagerState,
                     sortType = sortType,
-                    onSortTypeChanged = viewModel::onSortTypeChanged
+                    onSortTypeChanged = { newSort ->
+                        val currentTabId = navTabs.getOrNull(pagerState.currentPage)?.tabId
+                            ?: NavTab.FALLBACK_TAB_ID
+                        viewModel.onSortTypeChanged(newSort, currentTabId = currentTabId)
+                    },
                 )
 
-                val classifyVisible by remember { derivedStateOf { pagerState.currentPage == TAB_FORUM_GOOD } }
+                val currentTab = navTabs.getOrNull(pagerState.currentPage)
+                val classifyVisible by remember(currentTab, uiState.forum?.goodClassifies) {
+                    derivedStateOf {
+                        currentTab?.isEssence == true && (uiState.forum?.goodClassifies?.size ?: 0) > 1
+                    }
+                }
                 val goodClassifies = uiState.forum?.goodClassifies ?: return@CollapsingAvatarTopAppBar
                 // Compose classify inside TopBar for background blur
                 AnimatedVisibility(visible = classifyVisible) {
                     ClassifyTabs(
                         goodClassifies = goodClassifies,
-                        selectedItem = uiState.goodClassifyId,
-                        onSelected = viewModel::onGoodClassifyChanged
+                        selectedItem = uiState.subClassifyId,
+                        onSelected = { subId ->
+                            currentTab?.let { viewModel.onSubClassifyChanged(it.tabId, subId) }
+                        },
                     )
                 }
             }
@@ -403,7 +428,8 @@ fun ForumPage(
             }
 
             ForumFAB(expanded = fabMenuExpanded, onExpandChanged = onFabExpandChanged, visible = fabVisible) { fab ->
-                viewModel.onFabClicked(fab, isGood = pagerState.currentPage == TAB_FORUM_GOOD)
+                val currentTabId = navTabs.getOrNull(pagerState.currentPage)?.tabId ?: NavTab.FALLBACK_TAB_ID
+                viewModel.onFabClicked(fab, currentTabId = currentTabId)
             }
         }
     ) { contentPadding ->

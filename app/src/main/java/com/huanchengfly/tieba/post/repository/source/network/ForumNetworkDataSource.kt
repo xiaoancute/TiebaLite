@@ -43,10 +43,12 @@ object ForumNetworkDataSource {
         page: Int,
         loadType: Int,
         sortType: Int,
-        goodClassifyId: Int?
+        tabId: Int,
+        isEssence: Boolean,
+        subClassifyId: Int?
     ): FrsPageResponseData {
         val response = TiebaApi.getInstance()
-            .frsPage(forumName, page, loadType, sortType, goodClassifyId)
+            .frsPage(forumName, page, loadType, sortType, tabId, isEssence, subClassifyId)
             .catch { throw ConnectivityInterceptor.wrapException(it) }
             .firstOrThrow()
         if (response.data_?.forum == null) throw TiebaApiException(response.error.commonResponse)

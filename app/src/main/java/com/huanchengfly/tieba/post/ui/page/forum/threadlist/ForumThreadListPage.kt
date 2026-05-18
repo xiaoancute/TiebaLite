@@ -33,6 +33,7 @@ import com.huanchengfly.tieba.post.arch.collectPartialAsState
 import com.huanchengfly.tieba.post.arch.onGlobalEvent
 import com.huanchengfly.tieba.post.navigateDebounced
 import com.huanchengfly.tieba.post.ui.page.Destination
+import com.huanchengfly.tieba.post.ui.models.forum.NavTab
 import com.huanchengfly.tieba.post.ui.page.Destination.ForumRuleDetail
 import com.huanchengfly.tieba.post.ui.page.Destination.Thread
 import com.huanchengfly.tieba.post.ui.page.LocalNavController
@@ -100,14 +101,14 @@ fun ForumThreadList(
     threadClickListeners: ThreadClickListeners,
     forumId: Long,
     forumName: String,
-    type: ForumType,
+    tab: NavTab,
     forumRuleTitle: String?,
     contentPadding: PaddingValues,
     listState: LazyListState = rememberLazyListState(),
     viewModel: ForumThreadListViewModel = hiltViewModel<ForumThreadListViewModel, ForumVMFactory>(
-        key = Objects.hash(forumId, forumName, type).toString()
+        key = Objects.hash(forumId, forumName, tab.tabId).toString()
     ) {
-        it.create(forumName, forumId, type = type)
+        it.create(forumName, forumId, tab = tab)
     }
 ) {
     val navigator = LocalNavController.current
@@ -115,14 +116,16 @@ fun ForumThreadList(
     viewModel.uiEvent.collectCommonUiEventWithLifecycle()
 
     onGlobalEvent<ForumThreadListUiEvent.Refresh>(
-        filter = { it.type == type },
+        filter = { it.tabId == tab.tabId },
     ) {
         viewModel.onRefresh()
     }
 
-    if (type == ForumType.Good) {
-        onGlobalEvent<ForumThreadListUiEvent.ClassifyChanged> {
-            viewModel.onClassifyIdChanged(classifyId = it.goodClassifyId)
+    if (tab.isEssence) {
+        onGlobalEvent<ForumThreadListUiEvent.ClassifyChanged>(
+            filter = { it.tabId == tab.tabId },
+        ) {
+            viewModel.onSubClassifyIdChanged(classifyId = it.subClassifyId)
         }
     } else {
         onGlobalEvent<ForumThreadListUiEvent.SortTypeChanged> {
