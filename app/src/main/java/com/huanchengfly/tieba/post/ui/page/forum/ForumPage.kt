@@ -187,14 +187,19 @@ fun ForumPage(
     val navTabs = remember(forumDataNavTabs) {
         forumDataNavTabs.orEmpty().ifEmpty { listOf(NavTab.Fallback) }
     }
-    val initialPage = remember(forumName, navTabs) {
-        navTabs.indexOfFirst { it.isDefault }.coerceAtLeast(0)
-    }
-    val pagerState = rememberPagerState(
-        initialPage = initialPage,
-        pageCount = { navTabs.size },
-    )
+    val pagerState = rememberPagerState(pageCount = { navTabs.size })
     val listStates = rememberPagerListStates(pagerState.pageCount)
+
+    // First composition runs with forumData=null → navTabs=[Fallback] (size 1, initialPage=0).
+    // Once real navTabs arrive, jump to the protocol-marked default tab.
+    LaunchedEffect(forumData?.id) {
+        if (forumData != null) {
+            val defaultIdx = navTabs.indexOfFirst { it.isDefault }.coerceAtLeast(0)
+            if (defaultIdx != pagerState.currentPage) {
+                pagerState.scrollToPage(defaultIdx)
+            }
+        }
+    }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val scrollOrientationConnection = rememberScrollOrientationConnection()
 

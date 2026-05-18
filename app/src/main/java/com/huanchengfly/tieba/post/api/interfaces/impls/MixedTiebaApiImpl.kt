@@ -1054,7 +1054,7 @@ object MixedTiebaApiImpl : ITiebaApi {
                         ctime = 0,
                         data_size = 0,
                         hot_thread_id = 0,
-                        is_default_navtab = 0, // TODO(Task 5/6): set to 1 only when fallback NavTab is in play; for now keep legacy 0 for callers that haven't migrated.
+                        is_default_navtab = 0, // TODO(Task 8 抓包): 实测哪个语义对 — 是否应在 fallback (tabId=0 且非精华) 时置 1。
                         is_good = if (isEssence) 1 else 0,
                         is_selection = 0,
                         kw = forumName.urlEncode(),
