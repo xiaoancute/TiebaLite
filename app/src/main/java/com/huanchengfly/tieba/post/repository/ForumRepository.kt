@@ -301,7 +301,8 @@ private fun FrsPageResponseData.toData(): ForumData = forum!!.let {
         posts = it.post_num,
         goodClassifies = it.good_classify
             .takeUnless { c -> c.size <= 1 }
-            ?.map { c -> GoodClassify(c.class_name, c.class_id) }
+            ?.map { c -> GoodClassify(c.class_name, c.class_id) },
+        navTabs = nav_tab_info.toNavTabs(),
     )
 }
 
