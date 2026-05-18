@@ -78,6 +78,9 @@ class ForumRepository @Inject constructor(
         subClassifyId: Int?,
         forceNew: Boolean = false
     ): ForumPageResult {
+        // tabId == -1 is a private cache-disambiguator passed by legacy essence wrappers.
+        // It never flows into the protobuf request (MixedTiebaApiImpl gates on isEssence first).
+        // Removed once Task 7 deletes the legacy wrappers.
         var cacheKey: CacheKey? = null
         var cached: ForumCache? = null
         val cacheable = if (isEssence) (subClassifyId ?: 0) == 0 else sortType == ForumSortType.BY_REPLY
@@ -105,7 +108,10 @@ class ForumRepository @Inject constructor(
         // is result cacheable
         if (cacheKey != null) {
             forumManagers = data.getManagers(habit = habitSettings.first())
-            val mergedResults = (cached?.tabResults ?: emptyMap()) + (tabId to typedThreads)
+            // Re-read at write time so a concurrent miss for a different tab doesn't
+            // clobber its result with our pre-network `cached` snapshot.
+            val latest = cache[cacheKey]
+            val mergedResults = (latest?.tabResults ?: emptyMap()) + (tabId to typedThreads)
             cache.put(cacheKey, ForumCache(forumData, forumManagers, tabResults = mergedResults))
         }
         return ForumPageResult(forumData, typedThreads, forumManagers)
