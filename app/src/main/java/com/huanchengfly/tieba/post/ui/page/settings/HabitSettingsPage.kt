@@ -9,11 +9,13 @@ import androidx.compose.material.icons.outlined.PhotoSizeSelectActual
 import androidx.compose.material.icons.outlined.SecurityUpdateWarning
 import androidx.compose.material.icons.outlined.SpeakerNotesOff
 import androidx.compose.material.icons.outlined.StarOutline
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.outlined.Verified
 import androidx.compose.material.icons.rounded.UnfoldLess
 import androidx.compose.runtime.Composable
 import com.huanchengfly.tieba.post.R
 import com.huanchengfly.tieba.post.repository.user.Settings
+import com.huanchengfly.tieba.post.ui.models.search.SearchThreadSortType
 import com.huanchengfly.tieba.post.ui.icons.PageHeader
 import com.huanchengfly.tieba.post.ui.models.settings.ForumSortType
 import com.huanchengfly.tieba.post.ui.models.settings.HabitSettings
@@ -59,6 +61,10 @@ fun HabitSettingsPage(
 
         group(title = R.string.settings_group_forum) {
             forumSortPreference()
+        }
+
+        group(title = R.string.settings_group_search) {
+            searchThreadSortPreference()
         }
 
         group(title = R.string.settings_group_thread) {
@@ -122,6 +128,19 @@ fun SettingsSegmentedPrefsScope<HabitSettings>.forumSortPreference() {
             ForumSortType.BY_SEND to R.string.title_sort_by_send,
         ),
         leadingIcon = Icons.Outlined.CalendarViewDay
+    )
+}
+
+fun SettingsSegmentedPrefsScope<HabitSettings>.searchThreadSortPreference() {
+    listPref(
+        property = HabitSettings::searchThreadSortType,
+        title = R.string.title_settings_search_thread_sort_type,
+        options = persistentMapOf(
+            SearchThreadSortType.NEWEST to R.string.title_search_order_new,
+            SearchThreadSortType.OLDEST to R.string.title_search_order_old,
+            SearchThreadSortType.RELATIVE to R.string.title_search_order_relevant,
+        ),
+        leadingIcon = Icons.Rounded.Search
     )
 }
 

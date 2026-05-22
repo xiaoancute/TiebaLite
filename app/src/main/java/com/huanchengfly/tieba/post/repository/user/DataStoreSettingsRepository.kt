@@ -39,6 +39,7 @@ import com.huanchengfly.tieba.post.ui.models.settings.ThemeSettings
 import com.huanchengfly.tieba.post.ui.models.settings.UISettings
 import com.huanchengfly.tieba.post.ui.models.settings.WaterType
 import com.huanchengfly.tieba.post.ui.models.settings.randomSignTime
+import com.huanchengfly.tieba.post.ui.models.search.SearchThreadSortType
 import com.huanchengfly.tieba.post.utils.HmTime
 import com.huanchengfly.tieba.post.utils.ImageUtil
 import com.huanchengfly.tieba.post.utils.JobQueue
@@ -140,6 +141,7 @@ private object HabitSettingsTransformer : PreferenceTransformer<HabitSettings> {
             hideReplyWarning = it[booleanPreferencesKey(KEY_REPLY_HIDE_WARNING)] == true,
             imageLoadType = it[intPreferencesKey(KEY_IMAGE_LOAD_TYPE)] ?: ImageUtil.SETTINGS_SMART_ORIGIN,
             imageWatermarkType = it[intPreferencesKey(KEY_IMAGE_WATERMARK_TYPE)] ?: WaterType.FORUM_NAME,
+            searchThreadSortType = it[intPreferencesKey(KEY_SEARCH_THREAD_SORT_DEFAULT)] ?: SearchThreadSortType.NEWEST,
             showBothName = it[booleanPreferencesKey(KEY_SHOW_NICKNAME)] == true,
             stickyHeader = it[booleanPreferencesKey(KEY_STICKY_HEADER)] ?: true,
         )
@@ -155,6 +157,7 @@ private object HabitSettingsTransformer : PreferenceTransformer<HabitSettings> {
         it[booleanPreferencesKey(KEY_REPLY_HIDE_WARNING)] = habit.hideReplyWarning
         it[intPreferencesKey(KEY_IMAGE_LOAD_TYPE)] = habit.imageLoadType
         it[intPreferencesKey(KEY_IMAGE_WATERMARK_TYPE)] = habit.imageWatermarkType
+        it[intPreferencesKey(KEY_SEARCH_THREAD_SORT_DEFAULT)] = habit.searchThreadSortType
         it[booleanPreferencesKey(KEY_SHOW_NICKNAME)] = habit.showBothName
         it[booleanPreferencesKey(KEY_STICKY_HEADER)] = habit.stickyHeader
         it -= intPreferencesKey(KEY_FORUM_FAB_FUNCTION)
@@ -177,6 +180,7 @@ private object HabitSettingsTransformer : PreferenceTransformer<HabitSettings> {
     private const val KEY_POST_HIDE_MEDIA = "ui_post_hide_media"
     private const val KEY_REPLY_HIDE = "ui_reply_hide"
     private const val KEY_REPLY_HIDE_WARNING = "ui_reply_hide_warn"
+    private const val KEY_SEARCH_THREAD_SORT_DEFAULT = "search_thread_sort_type"
     private const val KEY_SHOW_NICKNAME = "ui_show_both_name"
     private const val KEY_STICKY_HEADER = "ui_sticky_header"
 }
@@ -185,15 +189,18 @@ private object PrivacySettingsTransformer : PreferenceTransformer<PrivacySetting
 
     override val get: (Preferences) -> PrivacySettings = {
         PrivacySettings(
+            requestNotificationPermission = it[booleanPreferencesKey(KEY_PRIVACY_NOTIFICATION_PERMISSION)] ?: true,
             readClipBoardLink = it[booleanPreferencesKey(KEY_PRIVACY_CLIPBOARD)] ?: true
         )
     }
 
     override val set: (MutablePreferences, PrivacySettings) -> Unit = { it, settings ->
+        it.putBoolean(KEY_PRIVACY_NOTIFICATION_PERMISSION, settings.requestNotificationPermission)
         it.putBoolean(KEY_PRIVACY_CLIPBOARD, settings.readClipBoardLink)
     }
 
     private const val KEY_PRIVACY_CLIPBOARD = "clipboard_link"
+    private const val KEY_PRIVACY_NOTIFICATION_PERMISSION = "notification_permission_prompt"
 }
 
 private object ThemeSettingsTransformer : PreferenceTransformer<ThemeSettings> {

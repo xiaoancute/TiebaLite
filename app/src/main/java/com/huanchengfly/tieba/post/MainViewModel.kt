@@ -89,5 +89,12 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    suspend fun shouldRequestNotificationPermission(): Boolean =
+        privacySettings.snapshot().requestNotificationPermission
+
+    fun onNotificationPermissionDenied() {
+        privacySettings.save { it.copy(requestNotificationPermission = false) }
+    }
+
     fun onClipBoardDetectDialogDismiss() = ClipBoardLinkDetector.clear()
 }

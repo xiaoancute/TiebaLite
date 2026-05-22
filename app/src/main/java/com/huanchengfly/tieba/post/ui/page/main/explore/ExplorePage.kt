@@ -239,7 +239,7 @@ fun AnimatedVisibilityScope.ExplorePage(loggedIn: Boolean) {
                     ActionItem(
                         icon = Icons.Rounded.Search,
                         contentDescription = R.string.title_search,
-                        onClick = { navigator.navigateDebounced(route = Search) }
+                        onClick = { navigator.navigateDebounced(route = Search()) }
                     )
                 },
                 scrollBehavior = scrollBehavior,

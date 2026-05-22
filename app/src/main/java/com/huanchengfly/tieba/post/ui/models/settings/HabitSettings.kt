@@ -2,6 +2,7 @@ package com.huanchengfly.tieba.post.ui.models.settings
 
 import androidx.annotation.IntDef
 import androidx.compose.runtime.Immutable
+import com.huanchengfly.tieba.post.ui.models.search.SearchThreadSortType
 import com.huanchengfly.tieba.post.utils.ImageUtil
 
 @IntDef(ForumFAB.POST, ForumFAB.REFRESH, ForumFAB.BACK_TO_TOP, ForumFAB.HIDE)
@@ -52,6 +53,7 @@ annotation class WaterType {
  * @param hideReplyWarning 隐藏回贴风险提示
  * @param imageLoadType 图片加载设置
  * @param imageWatermarkType 图片上传水印设置
+ * @param searchThreadSortType 搜贴默认排序方式
  * @param showBothName 同时显示用户名和昵称
  * @param stickyHeader 帖子页面是否使用StickyHeader
  * */
@@ -66,6 +68,7 @@ data class HabitSettings(
     val hideReplyWarning: Boolean = false,
     val imageLoadType: Int = ImageUtil.SETTINGS_SMART_ORIGIN,
     @WaterType val imageWatermarkType: Int = WaterType.FORUM_NAME,
+    @SearchThreadSortType val searchThreadSortType: Int = SearchThreadSortType.NEWEST,
     val showBothName: Boolean = false,
     val stickyHeader: Boolean = true,
 )

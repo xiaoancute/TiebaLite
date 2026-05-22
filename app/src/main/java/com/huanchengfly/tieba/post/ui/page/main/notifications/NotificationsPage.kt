@@ -140,7 +140,7 @@ private fun NotificationsToolBar(
                 ActionItem(
                     icon = Icons.Rounded.Search,
                     contentDescription = stringResource(id = R.string.title_search),
-                    onClick = { navigator.navigateDebounced(Search) }
+                    onClick = { navigator.navigateDebounced(Search()) }
                 )
             },
             scrollBehavior = scrollBehavior,

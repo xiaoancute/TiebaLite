@@ -82,13 +82,13 @@ import com.huanchengfly.tieba.post.ui.common.localSharedBounds
 import com.huanchengfly.tieba.post.ui.common.theme.compose.clickableNoIndication
 import com.huanchengfly.tieba.post.ui.models.search.SearchForum
 import com.huanchengfly.tieba.post.ui.models.search.SearchSuggestion
+import com.huanchengfly.tieba.post.ui.models.search.SearchThreadSortType
 import com.huanchengfly.tieba.post.ui.page.Destination
 import com.huanchengfly.tieba.post.ui.page.ProvideNavigator
 import com.huanchengfly.tieba.post.ui.page.main.rememberTopAppBarScrollBehaviors
 import com.huanchengfly.tieba.post.ui.page.search.forum.SearchForumItem
 import com.huanchengfly.tieba.post.ui.page.search.forum.SearchForumPage
 import com.huanchengfly.tieba.post.ui.page.search.thread.SearchThreadPage
-import com.huanchengfly.tieba.post.ui.page.search.thread.SearchThreadSortType
 import com.huanchengfly.tieba.post.ui.page.search.user.SearchUserPage
 import com.huanchengfly.tieba.post.ui.widgets.compose.BlurScaffold
 import com.huanchengfly.tieba.post.ui.widgets.compose.Container
@@ -113,6 +113,7 @@ private enum class SearchPages(val titleRes: Int) {
 @Composable
 fun SearchPage(
     navigator: NavController,
+    initialKeyword: String? = null,
     viewModel: SearchViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -173,7 +174,7 @@ fun SearchPage(
         }
     }
 
-    var inputKeyword by rememberSaveable { mutableStateOf("") }
+    var inputKeyword by rememberSaveable(initialKeyword) { mutableStateOf(initialKeyword.orEmpty()) }
 
     // Callback for HistoryList, SearchBox and SuggestionList
     val onKeywordSubmit: (String) -> Unit = {
@@ -186,6 +187,12 @@ fun SearchPage(
     }
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(initialKeyword) {
+        if (!initialKeyword.isNullOrBlank()) {
+            onKeywordSubmit(initialKeyword.trim())
+        }
+    }
 
     // Submitted search keyword
     val isKeywordNotEmpty = uiState.isKeywordNotEmpty

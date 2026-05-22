@@ -1,9 +1,11 @@
 package com.huanchengfly.tieba.post.ui.page.settings
 
+import android.content.Intent
 import android.os.Build
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.ContentPasteSearch
+import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
@@ -14,6 +16,7 @@ import com.huanchengfly.tieba.post.ui.models.settings.PrivacySettings
 import com.huanchengfly.tieba.post.ui.widgets.compose.LocalSnackbarHostState
 import com.huanchengfly.tieba.post.ui.widgets.compose.preference.SegmentedPreference
 import com.huanchengfly.tieba.post.ui.widgets.compose.preference.SettingsSegmentedPrefsScope
+import com.huanchengfly.tieba.post.ui.widgets.compose.preference.toggleablePreference
 import com.huanchengfly.tieba.post.utils.buildAppSettingsIntent
 import kotlinx.coroutines.launch
 
@@ -26,6 +29,10 @@ fun PrivacySettingsPage(settings: Settings<PrivacySettings>, onBack: () -> Unit)
         initialValue = PrivacySettings(),
     ) {
         appLinkPreference()
+
+        notificationPermissionPromptPreference()
+
+        notificationSettingsPreference()
 
         clipboardPreference()
     }
@@ -50,6 +57,47 @@ fun SettingsSegmentedPrefsScope<PrivacySettings>.appLinkPreference() = customPre
                         }
                     }
                 )
+            }
+            .onFailure {
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar(context.getString(R.string.error_open_settings))
+                }
+            }
+        }
+    )
+}
+
+fun SettingsSegmentedPrefsScope<PrivacySettings>.notificationPermissionPromptPreference() {
+    toggleablePreference(
+        property = PrivacySettings::requestNotificationPermission,
+        title = R.string.title_settings_notification_permission_prompt,
+        summaryOn = R.string.summary_notification_permission_prompt_on,
+        summaryOff = R.string.summary_notification_permission_prompt_off,
+        leadingIcon = Icons.Outlined.NotificationsActive,
+        enabled = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+    )
+}
+
+fun SettingsSegmentedPrefsScope<PrivacySettings>.notificationSettingsPreference() = customPreference { shapes ->
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val snackbarHostState = LocalSnackbarHostState.current
+
+    SegmentedPreference(
+        title = R.string.title_settings_notification_permission_system,
+        shapes = shapes,
+        summary = R.string.summary_notification_permission_system,
+        leadingIcon = Icons.AutoMirrored.Outlined.OpenInNew,
+        onClick = {
+            runCatching {
+                val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                        putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, BuildConfig.APPLICATION_ID)
+                    }
+                } else {
+                    buildAppSettingsIntent(BuildConfig.APPLICATION_ID)
+                }
+                context.startActivity(intent)
             }
             .onFailure {
                 coroutineScope.launch {
