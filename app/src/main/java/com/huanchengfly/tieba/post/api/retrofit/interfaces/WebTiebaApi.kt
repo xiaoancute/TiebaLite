@@ -117,6 +117,30 @@ interface WebTiebaApi {
     ): Deferred<ApiResult<ForumBean>>
 
     @Headers(
+        "${Header.HOST}: tieba.baidu.com",
+        "${Header.ORIGIN}: https://tieba.baidu.com",
+        "X-Requested-With: XMLHttpRequest"
+    )
+    @POST("/c/f/frs/page_pc")
+    @FormUrlEncoded
+    fun frsPagePcFlow(
+        @FieldMap fields: Map<String, String>,
+        @retrofit2.http.Header(Header.REFERER) referer: String
+    ): Flow<PcFrsPageResponse>
+
+    @Headers(
+        "${Header.HOST}: tieba.baidu.com",
+        "${Header.ORIGIN}: https://tieba.baidu.com",
+        "X-Requested-With: XMLHttpRequest"
+    )
+    @POST("/c/f/frs/generalTabList_pc")
+    @FormUrlEncoded
+    fun generalTabListPcFlow(
+        @FieldMap fields: Map<String, String>,
+        @retrofit2.http.Header(Header.REFERER) referer: String
+    ): Flow<PcFrsPageResponse>
+
+    @Headers(
         "${Header.ADD_WEB_COOKIE}: ${Header.ADD_WEB_COOKIE_FALSE}"
     )
     @GET("/mo/q/newmoindex?need_user=1")

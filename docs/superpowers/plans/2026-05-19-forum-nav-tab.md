@@ -4,11 +4,18 @@
 
 **Spec:** `docs/superpowers/specs/2026-05-19-forum-nav-tab-design.md`
 
-**Goal:** 把 ForumPage 顶部"最新/精品"双 Tab 改为由协议 `nav_tab_info` 驱动的网页版式平级 NavTab 标签栏,精华子分类(GoodClassify Chip)保留。
+**Goal:** 把 ForumPage 顶部"最新/精品"双 Tab 改为对齐网页版的平级 NavTab 标签栏,精华子分类(GoodClassify Chip)保留。
+
+**2026-05-20 抓包修正:** App protobuf 的 `nav_tab_info` 在大吧里不稳定/不完整,不能作为唯一来源。网页版真实链路是:
+- 首次进吧请求 `POST /c/f/frs/page_pc`,返回 `nav_tab_info.tab` 里的完整 8 项 NavTab、PC `anti.tbs` 和 `frs_common_info`。
+- `精华/热门/最新` 这类普通 tab 继续请求 `POST /c/f/frs/page_pc`,body 携带 `tab_id/tab_type/tab_name/is_good/sort_type/forum_id`。
+- `开黑/交友/战队丨圈子/视频` 这类 `is_general_tab=1` 的分区请求 `POST /c/f/frs/generalTabList_pc`,body 需要完整 `frs_common_info`。
+- PC 签名算法为按 key 字典序拼接 `key=value`,追加 secret `36770b1f34c9bbf2e7d1a99d2b82fa9e`,再取小写 MD5。
 
 **Architecture:**
-- 协议层:`FrsPage.frsTabInfo` / `navTabInfo` 字段已存在,Kotlin 侧补上读取与映射;请求参数 `(loadType, sortType, tabId, isEssence, subClassifyId)` 替换原 `(loadType, sortType, goodClassifyId)`。
-- 数据层:`ForumData` 加 `navTabs: List<NavTab>`;`ForumRepository.cache` 从 `(normal, good)` 二元改为 `Map<tabId, ThreadItemList>`。
+- 协议层:`FrsPage.frsTabInfo` / `navTabInfo` 只保留 fallback 能力;完整 tab 来源切到 PC `page_pc`。
+- PC 数据层:新增 `PcFrsPageResponse` 最小模型、PC sign helper、`page_pc` / `generalTabList_pc` Retrofit 方法。
+- 数据层:`ForumData` 加 `navTabs: List<NavTab>` 和 `pcFrsCommonInfo`;`ForumRepository.cache` 从 `(normal, good)` 二元改为 `Map<tabId, ThreadItemList>`。
 - ViewModel:`ForumThreadListViewModel` 的 AssistedInject 入参 `ForumType` → `NavTab`;`hiltViewModel(key)` 含 `forumId+tabId`。
 - UI:`ForumTab.kt` 重写为动态 `LazyRow`;`ForumPage` 的 HorizontalPager 按 `navTabs.size` 动态出页;ClassifyTabs 显隐改用 `currentTab.isEssence && goodClassifies.size > 1`。
 

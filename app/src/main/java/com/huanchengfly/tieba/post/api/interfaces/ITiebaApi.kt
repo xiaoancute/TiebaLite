@@ -1286,14 +1286,18 @@ interface ITiebaApi {
      * @param page 页码（从 1 开始）
      * @param loadType 加载类型（1 - 下拉刷新 2 - 加载更多）
      * @param sortType 排序
-     * @param goodClassifyId 精品贴分类
+     * @param tabId 网页 URL 里 `?tab=` 对应的分区 ID；`0` 表示默认/无分区
+     * @param isEssence 当前 tab 是否为“精华类”；是则置 `is_good=1`
+     * @param subClassifyId 精华子分类 `class_id`；仅 [isEssence]=true 时有效
      */
     fun frsPage(
         forumName: String,
         page: Int,
         loadType: Int,
         sortType: Int,
-        goodClassifyId: Int? = null
+        tabId: Int = 0,
+        isEssence: Boolean = false,
+        subClassifyId: Int? = null,
     ): Flow<FrsPageResponse>
 
     /**

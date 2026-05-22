@@ -22,6 +22,7 @@ import com.huanchengfly.tieba.post.ui.models.forum.ForumDetail
 import com.huanchengfly.tieba.post.ui.models.forum.ForumManager
 import com.huanchengfly.tieba.post.ui.models.forum.ForumRule
 import com.huanchengfly.tieba.post.ui.models.forum.GoodClassify
+import com.huanchengfly.tieba.post.ui.models.forum.NavTab
 import com.huanchengfly.tieba.post.ui.models.forum.Rule
 import com.huanchengfly.tieba.post.ui.models.settings.BlockSettings
 import com.huanchengfly.tieba.post.ui.models.settings.ForumSortType
@@ -43,11 +44,8 @@ private typealias ForumPageResult  = Triple<ForumData, ThreadItemList, List<Foru
 private data class ForumCache(
     val forum: ForumData,
     val managers: List<ForumManager>?,
-    val normal: ThreadItemList?,
-    val good: ThreadItemList?
-) {
-    fun getItemsByType(isGood: Boolean): ThreadItemList? = if (isGood) good else normal
-}
+    val tabResults: Map<Int, ThreadItemList>,
+)
 
 @Singleton
 class ForumRepository @Inject constructor(
@@ -76,25 +74,70 @@ class ForumRepository @Inject constructor(
         page: Int,
         loadType: Int,
         sortType: Int,
-        goodClassifyId: Int?,
+        tab: NavTab,
+        subClassifyId: Int?,
         forceNew: Boolean = false
     ): ForumPageResult {
-        var key: CacheKey? = null
-        var cached: ForumCache? = null
-        val cacheable = if (sortType == -1) (goodClassifyId ?: 0) == 0 else sortType == ForumSortType.BY_REPLY
+        val cacheKey: CacheKey = forumName
+        val cached = cache[cacheKey]
+        val cacheable = if (tab.isEssence) (subClassifyId ?: 0) == 0 else sortType == ForumSortType.BY_REPLY
 
-        // Load first page from lru cache if possible
         if (page == 1 && cacheable && loadType == 1) {
-            key = forumName
-            cached = cache[key]
-            val typedItemList = cached?.getItemsByType(isGood = goodClassifyId != null)
+            val typedItemList = cached?.tabResults?.get(tab.tabId)
             if (!forceNew && typedItemList != null) {
                 return ForumPageResult(cached.forum, typedItemList, cached.managers)
             }
         }
 
-        val data = networkDataSource.frsPage(forumName, page, loadType, sortType, goodClassifyId)
-        val forumData = data.toData()
+        if (!tab.usesAppFrs && cached?.forum != null) {
+            val pcData = networkDataSource.pcFrsPage(
+                forumName = forumName,
+                forumId = cached.forum.id,
+                page = page,
+                sortType = sortType,
+                tab = tab,
+                subClassifyId = subClassifyId,
+                tbs = cached.forum.tbs,
+                frsCommonInfo = cached.forum.pcFrsCommonInfo,
+            )
+            val showBothName = habitSettings.first().showBothName
+            val typedThreads = pcData.toThreadItemList(
+                tab = tab,
+                showBothName = showBothName,
+                isBlocked = blockRepo::isBlocked,
+            )
+            if (page == 1 && cacheable && loadType == 1) {
+                val mergedResults = cached.tabResults + (tab.tabId to typedThreads)
+                cache.put(cacheKey, cached.copy(tabResults = mergedResults))
+            }
+            return ForumPageResult(cached.forum, typedThreads, cached.managers)
+        }
+
+        val data = networkDataSource.frsPage(
+            forumName,
+            page,
+            loadType,
+            sortType,
+            tabId = NavTab.FALLBACK_TAB_ID,
+            isEssence = false,
+            subClassifyId = null,
+        )
+        val pcBootstrap = if (page == 1 && loadType == 1) {
+            runCatching {
+                networkDataSource.pcForumBootstrap(
+                    forumName = forumName,
+                    page = page,
+                    tbs = data.anti?.tbs,
+                )
+            }.getOrNull()
+        } else {
+            null
+        }
+        val forumData = data.toData(
+            navTabs = pcBootstrap?.toNavTabs(),
+            pcTbs = pcBootstrap?.anti?.tbs,
+            pcFrsCommonInfo = pcBootstrap?.frsCommonInfo,
+        )
         var forumManagers: List<ForumManager>? = null
         val showBothName = habitSettings.first().showBothName
         val typedThreads = ThreadItemList(
@@ -103,22 +146,35 @@ class ForumRepository @Inject constructor(
             hasMore = data.page!!.has_more == 1
         )
 
-        // is result cacheable
-        if (key != null) {
+        if (page == 1 && cacheable && loadType == 1) {
             forumManagers = data.getManagers(habit = habitSettings.first())
-            val normalThreads = if (sortType != -1) typedThreads else cached?.normal
-            val goodThreads = if (sortType == -1) typedThreads else cached?.good
-            cache.put(key, ForumCache(forumData, forumManagers, normal = normalThreads, good = goodThreads))
+            val mergedResults = (cached?.tabResults ?: emptyMap()) + (tab.tabId to typedThreads)
+            cache.put(cacheKey, ForumCache(forumData, forumManagers, tabResults = mergedResults))
         }
         return ForumPageResult(forumData, typedThreads, forumManagers)
     }
 
     suspend fun loadForumInfo(forumName: String, forceNew: Boolean = true): ForumData {
-        return frsPage(forumName, page = 1, loadType = 1, sortType = 0, null, forceNew).first
+        return frsPage(
+            forumName = forumName,
+            page = 1,
+            loadType = 1,
+            sortType = 0,
+            tab = NavTab.Fallback,
+            subClassifyId = null,
+            forceNew = forceNew,
+        ).first
     }
 
     suspend fun loadForumDetail(forumName: String): ForumDetail {
-        val (forumData, _, managers) = frsPage(forumName, page = 1, loadType = 1, sortType = 0, null)
+        val (forumData, _, managers) = frsPage(
+            forumName = forumName,
+            page = 1,
+            loadType = 1,
+            sortType = 0,
+            tab = NavTab.Fallback,
+            subClassifyId = null,
+        )
         val detail = networkDataSource.loadForumDetail(forumData.id)
 
         return ForumDetail(
@@ -134,40 +190,37 @@ class ForumRepository @Inject constructor(
         )
     }
 
-    suspend fun loadPage(forum: String, page: Int, sortType: Int, forceNew: Boolean): ThreadItemList = frsPage(
+    suspend fun loadByTab(
+        forum: String,
+        page: Int,
+        sortType: Int,
+        tab: NavTab,
+        subClassifyId: Int?,
+        forceNew: Boolean,
+    ): ThreadItemList = frsPage(
         forumName = forum,
         page = page,
         loadType = 1,
         sortType = sortType,
-        goodClassifyId = null,
-        forceNew = forceNew
+        tab = tab,
+        subClassifyId = subClassifyId,
+        forceNew = forceNew,
     ).second
 
-    suspend fun loadGoodPage(forum: String, page: Int, goodClassifyId: Int?, forceNew: Boolean): ThreadItemList = frsPage(
-        forumName = forum,
-        page = page,
-        loadType = 1,
-        sortType = -1,
-        goodClassifyId = goodClassifyId ?: 0,
-        forceNew = forceNew
-    ).second
-
-    suspend fun loadMorePage(forum: String, page: Int, sortType: Int): ThreadItemList = frsPage(
+    suspend fun loadMoreByTab(
+        forum: String,
+        page: Int,
+        sortType: Int,
+        tab: NavTab,
+        subClassifyId: Int?,
+    ): ThreadItemList = frsPage(
         forumName = forum,
         page = page,
         loadType = 2,
         sortType = sortType,
-        goodClassifyId = null,
-        forceNew = false
-    ).second
-
-    suspend fun loadMoreGood(forum: String, page: Int, goodClassifyId: Int?): ThreadItemList = frsPage(
-        forumName = forum,
-        page = page,
-        loadType = 2,
-        sortType = -1,
-        goodClassifyId = goodClassifyId ?: 0,
-        forceNew = false
+        tab = tab,
+        subClassifyId = subClassifyId,
+        forceNew = false,
     ).second
 
     suspend fun threadList(forumId: Long, forumName: String, page: Int, sortType: Int, threadIds: List<Long>): List<ThreadItem> {
@@ -278,7 +331,11 @@ private suspend fun List<ThreadInfo>.mapUiModel(
 }
 
 // Map FrsPageResponseData.ForumInfo to UI Model
-private fun FrsPageResponseData.toData(): ForumData = forum!!.let {
+private fun FrsPageResponseData.toData(
+    navTabs: List<NavTab>? = null,
+    pcTbs: String? = null,
+    pcFrsCommonInfo: String? = null,
+): ForumData = forum!!.let {
     ForumData(
         id = it.id,
         avatar = it.avatar,
@@ -287,7 +344,8 @@ private fun FrsPageResponseData.toData(): ForumData = forum!!.let {
             title.takeIf { t -> has_forum_rule == 1 && t.isNotEmpty() }
         },
         slogan = forum.slogan.trim().takeUnless { slogan -> slogan.isEmpty() },
-        tbs = anti?.tbs?.takeUnless { tbs -> tbs.isEmpty() || tbs.isBlank() },
+        tbs = pcTbs?.takeUnless { tbs -> tbs.isEmpty() || tbs.isBlank() }
+            ?: anti?.tbs?.takeUnless { tbs -> tbs.isEmpty() || tbs.isBlank() },
         liked = it.is_like == 1,
         signed = it.sign_in_info?.user_info?.is_sign_in == 1,
         signedDays = it.sign_in_info?.user_info?.cont_sign_num ?: 0,
@@ -301,7 +359,9 @@ private fun FrsPageResponseData.toData(): ForumData = forum!!.let {
         posts = it.post_num,
         goodClassifies = it.good_classify
             .takeUnless { c -> c.size <= 1 }
-            ?.map { c -> GoodClassify(c.class_name, c.class_id) }
+            ?.map { c -> GoodClassify(c.class_name, c.class_id) },
+        navTabs = navTabs ?: nav_tab_info.toNavTabs(),
+        pcFrsCommonInfo = pcFrsCommonInfo,
     )
 }
 
