@@ -27,6 +27,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.huanchengfly.tieba.post.LocalHabitSettings
 import com.huanchengfly.tieba.post.R
 import com.huanchengfly.tieba.post.arch.collectCommonUiEventWithLifecycle
 import com.huanchengfly.tieba.post.arch.collectPartialAsState
@@ -164,6 +165,7 @@ fun ForumThreadList(
             prop1 = ForumThreadListUiState::hasMore,
             initial = true
         )
+        val preloadNextPage = LocalHabitSettings.current.preloadNextPage
 
         Container {
             SwipeUpLazyLoadColumn(
@@ -173,6 +175,7 @@ fun ForumThreadList(
                 isLoading = isLoadingMore,
                 onLoad = viewModel::loadMore,
                 onLazyLoad = viewModel::loadMore.takeIf { hasMore },
+                preloadNextPage = preloadNextPage,
                 bottomIndicator = {
                     LoadMoreIndicator(noMore = !hasMore, onThreshold = it)
                 }

@@ -176,6 +176,8 @@
     <string name="toast_photo_saved">图片保存在 %1$s</string>
     <string name="title_settings_default_sort_type">吧默认排序方式</string>
     <string name="title_settings_search_thread_sort_type">搜贴默认排序方式</string>
+    <string name="title_preload_next_page">预加载下一页</string>
+    <string name="summary_preload_next_page">接近列表底部时提前加载，减少继续下滑时的等待</string>
     <string name="toast_load_failed">加载失败</string>
     <string name="button_undo">撤销</string>
     <string name="title_reduce_effect">降低模糊效果</string>
@@ -451,6 +453,7 @@
     <string name="btn_copy_all">复制全部</string>
     <string name="btn_open_photos">查看图片 (%d)</string>
     <string name="title_hide_explore">隐藏「动态」入口</string>
+    <string name="title_hide_explore_hot">隐藏「动态」热榜</string>
     <string name="title_hide_media">收起贴子列表的图片和视频</string>
     <string name="button_open">打开</string>
     <string name="button_restart">重启</string>

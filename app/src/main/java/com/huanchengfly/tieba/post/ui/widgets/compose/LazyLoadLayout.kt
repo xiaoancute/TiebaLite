@@ -28,7 +28,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
@@ -46,6 +48,8 @@ import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import com.huanchengfly.tieba.post.R
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.pow
@@ -93,10 +97,32 @@ fun SwipeUpLazyLoadColumn(
     isLoading: Boolean,
     onLoad: (() -> Unit)? = null,
     onLazyLoad: (() -> Unit)? = null,
+    preloadNextPage: Boolean = false,
+    preloadDistance: Int = 4,
     bottomIndicator: @Composable BoxScope.(onThreshold: Boolean) -> Unit,
     items: LazyListScope.() -> Unit
 ) {
     val refreshState = rememberSwipeUpRefreshConnection(isLoading, onLoad)
+    val currentIsLoading by rememberUpdatedState(isLoading)
+    val currentOnLazyLoad by rememberUpdatedState(onLazyLoad)
+    val hasLazyLoad = onLazyLoad != null
+
+    LaunchedEffect(state, preloadNextPage, preloadDistance, hasLazyLoad) {
+        if (!preloadNextPage || !hasLazyLoad) return@LaunchedEffect
+
+        snapshotFlow {
+            val layoutInfo = state.layoutInfo
+            val lastVisibleIndex = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: return@snapshotFlow false
+            val totalItems = layoutInfo.totalItemsCount
+            !currentIsLoading &&
+                    layoutInfo.visibleItemsInfo.size > 1 &&
+                    totalItems > 0 &&
+                    lastVisibleIndex >= totalItems - 1 - preloadDistance.coerceAtLeast(0)
+        }
+            .distinctUntilChanged()
+            .filter { it }
+            .collect { currentOnLazyLoad?.invoke() }
+    }
 
     Box(
         modifier = Modifier.clipToBounds().nestedScroll(refreshState) then modifier

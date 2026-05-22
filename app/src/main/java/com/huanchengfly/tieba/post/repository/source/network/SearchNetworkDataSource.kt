@@ -43,7 +43,11 @@ object SearchNetworkDataSource {
             .catch { throw ConnectivityInterceptor.wrapException(it) }
             .firstOrThrow()
             .run {
-                if (errorCode == 0) data else throw TiebaApiException(CommonResponse(errorCode, errorMsg))
+                if (errorCode == 0) {
+                    data ?: throw TiebaApiException(CommonResponse(errorCode, errorMsg))
+                } else {
+                    throw TiebaApiException(CommonResponse(errorCode, errorMsg))
+                }
             }
     }
 
@@ -53,7 +57,11 @@ object SearchNetworkDataSource {
             .catch { throw ConnectivityInterceptor.wrapException(it) }
             .firstOrThrow()
             .run {
-                if (errorCode == 0) data else throw TiebaApiException(CommonResponse(errorCode, errorMsg))
+                if (errorCode == 0) {
+                    data ?: throw TiebaApiException(CommonResponse(errorCode, errorMsg))
+                } else {
+                    throw TiebaApiException(CommonResponse(errorCode, errorMsg))
+                }
             }
     }
 

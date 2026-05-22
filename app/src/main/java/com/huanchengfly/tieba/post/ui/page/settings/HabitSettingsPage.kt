@@ -69,6 +69,13 @@ fun HabitSettingsPage(
 
         group(title = R.string.settings_group_thread) {
             toggleablePreference(
+                property = HabitSettings::preloadNextPage,
+                title = R.string.title_preload_next_page,
+                summary = R.string.summary_preload_next_page,
+                leadingIcon = Icons.Rounded.UnfoldLess
+            )
+
+            toggleablePreference(
                 property = HabitSettings::showBothName,
                 title = R.string.title_show_both_username_and_nickname,
                 leadingIcon = Icons.Outlined.Verified

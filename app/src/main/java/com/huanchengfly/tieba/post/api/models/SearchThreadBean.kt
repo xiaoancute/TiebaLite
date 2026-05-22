@@ -22,7 +22,7 @@ data class SearchThreadBean(
     val errorCode: Int,
     @SerialName("error")
     val errorMsg: String,
-    val data: DataBean,
+    val data: DataBean? = null,
 ) {
     @Immutable
     @Serializable

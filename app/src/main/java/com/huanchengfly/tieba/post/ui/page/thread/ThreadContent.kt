@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastForEach
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.huanchengfly.tieba.post.LocalHabitSettings
 import com.huanchengfly.tieba.post.MacrobenchmarkConstant.testColumn
 import com.huanchengfly.tieba.post.PaddingNone
 import com.huanchengfly.tieba.post.R
@@ -111,6 +112,7 @@ fun StateScreenScope.ThreadContent(
     val isLoadingMore = state.isLoadingMore
     val hasMore = state.pageData.hasMore
     val localUid = state.user?.id
+    val preloadNextPage = LocalHabitSettings.current.preloadNextPage
 
     val onSwipeUpRefresh: (() -> Unit)? = viewModel::requestLoadLatestPosts.takeIf {
         state.data.isNotEmpty() && state.sortType == ThreadSortType.BY_ASC
@@ -126,6 +128,7 @@ fun StateScreenScope.ThreadContent(
             isLoading = isLoadingMore,
             onLoad = onSwipeUpRefresh,
             onLazyLoad = viewModel::requestLoadMore.takeIf { hasMore && state.data.isNotEmpty() },
+            preloadNextPage = preloadNextPage,
             bottomIndicator = {
                 if (onSwipeUpRefresh == null) {
                     defaultBottomIndicator(this, it)
