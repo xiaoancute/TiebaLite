@@ -86,28 +86,26 @@ jobs:
           path: 'app/build/outputs/apk/ci/app-ci-unsigned.apk'
           if-no-files-found: error
 
-      - name: Sign workflow dispatch app with temporary key
+      - name: Sign workflow dispatch app with release key
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        uses: r0adkll/sign-android-release@f30bdd30588842ac76044ecdbd4b6d0e3e813478
+        id: sign_workflow_dispatch_app
+        with:
+          releaseDirectory: app/build/outputs/apk/ci
+          signingKeyBase64: ${{ secrets.KEYSTORE }}
+          alias: ${{ secrets.RELEASE_KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.RELEASE_KEY_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: "36.0.0"
+
+      - name: Rename workflow dispatch test APK
         if: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
           set -e
           sha=`echo ${{ github.sha }} | cut -c1-8`
           apk_name="TiebaLite.CI.test.$sha"
-          keytool -genkeypair \
-            -keystore /tmp/tblite-test.jks \
-            -storepass android \
-            -keypass android \
-            -alias tblite-test \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 7 \
-            -dname "CN=TiebaLite Test,O=TiebaLite,C=CN"
-          $ANDROID_HOME/build-tools/36.0.0/apksigner sign \
-            --ks /tmp/tblite-test.jks \
-            --ks-key-alias tblite-test \
-            --ks-pass pass:android \
-            --key-pass pass:android \
-            --out "${apk_name}.apk" \
-            app/build/outputs/apk/ci/app-ci-unsigned.apk
+          mv app/build/outputs/apk/ci/app-ci-unsigned-signed.apk "${apk_name}.apk"
           echo "TEST_APK_NAME=$apk_name" >> "$GITHUB_ENV"
 
       - name: Upload workflow dispatch test APK
