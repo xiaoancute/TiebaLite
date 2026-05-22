@@ -86,9 +86,41 @@ jobs:
           path: 'app/build/outputs/apk/ci/app-ci-unsigned.apk'
           if-no-files-found: error
 
+      - name: Sign workflow dispatch app with temporary key
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          set -e
+          sha=`echo ${{ github.sha }} | cut -c1-8`
+          apk_name="TiebaLite.CI.test.$sha"
+          keytool -genkeypair \
+            -keystore /tmp/tblite-test.jks \
+            -storepass android \
+            -keypass android \
+            -alias tblite-test \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 7 \
+            -dname "CN=TiebaLite Test,O=TiebaLite,C=CN"
+          $ANDROID_HOME/build-tools/36.0.0/apksigner sign \
+            --ks /tmp/tblite-test.jks \
+            --ks-key-alias tblite-test \
+            --ks-pass pass:android \
+            --key-pass pass:android \
+            --out "${apk_name}.apk" \
+            app/build/outputs/apk/ci/app-ci-unsigned.apk
+          echo "TEST_APK_NAME=$apk_name" >> "$GITHUB_ENV"
+
+      - name: Upload workflow dispatch test APK
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: ${{ env.TEST_APK_NAME }}
+          path: 'TiebaLite.CI.test.*.apk'
+          if-no-files-found: error
+
   sign:
     name: "Sign and upload"
-    if: ${{ github.event_name == 'workflow_dispatch' || (github.ref == 'refs/heads/main' && github.event_name == 'push') }}
+    if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
     runs-on: ubuntu-latest
     needs: test_build
 
