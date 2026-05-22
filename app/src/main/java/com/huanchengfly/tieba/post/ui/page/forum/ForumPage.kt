@@ -167,7 +167,7 @@ fun ForumPage(
     avatarUrl: String?,
     transitionKey: String?,
     navigator: NavController,
-    viewModel: ForumViewModel = hiltViewModel(),
+    viewModel: ForumViewModel = hiltViewModel(key = forumName),
 ) {
     val context = LocalContext.current
     val loggedIn = LocalAccount.current != null
