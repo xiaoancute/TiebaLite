@@ -15,8 +15,8 @@
 - [x] Replace the manual workflow-dispatch temporary keystore with repository secrets in `.github/workflows/build.yml`.
 - [x] Allow `.github/workflows/release.yml` to run in `xiaoancute/TiebaLite`, not only upstream `0ranko0P/TiebaLite`.
 - [x] Create persistent GitHub secrets in `xiaoancute/TiebaLite`: `KEYSTORE`, `KEYSTORE_PASSWORD`, `RELEASE_KEY_ALIAS`, `RELEASE_KEY_PASSWORD`.
-- [ ] Push workflow changes to `main`.
-- [ ] Run a GitHub Actions manual build and verify the output APK is signed with the persistent key.
+- [x] Push workflow changes to `main`.
+- [x] Run a GitHub Actions manual build and verify the output APK is signed with the persistent key.
 
 Note: Users who installed a previous temporary-key CI APK must uninstall once when switching to the new fixed signing key. Builds after that should update in place.
 
