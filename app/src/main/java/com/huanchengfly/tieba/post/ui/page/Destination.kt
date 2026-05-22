@@ -38,7 +38,7 @@ sealed interface Destination {
     data object Login: Destination
 
     @Serializable
-    data object Search: Destination
+    data class Search(val keyword: String? = null): Destination
 
     /**
      * @param forumName 吧名

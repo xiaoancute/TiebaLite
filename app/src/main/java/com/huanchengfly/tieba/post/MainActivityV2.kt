@@ -70,6 +70,7 @@ import com.huanchengfly.tieba.post.utils.AccountUtil
 import com.huanchengfly.tieba.post.utils.ClientUtils
 import com.huanchengfly.tieba.post.utils.EmoticonManager
 import com.huanchengfly.tieba.post.utils.LocalAccount
+import com.huanchengfly.tieba.post.utils.PermissionUtils
 import com.huanchengfly.tieba.post.utils.PermissionUtils.askPermission
 import com.huanchengfly.tieba.post.utils.QuickPreviewUtil
 import com.huanchengfly.tieba.post.utils.QuickPreviewUtil.PreviewInfo
@@ -99,8 +100,18 @@ class MainActivityV2 : BaseComposeActivity() {
     private var welcomeScreen: Boolean? = null
 
     private suspend fun requestNotificationPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && AccountUtil.isLoggedIn()) {
-            askPermission(R.string.desc_permission_post_notifications, Manifest.permission.POST_NOTIFICATIONS, noRationale = true)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            AccountUtil.isLoggedIn() &&
+            viewModel.shouldRequestNotificationPermission()
+        ) {
+            val result = askPermission(
+                R.string.desc_permission_post_notifications,
+                Manifest.permission.POST_NOTIFICATIONS,
+                noRationale = true
+            )
+            if (result is PermissionUtils.Result.Deny) {
+                viewModel.onNotificationPermissionDenied()
+            }
         }
     }
 

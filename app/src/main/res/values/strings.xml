@@ -175,6 +175,7 @@
     <string name="title_hot_message_list">话题榜</string>
     <string name="toast_photo_saved">图片保存在 %1$s</string>
     <string name="title_settings_default_sort_type">吧默认排序方式</string>
+    <string name="title_settings_search_thread_sort_type">搜贴默认排序方式</string>
     <string name="toast_load_failed">加载失败</string>
     <string name="button_undo">撤销</string>
     <string name="title_reduce_effect">降低模糊效果</string>
@@ -513,6 +514,7 @@
     <string name="settings_group_media">多媒体</string>
     <string name="settings_group_oksign">签到设置</string>
     <string name="settings_group_forum">吧偏好</string>
+    <string name="settings_group_search">搜索偏好</string>
     <string name="settings_group_thread">帖子偏好</string>
     <string name="settings_group_reply">@string/title_reply</string>
     <string name="settings_nav_floating">悬浮底部导航栏</string>
@@ -523,6 +525,11 @@
     <string name="summary_nav_floating">首页底部导航栏样式</string>
     <string name="summary_sticky_header_off">不会占用顶部空间并且顶部应用栏在帖子滚动时会折叠, 你将获得最大阅读空间</string>
     <string name="summary_sticky_header_on">帖子滚动时固定到顶部应用栏下方, 这与贴吧官方App 的行为一致</string>
+    <string name="title_settings_notification_permission_prompt">启动时请求通知权限</string>
+    <string name="title_settings_notification_permission_system">系统通知权限</string>
+    <string name="summary_notification_permission_prompt_on">未授权时允许应用再次询问通知权限</string>
+    <string name="summary_notification_permission_prompt_off">已停止启动时反复请求通知权限</string>
+    <string name="summary_notification_permission_system">前往系统设置管理通知权限</string>
     <string name="summary_rules_count">%d 条</string>
     <string name="brightness">亮度</string>
     <string name="channel_at">提到我的</string>

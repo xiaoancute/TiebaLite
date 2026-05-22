@@ -18,6 +18,7 @@ import com.huanchengfly.tieba.post.api.models.SearchThreadBean.ForumInfo
 import com.huanchengfly.tieba.post.arch.collectCommonUiEventWithLifecycle
 import com.huanchengfly.tieba.post.navigateDebounced
 import com.huanchengfly.tieba.post.ui.models.search.SearchThreadInfo
+import com.huanchengfly.tieba.post.ui.models.search.SearchThreadSortType
 import com.huanchengfly.tieba.post.ui.page.Destination.Forum
 import com.huanchengfly.tieba.post.ui.page.Destination.Thread
 import com.huanchengfly.tieba.post.ui.page.Destination.UserProfile

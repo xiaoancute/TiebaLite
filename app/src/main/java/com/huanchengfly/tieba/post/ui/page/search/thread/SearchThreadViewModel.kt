@@ -1,6 +1,5 @@
 package com.huanchengfly.tieba.post.ui.page.search.thread
 
-import androidx.annotation.IntDef
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.util.fastDistinctBy
@@ -10,6 +9,7 @@ import com.huanchengfly.tieba.post.arch.TbLiteExceptionHandler
 import com.huanchengfly.tieba.post.arch.UiState
 import com.huanchengfly.tieba.post.repository.SearchRepository
 import com.huanchengfly.tieba.post.ui.models.search.SearchThreadInfo
+import com.huanchengfly.tieba.post.ui.models.search.SearchThreadSortType
 import com.huanchengfly.tieba.post.ui.widgets.compose.video.util.set
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -105,15 +105,5 @@ class SearchThreadViewModel @Inject constructor(
             val oldState = _uiState.updateAndGet { it.copy(sortType = sortType) }
             searchThreadInternal(oldState.keyword)
         }
-    }
-}
-
-@IntDef(SearchThreadSortType.NEWEST, SearchThreadSortType.OLDEST, SearchThreadSortType.RELATIVE)
-@Retention(AnnotationRetention.SOURCE)
-annotation class SearchThreadSortType {
-    companion object {
-        const val NEWEST = 5
-        const val OLDEST = 0
-        const val RELATIVE = 2
     }
 }

@@ -12,8 +12,9 @@ import com.huanchengfly.tieba.post.arch.TbLiteExceptionHandler
 import com.huanchengfly.tieba.post.arch.UiState
 import com.huanchengfly.tieba.post.arch.stateInViewModel
 import com.huanchengfly.tieba.post.repository.SearchRepository
+import com.huanchengfly.tieba.post.repository.user.SettingsRepository
 import com.huanchengfly.tieba.post.ui.models.search.SearchSuggestion
-import com.huanchengfly.tieba.post.ui.page.search.thread.SearchThreadSortType
+import com.huanchengfly.tieba.post.ui.models.search.SearchThreadSortType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
@@ -40,7 +41,8 @@ private const val TAG = "SearchViewModel"
 @Stable
 @HiltViewModel
 class SearchViewModel @Inject constructor(
-    private val searchRepo: SearchRepository
+    private val searchRepo: SearchRepository,
+    private val settingsRepo: SettingsRepository
 ): BaseStateViewModel<SearchUiState>() {
 
     /**
@@ -63,6 +65,13 @@ class SearchViewModel @Inject constructor(
         .stateInViewModel(initialValue = emptyList())
 
     override fun createInitialState(): SearchUiState = SearchUiState()
+
+    init {
+        launchInVM {
+            val sortType = settingsRepo.habitSettings.snapshot().searchThreadSortType
+            _uiState.update { it.copy(sortType = sortType) }
+        }
+    }
 
     fun onClearHistory(): Unit = launchInVM {
         runCatching {
