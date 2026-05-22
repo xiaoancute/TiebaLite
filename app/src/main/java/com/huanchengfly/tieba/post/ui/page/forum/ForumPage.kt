@@ -193,14 +193,23 @@ fun ForumPage(
     val listStates = rememberPagerListStates(pagerState.pageCount)
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val scrollOrientationConnection = rememberScrollOrientationConnection()
-    var defaultTabPositioned by remember(forumName) { mutableStateOf(false) }
+    // NavHost may dispose ForumPage while a thread is on top. Keep this saveable so returning
+    // from a thread does not re-run the default-tab jump and lose the user's current place.
+    var initialTabPositioned by rememberSaveable(forumName) { mutableStateOf(false) }
 
     LaunchedEffect(forumName, forumDataNavTabs, initialPage) {
-        if (!defaultTabPositioned && forumDataNavTabs != null && pagerState.currentPage != initialPage) {
+        if (
+            shouldApplyInitialForumTab(
+                initialTabPositioned = initialTabPositioned,
+                navTabsLoaded = forumDataNavTabs != null,
+                currentPage = pagerState.currentPage,
+                initialPage = initialPage
+            )
+        ) {
             pagerState.scrollToPage(initialPage)
         }
         if (forumDataNavTabs != null) {
-            defaultTabPositioned = true
+            initialTabPositioned = true
         }
     }
 
@@ -467,6 +476,15 @@ fun ForumPage(
 }
 
 private const val SignActionVisibilityThreshold = 0.1f // 10% Collapsing
+
+internal fun shouldApplyInitialForumTab(
+    initialTabPositioned: Boolean,
+    navTabsLoaded: Boolean,
+    currentPage: Int,
+    initialPage: Int,
+): Boolean {
+    return !initialTabPositioned && navTabsLoaded && currentPage != initialPage
+}
 
 @Composable
 private fun ForumSignFollowActionButton(
