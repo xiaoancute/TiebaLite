@@ -37,6 +37,7 @@ import androidx.compose.ui.util.fastForEachIndexed
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import androidx.navigation.Navigator
+import com.huanchengfly.tieba.post.LocalUISettings
 import com.huanchengfly.tieba.post.R
 import com.huanchengfly.tieba.post.arch.GlobalEvent
 import com.huanchengfly.tieba.post.arch.emitGlobalEvent
@@ -142,17 +143,18 @@ private fun ExplorePageTab(
     pages: List<ExplorePageItem>
 ) {
     val coroutineScope = rememberCoroutineScope()
+    val currentPageIndex = pagerState.currentPage.coerceIn(pages.indices)
 
     SecondaryTabRow(
-        selectedTabIndex = pagerState.currentPage,
+        selectedTabIndex = currentPageIndex,
         indicator = {
-            FancyAnimatedIndicatorWithModifier(index = pagerState.currentPage)
+            FancyAnimatedIndicatorWithModifier(index = currentPageIndex)
         },
         containerColor = Color.Transparent,
         contentColor = MaterialTheme.colorScheme.primary,
     ) {
         pages.fastForEachIndexed { index, item ->
-            val selected = pagerState.currentPage == index
+            val selected = currentPageIndex == index
             Tab(
                 text = {
                     Text(
@@ -165,7 +167,7 @@ private fun ExplorePageTab(
                 onClick = {
                     if (selected) return@Tab
                     coroutineScope.launch {
-                        if (abs(pagerState.currentPage - index) > 1) {
+                        if (abs(currentPageIndex - index) > 1) {
                             pagerState.scrollToPage(index)
                         } else {
                             pagerState.animateScrollToPage(index)
@@ -190,16 +192,26 @@ fun AnimatedVisibilityScope.ExplorePage(loggedIn: Boolean) {
     val hazeState: HazeState? = LocalHazeState.current
     val hazeInputScale = defaultInputScale()
     val sharedTransitionScope = LocalSharedTransitionScope.current
+    val uiSettings = LocalUISettings.current
 
-    val pages = remember(loggedIn) {
+    val pages = remember(loggedIn, uiSettings.hideExploreHot) {
         listOfNotNull(
             ExplorePageItem.Concern.takeIf { loggedIn },
             ExplorePageItem.Personalized,
-            ExplorePageItem.Hot
+            ExplorePageItem.Hot.takeUnless { uiSettings.hideExploreHot }
         )
     }
     val pagerState = rememberPagerState(initialPage = if (loggedIn) 1 else 0) { pages.size }
     val listStates = rememberPagerListStates(pages.size)
+    val currentPageIndex by remember(pages) {
+        derivedStateOf { pagerState.currentPage.coerceIn(pages.indices) }
+    }
+
+    LaunchedEffect(pages.size) {
+        if (pagerState.currentPage >= pages.size) {
+            pagerState.scrollToPage(pages.lastIndex)
+        }
+    }
 
     val scrollOrientationConnection = rememberScrollOrientationConnection()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -215,7 +227,7 @@ fun AnimatedVisibilityScope.ExplorePage(loggedIn: Boolean) {
     OnMainNavigationScrollTopEvent<MainDestination.Explore>(
         coroutineScope = coroutineScope,
         topAppBarState = scrollBehavior.state,
-        listState = { listStates.getOrNull(pagerState.currentPage) }
+        listState = { listStates.getOrNull(currentPageIndex) }
     )
 
     MyScaffold(
@@ -229,7 +241,7 @@ fun AnimatedVisibilityScope.ExplorePage(loggedIn: Boolean) {
                         hazeState = hazeState,
                         style = defaultHazeStyle(),
                         inputScale = hazeInputScale,
-                        blurEnabled = { !fabHideStates[pagerState.currentPage] || pagerState.isScrolling }
+                        blurEnabled = { !fabHideStates[currentPageIndex] || pagerState.isScrolling }
                     ),
                 title = { Text(text = stringResource(R.string.title_explore)) },
                 navigationIcon = {
@@ -245,7 +257,7 @@ fun AnimatedVisibilityScope.ExplorePage(loggedIn: Boolean) {
                 scrollBehavior = scrollBehavior,
                 canScrollBackward = { // No transition running && canScrollBackward
                     sharedTransitionScope?.isTransitionActive != true && !transition.isRunning &&
-                            listStates[pagerState.currentPage].canScrollBackward
+                            listStates[currentPageIndex].canScrollBackward
                 }
             ) {
                 ExplorePageTab(pagerState = pagerState, pages = pages)
@@ -259,7 +271,7 @@ fun AnimatedVisibilityScope.ExplorePage(loggedIn: Boolean) {
             val visible by remember {
                 derivedStateOf {
                     !transition.isRunning && scrollOrientationConnection.isScrollingForward &&
-                    !pagerState.isScrolling && !fabHideStates[pagerState.currentPage]
+                    !pagerState.isScrolling && !fabHideStates[currentPageIndex]
                 }
             }
             DefaultBackToTopFAB(visible = visible) {

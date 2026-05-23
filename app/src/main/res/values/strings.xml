@@ -176,6 +176,8 @@
     <string name="toast_photo_saved">图片保存在 %1$s</string>
     <string name="title_settings_default_sort_type">吧默认排序方式</string>
     <string name="title_settings_search_thread_sort_type">搜贴默认排序方式</string>
+    <string name="title_preload_next_page">预加载下一页</string>
+    <string name="summary_preload_next_page">接近列表底部时提前加载，减少继续下滑时的等待</string>
     <string name="toast_load_failed">加载失败</string>
     <string name="button_undo">撤销</string>
     <string name="title_reduce_effect">降低模糊效果</string>
@@ -451,6 +453,7 @@
     <string name="btn_copy_all">复制全部</string>
     <string name="btn_open_photos">查看图片 (%d)</string>
     <string name="title_hide_explore">隐藏「动态」入口</string>
+    <string name="title_hide_explore_hot">隐藏「动态」热榜</string>
     <string name="title_hide_media">收起贴子列表的图片和视频</string>
     <string name="button_open">打开</string>
     <string name="button_restart">重启</string>
@@ -476,6 +479,12 @@
     <string name="video_preview_not_supported">暂不支持视频预览</string>
     <string name="about_license">开源许可证</string>
     <string name="about_source_code">开源代码</string>
+    <string name="title_check_update">检查更新</string>
+    <string name="summary_check_update">从 GitHub Releases 获取最新版本</string>
+    <string name="summary_check_update_loading">正在检查最新版本…</string>
+    <string name="toast_no_update_available">已是最新版本</string>
+    <string name="dialog_title_update_available">发现新版本</string>
+    <string name="dialog_message_update_available">最新版本：%1$s</string>
     <string name="ban_chat">禁止TA私信</string>
     <string name="ban_follow">禁止TA关注我</string>
     <string name="ban_interact">禁止TA互动</string>

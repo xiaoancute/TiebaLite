@@ -94,6 +94,7 @@
             android:name=".MainActivityV2"
             android:configChanges="uiMode|screenSize|screenLayout|orientation|smallestScreenSize|keyboard|navigation|keyboardHidden"
             android:enabled="true"
+            android:enableOnBackInvokedCallback="false"
             android:exported="true"
             android:icon="@mipmap/ic_launcher_new"
             android:roundIcon="@mipmap/ic_launcher_new_round"

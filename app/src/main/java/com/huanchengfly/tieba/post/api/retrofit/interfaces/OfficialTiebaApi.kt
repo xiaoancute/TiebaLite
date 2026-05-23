@@ -14,6 +14,7 @@ import com.huanchengfly.tieba.post.api.retrofit.body.MyMultipartBody
 import com.huanchengfly.tieba.post.utils.AccountUtil
 import com.huanchengfly.tieba.post.utils.CacheUtil.base64Encode
 import com.huanchengfly.tieba.post.utils.ClientUtils
+import com.huanchengfly.tieba.post.utils.CuidUtils
 import com.huanchengfly.tieba.post.utils.MobileInfoUtil
 import com.huanchengfly.tieba.post.utils.UIDUtil
 import kotlinx.coroutines.Deferred
@@ -120,6 +121,15 @@ interface OfficialTiebaApi {
         @Field("dislike") dislike: String,
         @Field("dislike_from") dislike_from: String = "homepage",
         @Field("stoken") stoken: String? = AccountUtil.getSToken()
+    ): Flow<CommonResponse>
+
+    @Headers("${Header.FORCE_LOGIN}: ${Header.FORCE_LOGIN_TRUE}")
+    @POST("/c/c/excellent/submitCancelDislike")
+    @FormUrlEncoded
+    fun submitCancelDislikeFlow(
+        @Field("forum_id") forumId: Long,
+        @Field("BDUSS") bduss: String? = AccountUtil.getBduss(),
+        @Field("cuid") cuid: String = CuidUtils.getNewCuid(),
     ): Flow<CommonResponse>
 
     @Headers("${Header.FORCE_LOGIN}: ${Header.FORCE_LOGIN_TRUE}")

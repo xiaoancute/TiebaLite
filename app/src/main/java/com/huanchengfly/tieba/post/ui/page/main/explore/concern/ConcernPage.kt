@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.huanchengfly.tieba.post.LocalHabitSettings
 import com.huanchengfly.tieba.post.arch.collectCommonUiEventWithLifecycle
 import com.huanchengfly.tieba.post.arch.collectPartialAsState
 import com.huanchengfly.tieba.post.navigateDebounced
@@ -51,6 +52,7 @@ fun ConcernPage(
         prop1 = ConcernUiState::error,
         initial = null
     )
+    val preloadNextPage = LocalHabitSettings.current.preloadNextPage
 
     viewModel.uiEvent.collectCommonUiEventWithLifecycle()
 
@@ -84,6 +86,7 @@ fun ConcernPage(
                 contentPadding = contentPadding,
                 isLoading = isLoadingMore,
                 onLazyLoad = viewModel::onLoadMore.takeIf { uiState.hasMore },
+                preloadNextPage = preloadNextPage,
                 bottomIndicator = defaultBottomIndicator,
             ) {
                 itemsIndexed(data, key = { _, it -> it.id }, ThreadContentType) { i, thread ->

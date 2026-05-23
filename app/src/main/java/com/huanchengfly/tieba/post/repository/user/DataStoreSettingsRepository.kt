@@ -141,6 +141,7 @@ private object HabitSettingsTransformer : PreferenceTransformer<HabitSettings> {
             hideReplyWarning = it[booleanPreferencesKey(KEY_REPLY_HIDE_WARNING)] == true,
             imageLoadType = it[intPreferencesKey(KEY_IMAGE_LOAD_TYPE)] ?: ImageUtil.SETTINGS_SMART_ORIGIN,
             imageWatermarkType = it[intPreferencesKey(KEY_IMAGE_WATERMARK_TYPE)] ?: WaterType.FORUM_NAME,
+            preloadNextPage = it[booleanPreferencesKey(KEY_PRELOAD_NEXT_PAGE)] == true,
             searchThreadSortType = it[intPreferencesKey(KEY_SEARCH_THREAD_SORT_DEFAULT)] ?: SearchThreadSortType.NEWEST,
             showBothName = it[booleanPreferencesKey(KEY_SHOW_NICKNAME)] == true,
             stickyHeader = it[booleanPreferencesKey(KEY_STICKY_HEADER)] ?: true,
@@ -157,6 +158,7 @@ private object HabitSettingsTransformer : PreferenceTransformer<HabitSettings> {
         it[booleanPreferencesKey(KEY_REPLY_HIDE_WARNING)] = habit.hideReplyWarning
         it[intPreferencesKey(KEY_IMAGE_LOAD_TYPE)] = habit.imageLoadType
         it[intPreferencesKey(KEY_IMAGE_WATERMARK_TYPE)] = habit.imageWatermarkType
+        it[booleanPreferencesKey(KEY_PRELOAD_NEXT_PAGE)] = habit.preloadNextPage
         it[intPreferencesKey(KEY_SEARCH_THREAD_SORT_DEFAULT)] = habit.searchThreadSortType
         it[booleanPreferencesKey(KEY_SHOW_NICKNAME)] = habit.showBothName
         it[booleanPreferencesKey(KEY_STICKY_HEADER)] = habit.stickyHeader
@@ -178,6 +180,7 @@ private object HabitSettingsTransformer : PreferenceTransformer<HabitSettings> {
     private const val KEY_IMAGE_LOAD_TYPE = "img_load_type"
     private const val KEY_IMAGE_WATERMARK_TYPE = "img_watermark"
     private const val KEY_POST_HIDE_MEDIA = "ui_post_hide_media"
+    private const val KEY_PRELOAD_NEXT_PAGE = "preload_next_page"
     private const val KEY_REPLY_HIDE = "ui_reply_hide"
     private const val KEY_REPLY_HIDE_WARNING = "ui_reply_hide_warn"
     private const val KEY_SEARCH_THREAD_SORT_DEFAULT = "search_thread_sort_type"
@@ -256,6 +259,7 @@ private object UISettingsTransformer: PreferenceTransformer<UISettings> {
             darkPreference = DarkPreference.entries[darkPrefOrdinal],
             darkenImage = it[booleanPreferencesKey(KEY_DARKEN_IMAGE_ON_NIGHT)] ?: true,
             hideExplore = it[booleanPreferencesKey(KEY_HIDE_EXPLORE)] == true,
+            hideExploreHot = it[booleanPreferencesKey(KEY_HIDE_EXPLORE_HOT)] == true,
             reduceEffect = it[booleanPreferencesKey(KEY_REDUCE_EFFECT)] ?: (Build.VERSION.SDK_INT < Build.VERSION_CODES.S),
             setupFinished = it[booleanPreferencesKey(KEY_SETUP_FINISHED)] == true,
             homeForumList = it[booleanPreferencesKey(KEY_HOME_SINGLE_FORUM_LIST)] == true,
@@ -272,6 +276,7 @@ private object UISettingsTransformer: PreferenceTransformer<UISettings> {
         it[intPreferencesKey(KEY_DARK_THEME_MODE)] = ui.darkPreference.ordinal
         it[booleanPreferencesKey(KEY_DARKEN_IMAGE_ON_NIGHT)] = ui.darkenImage
         it[booleanPreferencesKey(KEY_HIDE_EXPLORE)] = ui.hideExplore
+        it[booleanPreferencesKey(KEY_HIDE_EXPLORE_HOT)] = ui.hideExploreHot
         it[booleanPreferencesKey(KEY_REDUCE_EFFECT)] = ui.reduceEffect
         it[booleanPreferencesKey(KEY_SETUP_FINISHED)] = ui.setupFinished
         it[booleanPreferencesKey(KEY_HOME_SINGLE_FORUM_LIST)] = ui.homeForumList
@@ -293,6 +298,7 @@ private object UISettingsTransformer: PreferenceTransformer<UISettings> {
     private const val KEY_DARK_THEME_MODE = "dark_mode"
     private const val KEY_DARKEN_IMAGE_ON_NIGHT = "ui_dark_img"
     private const val KEY_HIDE_EXPLORE = "ui_hide_explore"
+    private const val KEY_HIDE_EXPLORE_HOT = "ui_hide_explore_hot"
     private const val KEY_SETUP_FINISHED = "ui_setup"
     private const val KEY_REDUCE_EFFECT = "ui_reduce_effect"
     private const val KEY_HOME_SINGLE_FORUM_LIST = "ui_forum_list_in_home"

@@ -67,6 +67,9 @@ import com.huanchengfly.tieba.post.api.models.protos.frsPage.FrsPageResponse
 import com.huanchengfly.tieba.post.api.models.protos.getBawuInfo.GetBawuInfoRequest
 import com.huanchengfly.tieba.post.api.models.protos.getBawuInfo.GetBawuInfoRequestData
 import com.huanchengfly.tieba.post.api.models.protos.getBawuInfo.GetBawuInfoResponse
+import com.huanchengfly.tieba.post.api.models.protos.getDislikeList.GetDislikeListRequest
+import com.huanchengfly.tieba.post.api.models.protos.getDislikeList.GetDislikeListRequestData
+import com.huanchengfly.tieba.post.api.models.protos.getDislikeList.GetDislikeListResponse
 import com.huanchengfly.tieba.post.api.models.protos.getForumDetail.GetForumDetailRequest
 import com.huanchengfly.tieba.post.api.models.protos.getForumDetail.GetForumDetailRequestData
 import com.huanchengfly.tieba.post.api.models.protos.getForumDetail.GetForumDetailResponse
@@ -600,6 +603,9 @@ object MixedTiebaApiImpl : ITiebaApi {
     override fun submitDislikeFlow(dislikeBean: DislikeBean): Flow<CommonResponse> =
         RetrofitTiebaApi.OFFICIAL_TIEBA_API.submitDislikeFlow(listOf(dislikeBean).toJson())
 
+    override fun submitCancelDislikeForumFlow(forumId: Long): Flow<CommonResponse> =
+        RetrofitTiebaApi.OFFICIAL_TIEBA_API.submitCancelDislikeFlow(forumId)
+
     override fun follow(
         portrait: String, tbs: String
     ): Call<CommonResponse> = RetrofitTiebaApi.WEB_TIEBA_API.follow(
@@ -972,6 +978,20 @@ object MixedTiebaApiImpl : ITiebaApi {
                         common = buildCommonRequest(),
                         tabCode = tabCode,
                         tabId = "1"
+                    )
+                )
+            )
+        )
+    }
+
+    override fun getDislikeListFlow(page: Int, pageSize: Int): Flow<GetDislikeListResponse> {
+        return RetrofitTiebaApi.OFFICIAL_PROTOBUF_TIEBA_API.getDislikeListFlow(
+            buildProtobufRequestBody(
+                GetDislikeListRequest(
+                    GetDislikeListRequestData(
+                        common = buildCommonRequest(),
+                        pn = page,
+                        rn = pageSize,
                     )
                 )
             )

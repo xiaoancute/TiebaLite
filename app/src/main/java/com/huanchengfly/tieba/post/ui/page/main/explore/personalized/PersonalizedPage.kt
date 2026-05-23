@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.huanchengfly.tieba.post.LocalHabitSettings
 import com.huanchengfly.tieba.post.R
 import com.huanchengfly.tieba.post.api.retrofit.exception.TiebaNotLoggedInException
 import com.huanchengfly.tieba.post.api.retrofit.exception.getErrorMessage
@@ -118,6 +119,7 @@ fun PersonalizedPage(
         initial = null
     )
     val isError = error != null
+    val preloadNextPage = LocalHabitSettings.current.preloadNextPage
 
     LaunchedFabStateEffect(listState, onHideFab, isRefreshing, isError)
 
@@ -146,6 +148,7 @@ fun PersonalizedPage(
                 contentPadding = contentPadding,
                 isLoading = isLoadingMore,
                 onLazyLoad = viewModel::onLoadMore.takeUnless { isRefreshing },
+                preloadNextPage = preloadNextPage,
                 bottomIndicator = defaultBottomIndicator,
             ) {
                 itemsIndexed(data, key = { _, it -> it.id }, ThreadContentType) { index, thread ->

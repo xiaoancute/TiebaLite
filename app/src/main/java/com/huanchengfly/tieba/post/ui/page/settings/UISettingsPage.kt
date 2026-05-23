@@ -172,6 +172,13 @@ fun UISettingsPage(
                 title = R.string.title_hide_explore,
                 leadingIcon = toyFansIcon.imageVector,
             )
+
+            toggleablePreference(
+                property = UISettings::hideExploreHot,
+                title = R.string.title_hide_explore_hot,
+                enabled = !currentPreference.hideExplore,
+                leadingIcon = toyFansIcon.imageVector,
+            )
         }
     }
 }
