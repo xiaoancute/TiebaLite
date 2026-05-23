@@ -479,6 +479,12 @@
     <string name="video_preview_not_supported">暂不支持视频预览</string>
     <string name="about_license">开源许可证</string>
     <string name="about_source_code">开源代码</string>
+    <string name="title_check_update">检查更新</string>
+    <string name="summary_check_update">从 GitHub Releases 获取最新版本</string>
+    <string name="summary_check_update_loading">正在检查最新版本…</string>
+    <string name="toast_no_update_available">已是最新版本</string>
+    <string name="dialog_title_update_available">发现新版本</string>
+    <string name="dialog_message_update_available">最新版本：%1$s</string>
     <string name="ban_chat">禁止TA私信</string>
     <string name="ban_follow">禁止TA关注我</string>
     <string name="ban_interact">禁止TA互动</string>
