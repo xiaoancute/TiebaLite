@@ -47,3 +47,5 @@ cd TiebaLite
 
 + [Starry-OvO/aiotieba: Asynchronous I/O Client for Baidu Tieba](https://github.com/Starry-OvO/aiotieba)
 + [n0099/tbclient.protobuf: 百度贴吧客户端 Protocol Buffers 定义文件合集](https://github.com/n0099/tbclient.protobuf)
++ https://github.com/zzc10086/TiebaLite
++ https://github.com/0ranko0P/TiebaLite
