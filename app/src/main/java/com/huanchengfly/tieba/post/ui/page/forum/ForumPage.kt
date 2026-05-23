@@ -186,6 +186,9 @@ fun ForumPage(
     val navTabs = remember(forumDataNavTabs) {
         forumDataNavTabs.orEmpty().ifEmpty { listOf(NavTab.Fallback) }
     }
+    val tabBarNavTabs = remember(forumDataNavTabs) {
+        forumTabBarNavTabs(forumDataNavTabs)
+    }
     val initialPage = remember(forumName, navTabs) {
         navTabs.indexOfFirst { it.isDefault }.coerceAtLeast(0)
     }
@@ -395,16 +398,18 @@ fun ForumPage(
                 scrollBehavior = scrollBehavior,
             )  {
                 val sortType by viewModel.sortType.collectAsStateWithLifecycle()
-                ForumTab(
-                    modifier = Modifier.fillMaxWidth(),
-                    navTabs = navTabs,
-                    pagerState = pagerState,
-                    sortType = sortType,
-                    onSortTypeChanged = { sortType ->
-                        val currentTabId = navTabs.getOrNull(pagerState.currentPage)?.tabId ?: NavTab.FALLBACK_TAB_ID
-                        viewModel.onSortTypeChanged(currentTabId, sortType)
-                    }
-                )
+                if (tabBarNavTabs.isNotEmpty()) {
+                    ForumTab(
+                        modifier = Modifier.fillMaxWidth(),
+                        navTabs = tabBarNavTabs,
+                        pagerState = pagerState,
+                        sortType = sortType,
+                        onSortTypeChanged = { sortType ->
+                            val currentTabId = navTabs.getOrNull(pagerState.currentPage)?.tabId ?: NavTab.FALLBACK_TAB_ID
+                            viewModel.onSortTypeChanged(currentTabId, sortType)
+                        }
+                    )
+                }
 
                 val currentTab = navTabs.getOrNull(pagerState.currentPage)
                 val classifyVisible by remember(currentTab, uiState.forum?.goodClassifies) {
@@ -484,6 +489,10 @@ internal fun shouldApplyInitialForumTab(
     initialPage: Int,
 ): Boolean {
     return !initialTabPositioned && navTabsLoaded && currentPage != initialPage
+}
+
+internal fun forumTabBarNavTabs(forumDataNavTabs: List<NavTab>?): List<NavTab> {
+    return forumDataNavTabs?.ifEmpty { listOf(NavTab.Fallback) }.orEmpty()
 }
 
 @Composable

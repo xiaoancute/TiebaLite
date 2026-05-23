@@ -1,5 +1,7 @@
 package com.huanchengfly.tieba.post.ui.page.forum
 
+import com.huanchengfly.tieba.post.ui.models.forum.NavTab
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -52,5 +54,15 @@ class ForumPageStateTest {
                 initialPage = 1
             )
         )
+    }
+
+    @Test
+    fun `tab bar stays empty while forum tabs are still loading`() {
+        assertEquals(emptyList<NavTab>(), forumTabBarNavTabs(null))
+    }
+
+    @Test
+    fun `tab bar falls back only after loaded tabs are empty`() {
+        assertEquals(listOf(NavTab.Fallback), forumTabBarNavTabs(emptyList()))
     }
 }
