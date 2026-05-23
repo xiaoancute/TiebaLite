@@ -4,10 +4,10 @@ import androidx.compose.ui.util.fastAny
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.huanchengfly.tieba.post.arch.unsafeLazy
-import com.huanchengfly.tieba.post.models.database.BlockForum
 import com.huanchengfly.tieba.post.models.database.BlockKeyword
 import com.huanchengfly.tieba.post.models.database.BlockUser
 import com.huanchengfly.tieba.post.repository.BlockRepository
+import com.huanchengfly.tieba.post.repository.BlockRepository.Companion.normalizeForumName
 import com.huanchengfly.tieba.post.utils.StringUtil.normalized
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -24,6 +24,7 @@ import kotlinx.coroutines.launch
 import java.util.regex.Pattern
 import java.util.regex.PatternSyntaxException
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 @Suppress("PropertyName")
 abstract class BaseBlockListViewModel<T>: ViewModel() {
@@ -67,8 +68,11 @@ abstract class BaseBlockListViewModel<T>: ViewModel() {
         if (!_updating.value) {
             viewModelScope.launch(Dispatchers.Default) {
                 _updating.update { true }
-                block()
-                _updating.update { false }
+                try {
+                    block()
+                } finally {
+                    _updating.update { false }
+                }
             }
         }
     }
@@ -83,17 +87,28 @@ class ForumBlockListViewModel @Inject constructor(
 
     override val _whiteList: Flow<List<String>?> = flowOf(null)
 
+    init {
+        update {
+            try {
+                blockRepo.syncOfficialForums()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Throwable) {
+                // Keep showing local rules when the official list cannot be refreshed.
+            }
+        }
+    }
+
     override suspend fun upsertInternal(item: String) {
-        val forumName = item.trim().run { if (endsWith("吧")) substring(0, lastIndex) else this }
-        blockRepo.upsertForum(BlockForum(forumName))
+        blockRepo.upsertSyncedForum(item)
     }
 
     override suspend fun deleteInternal(item: String) {
-        blockRepo.deleteForum(forumName = item)
+        blockRepo.deleteSyncedForum(forumName = item)
     }
 
     override suspend fun deleteListInternal(items: List<String>) {
-        blockRepo.deleteForums(items)
+        blockRepo.deleteSyncedForums(items)
     }
 
     fun isForumInvalid(name: String): Boolean {
@@ -101,7 +116,7 @@ class ForumBlockListViewModel @Inject constructor(
             return true
         }
 
-        val forumName = name.trim().run { if (endsWith("吧")) substring(0, lastIndex) else this }
+        val forumName = normalizeForumName(name)
         return blackList.value?.contains(forumName) == true
     }
 }

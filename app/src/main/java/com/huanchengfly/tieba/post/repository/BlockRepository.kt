@@ -8,6 +8,10 @@ import com.huanchengfly.tieba.post.models.database.BlockKeyword
 import com.huanchengfly.tieba.post.models.database.BlockUser
 import com.huanchengfly.tieba.post.models.database.dao.BlockDao
 import com.huanchengfly.tieba.post.models.database.dao.TypedKeyword
+import com.huanchengfly.tieba.post.repository.source.network.ForumBlockNetworkDataSource
+import com.huanchengfly.tieba.post.repository.source.network.OfficialBlockForum
+import com.huanchengfly.tieba.post.repository.source.network.SearchNetworkDataSource
+import com.huanchengfly.tieba.post.utils.AccountUtil
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
@@ -15,8 +19,10 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * Block Repository that manages blocking rule data.
@@ -25,6 +31,7 @@ import javax.inject.Singleton
 class BlockRepository @Inject constructor(
     private val localDataSource: BlockDao
 ) {
+    private val officialForumIds = ConcurrentHashMap<String, Long>()
 
     /**
      * Blacklisted predicates.
@@ -44,12 +51,58 @@ class BlockRepository @Inject constructor(
         localDataSource.upsertForum(forum)
     }
 
+    suspend fun syncOfficialForums() {
+        if (AccountUtil.getInstance().currentAccount.first() == null) return
+
+        val forums = ForumBlockNetworkDataSource.loadDislikeForums()
+        cacheOfficialForums(forums)
+        if (forums.isNotEmpty()) {
+            withContext(NonCancellable) {
+                localDataSource.insertForums(
+                    forums = forums.map { BlockForum(normalizeForumName(it.name)) }.toTypedArray()
+                )
+            }
+        }
+    }
+
+    suspend fun upsertSyncedForum(forumName: String) {
+        val normalizedName = normalizeForumName(forumName)
+        ignoreRemoteSyncFailure {
+            if (AccountUtil.getInstance().currentAccount.first() != null) {
+                val forumId = findForumId(normalizedName)
+                if (forumId != null) {
+                    ForumBlockNetworkDataSource.submitDislikeForum(forumId)
+                    officialForumIds[normalizedName] = forumId
+                }
+            }
+        }
+        upsertForum(BlockForum(normalizedName))
+    }
+
     suspend fun deleteForum(forumName: String) = withContext(NonCancellable) {
         localDataSource.deleteForum(forumName)
     }
 
+    suspend fun deleteSyncedForum(forumName: String) {
+        val normalizedName = normalizeForumName(forumName)
+        ignoreRemoteSyncFailure {
+            if (AccountUtil.getInstance().currentAccount.first() != null) {
+                val forumId = findForumId(normalizedName)
+                if (forumId != null) {
+                    ForumBlockNetworkDataSource.cancelDislikeForum(forumId)
+                    officialForumIds.remove(normalizedName)
+                }
+            }
+        }
+        deleteForum(normalizedName)
+    }
+
     suspend fun deleteForums(forumNames: List<String>) = withContext(NonCancellable) {
         localDataSource.deleteForums(forumNames)
+    }
+
+    suspend fun deleteSyncedForums(forumNames: List<String>) {
+        forumNames.forEach { deleteSyncedForum(it) }
     }
 
     suspend fun addKeyword(keyword: String, isRegex: Boolean, whitelisted: Boolean) = withContext(NonCancellable) {
@@ -84,6 +137,37 @@ class BlockRepository @Inject constructor(
 
     fun observeKeyword(whitelisted: Boolean): Flow<List<BlockKeyword>> = localDataSource.observeKeywordRules(whitelisted)
 
+    private suspend fun findForumId(forumName: String): Long? {
+        officialForumIds[forumName]?.let { return it }
+
+        val data = SearchNetworkDataSource.searchForum(forumName)
+        val matches = buildList {
+            data.exactMatch?.let(::add)
+            addAll(data.fuzzyMatch)
+        }
+        return matches.firstOrNull {
+            normalizeForumName(it.forumName.orEmpty()) == forumName ||
+                    normalizeForumName(it.forumNameShow.orEmpty()) == forumName
+        }?.forumId ?: data.exactMatch?.forumId
+    }
+
+    private fun cacheOfficialForums(forums: List<OfficialBlockForum>) {
+        officialForumIds.clear()
+        officialForumIds.putAll(
+            forums.associate { forum -> normalizeForumName(forum.name) to forum.id }
+        )
+    }
+
+    private suspend inline fun ignoreRemoteSyncFailure(crossinline block: suspend () -> Unit) {
+        try {
+            block()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Throwable) {
+            // Local rules still work if the official endpoint or forum lookup fails.
+        }
+    }
+
     /**
      * @return is user or contents blocked
      */
@@ -106,6 +190,10 @@ class BlockRepository @Inject constructor(
     }
 
     companion object {
+
+        fun normalizeForumName(name: String): String {
+            return name.trim().run { if (endsWith("吧")) substring(0, lastIndex) else this }
+        }
 
         private class KeywordPredicate(val keyword: String): Predicate<String> {
             override fun test(t: String?): Boolean {
