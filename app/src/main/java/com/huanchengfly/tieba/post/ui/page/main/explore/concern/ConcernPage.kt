@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -38,6 +39,8 @@ fun ConcernPage(
     listState: LazyListState = rememberLazyListState(),
     navigator: NavController,
     onHideFab: (Boolean) -> Unit,
+    refreshOnLaunch: Boolean = false,
+    onLaunchRefreshConsumed: () -> Unit = {},
     viewModel: ConcernViewModel = hiltViewModel(),
 ) {
     val isRefreshing by viewModel.uiState.collectPartialAsState(
@@ -57,6 +60,12 @@ fun ConcernPage(
     viewModel.uiEvent.collectCommonUiEventWithLifecycle()
 
     LaunchedFabStateEffect(listState, onHideFab, isRefreshing, isError = error != null)
+    LaunchedEffect(refreshOnLaunch, isRefreshing) {
+        if (refreshOnLaunch && !isRefreshing) {
+            viewModel.onRefresh()
+            onLaunchRefreshConsumed()
+        }
+    }
 
     val threadClickListeners = remember(navigator) {
         createThreadClickListeners(onNavigate = navigator::navigateDebounced)

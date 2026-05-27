@@ -20,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateSetOf
@@ -75,6 +76,8 @@ fun PersonalizedPage(
     listState: LazyListState = rememberLazyListState(),
     navigator: NavController,
     onHideFab: (Boolean) -> Unit,
+    refreshOnLaunch: Boolean = false,
+    onLaunchRefreshConsumed: () -> Unit = {},
     viewModel: PersonalizedViewModel = hiltViewModel(),
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -122,6 +125,12 @@ fun PersonalizedPage(
     val preloadNextPage = LocalHabitSettings.current.preloadNextPage
 
     LaunchedFabStateEffect(listState, onHideFab, isRefreshing, isError)
+    LaunchedEffect(refreshOnLaunch, isRefreshing) {
+        if (refreshOnLaunch && !isRefreshing) {
+            viewModel.onRefresh()
+            onLaunchRefreshConsumed()
+        }
+    }
 
     StateScreen(
         isEmpty = isEmpty,

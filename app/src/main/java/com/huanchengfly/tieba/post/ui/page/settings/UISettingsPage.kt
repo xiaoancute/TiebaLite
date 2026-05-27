@@ -20,6 +20,7 @@ import androidx.compose.material.icons.outlined.FontDownload
 import androidx.compose.material.icons.outlined.House
 import androidx.compose.material.icons.outlined.Houseboat
 import androidx.compose.material.icons.outlined.NightsStay
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.ViewAgenda
 import androidx.compose.material.icons.outlined.ViewColumn
 import androidx.compose.material.icons.outlined.WatchLater
@@ -31,6 +32,7 @@ import androidx.navigation.NavController
 import com.huanchengfly.tieba.post.R
 import com.huanchengfly.tieba.post.repository.user.Settings
 import com.huanchengfly.tieba.post.ui.models.settings.DarkPreference
+import com.huanchengfly.tieba.post.ui.models.settings.DefaultMainPage
 import com.huanchengfly.tieba.post.ui.models.settings.NavigationLabel
 import com.huanchengfly.tieba.post.ui.models.settings.UISettings
 import com.huanchengfly.tieba.post.ui.page.settings.SettingsDestination.AppFont
@@ -159,6 +161,18 @@ fun UISettingsPage(
                 ),
             )
 
+            listPref(
+                property = UISettings::defaultMainPage,
+                title = R.string.settings_default_main_page,
+                leadingIcon = Icons.Outlined.House,
+                options = persistentMapOf(
+                    DefaultMainPage.HOME to R.string.title_main,
+                    DefaultMainPage.EXPLORE to R.string.title_explore,
+                    DefaultMainPage.NOTIFICATION to R.string.title_notifications,
+                    DefaultMainPage.USER to R.string.title_user
+                ),
+            )
+
             forumListPreference()
 
             toggleablePreference(
@@ -171,6 +185,14 @@ fun UISettingsPage(
                 property = UISettings::hideExplore,
                 title = R.string.title_hide_explore,
                 leadingIcon = toyFansIcon.imageVector,
+            )
+
+            toggleablePreference(
+                property = UISettings::refreshExploreOnLaunch,
+                title = R.string.settings_refresh_explore_on_launch,
+                summary = R.string.summary_refresh_explore_on_launch,
+                enabled = !currentPreference.hideExplore,
+                leadingIcon = Icons.Outlined.Refresh,
             )
 
             toggleablePreference(

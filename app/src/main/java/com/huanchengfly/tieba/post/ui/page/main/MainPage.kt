@@ -59,6 +59,7 @@ import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
 import androidx.compose.material3.adaptive.navigationsuite.rememberNavigationSuiteScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.NonRestartableComposable
 import androidx.compose.runtime.ReadOnlyComposable
@@ -194,7 +195,7 @@ private fun NavController.currentMainDestinationAsState(destinations: List<MainD
 @Composable
 fun MainPage(
     navHostController: NavHostController,
-    startDestination: MainDestination = MainDestination.Home,
+    startDestination: MainDestination? = null,
     vm: MainPageViewModel = hiltViewModel()
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -205,6 +206,11 @@ fun MainPage(
     val navigationSuiteType = calculateMainNavigationSuiteType()
 
     val loggedIn = LocalAccount.current != null
+    val actualStartDestination = startDestination
+        ?: uiSettings.defaultMainPage.resolveMainDestination(
+            loggedIn = loggedIn,
+            hideExplore = uiSettings.hideExplore
+        )
     val destinations = remember(loggedIn, uiSettings.hideExplore) {
         listOfNotNull(
             MainDestination.Home,
@@ -212,6 +218,9 @@ fun MainPage(
             MainDestination.Notification.takeIf { loggedIn },
             MainDestination.User,
         )
+    }
+    var pendingLaunchExploreRefresh by rememberSaveable(uiSettings.refreshExploreOnLaunch) {
+        mutableStateOf(uiSettings.refreshExploreOnLaunch)
     }
 
     val blurEffect = !uiSettings.reduceEffect && !MaterialTheme.colorScheme.isTranslucent
@@ -232,7 +241,7 @@ fun MainPage(
                     nestedNavController.navigate(route = dest) {
                         launchSingleTop = true
                         restoreState = true
-                        popUpTo(route = startDestination) {
+                        popUpTo(route = actualStartDestination) {
                             saveState = true
                         }
                     }
@@ -283,7 +292,7 @@ fun MainPage(
 
         NavHost(
             navController = nestedNavController,
-            startDestination = startDestination,
+            startDestination = actualStartDestination,
             modifier = Modifier.onNotNull(hazeState) {
                 hazeSource(state = it, zIndex = 1f)
             },
@@ -298,13 +307,21 @@ fun MainPage(
                 hazeState = hazeState,
                 parentAnimatedVisibilityScope = parentAnimatedVisibilityScope,
                 parentSharedTransitionScope = parentSharedTransitionScope,
+                refreshExploreOnLaunch = uiSettings.refreshExploreOnLaunch && pendingLaunchExploreRefresh,
+                onLaunchExploreRefreshConsumed = { pendingLaunchExploreRefresh = false },
             )
         }
     }
 
+    LaunchedEffect(actualStartDestination) {
+        if (actualStartDestination === MainDestination.Notification) {
+            vm.onNavigateNotification()
+        }
+    }
+
     currentDestination?.let {
-        BackHandler(it !== startDestination) {
-            nestedNavController.popBackStack(route = startDestination::class, inclusive = false, saveState = true)
+        BackHandler(it !== actualStartDestination) {
+            nestedNavController.popBackStack(route = actualStartDestination::class, inclusive = false, saveState = true)
         }
     }
 }

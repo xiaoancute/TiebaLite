@@ -25,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -77,6 +78,8 @@ fun HotPage(
     listState: LazyListState = rememberLazyListState(),
     navigator: NavController,
     onHideFab: (Boolean) -> Unit,
+    refreshOnLaunch: Boolean = false,
+    onLaunchRefreshConsumed: () -> Unit = {},
     viewModel: HotViewModel = hiltViewModel()
 ) {
     val isRefreshing by viewModel.uiState.collectPartialAsState(
@@ -93,6 +96,12 @@ fun HotPage(
     viewModel.uiEvent.collectCommonUiEventWithLifecycle()
 
     LaunchedFabStateEffect(listState, onHideFab, isRefreshing, isError)
+    LaunchedEffect(refreshOnLaunch, isRefreshing) {
+        if (refreshOnLaunch && !isRefreshing) {
+            viewModel.onRefresh()
+            onLaunchRefreshConsumed()
+        }
+    }
 
     val threadClickListeners = remember(navigator) {
         createThreadClickListeners(onNavigate = navigator::navigateDebounced)

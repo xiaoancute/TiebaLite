@@ -29,6 +29,7 @@ import com.huanchengfly.tieba.post.theme.TiebaBlue
 import com.huanchengfly.tieba.post.ui.models.settings.BlockSettings
 import com.huanchengfly.tieba.post.ui.models.settings.ClientConfig
 import com.huanchengfly.tieba.post.ui.models.settings.DarkPreference
+import com.huanchengfly.tieba.post.ui.models.settings.DefaultMainPage
 import com.huanchengfly.tieba.post.ui.models.settings.ForumSortType
 import com.huanchengfly.tieba.post.ui.models.settings.HabitSettings
 import com.huanchengfly.tieba.post.ui.models.settings.NavigationLabel
@@ -249,17 +250,23 @@ private object UISettingsTransformer: PreferenceTransformer<UISettings> {
         val appIconOrdinal = it[intPreferencesKey(KEY_APP_ICON)] ?: LauncherIcons.NEW_ICON.ordinal
         val bottomNavLabelOrdinal =
             it[intPreferencesKey(KEY_BOTTOM_NAV_LABEL)] ?: NavigationLabel.ALWAYS.ordinal
+        val defaultMainPageOrdinal =
+            it[intPreferencesKey(KEY_DEFAULT_MAIN_PAGE)] ?: DefaultMainPage.HOME.ordinal
 
         UISettings(
             appIcon = LauncherIcons.entries[appIconOrdinal],
             appIconThemed = it[booleanPreferencesKey(KEY_APP_THEMED_ICON)] == true,
             bottomNavFloating = it[booleanPreferencesKey(KEY_BOTTOM_NAV_FLOATING)] == true,
             bottomNavLabel = NavigationLabel.entries[bottomNavLabelOrdinal],
+            defaultMainPage = DefaultMainPage.entries.getOrElse(defaultMainPageOrdinal) {
+                DefaultMainPage.HOME
+            },
             darkAmoled = it[booleanPreferencesKey(KEY_DARK_AMOLED)] == true,
             darkPreference = DarkPreference.entries[darkPrefOrdinal],
             darkenImage = it[booleanPreferencesKey(KEY_DARKEN_IMAGE_ON_NIGHT)] ?: true,
             hideExplore = it[booleanPreferencesKey(KEY_HIDE_EXPLORE)] == true,
             hideExploreHot = it[booleanPreferencesKey(KEY_HIDE_EXPLORE_HOT)] == true,
+            refreshExploreOnLaunch = it[booleanPreferencesKey(KEY_REFRESH_EXPLORE_ON_LAUNCH)] == true,
             reduceEffect = it[booleanPreferencesKey(KEY_REDUCE_EFFECT)] ?: (Build.VERSION.SDK_INT < Build.VERSION_CODES.S),
             setupFinished = it[booleanPreferencesKey(KEY_SETUP_FINISHED)] == true,
             homeForumList = it[booleanPreferencesKey(KEY_HOME_SINGLE_FORUM_LIST)] == true,
@@ -272,11 +279,13 @@ private object UISettingsTransformer: PreferenceTransformer<UISettings> {
         it[booleanPreferencesKey(KEY_APP_THEMED_ICON)] = ui.appIconThemed
         it[booleanPreferencesKey(KEY_BOTTOM_NAV_FLOATING)] = ui.bottomNavFloating
         it[intPreferencesKey(KEY_BOTTOM_NAV_LABEL)] = ui.bottomNavLabel.ordinal
+        it[intPreferencesKey(KEY_DEFAULT_MAIN_PAGE)] = ui.defaultMainPage.ordinal
         it[booleanPreferencesKey(KEY_DARK_AMOLED)] = ui.darkAmoled
         it[intPreferencesKey(KEY_DARK_THEME_MODE)] = ui.darkPreference.ordinal
         it[booleanPreferencesKey(KEY_DARKEN_IMAGE_ON_NIGHT)] = ui.darkenImage
         it[booleanPreferencesKey(KEY_HIDE_EXPLORE)] = ui.hideExplore
         it[booleanPreferencesKey(KEY_HIDE_EXPLORE_HOT)] = ui.hideExploreHot
+        it[booleanPreferencesKey(KEY_REFRESH_EXPLORE_ON_LAUNCH)] = ui.refreshExploreOnLaunch
         it[booleanPreferencesKey(KEY_REDUCE_EFFECT)] = ui.reduceEffect
         it[booleanPreferencesKey(KEY_SETUP_FINISHED)] = ui.setupFinished
         it[booleanPreferencesKey(KEY_HOME_SINGLE_FORUM_LIST)] = ui.homeForumList
@@ -287,6 +296,7 @@ private object UISettingsTransformer: PreferenceTransformer<UISettings> {
     private const val KEY_APP_THEMED_ICON = "app_themed_icon"
     private const val KEY_BOTTOM_NAV_FLOATING = "ui_bottom_nav_floating"
     private const val KEY_BOTTOM_NAV_LABEL = "ui_bottom_nav_label"
+    private const val KEY_DEFAULT_MAIN_PAGE = "ui_default_main_page"
 
     private const val KEY_DARK_AMOLED = "dark_amoled"
 
@@ -299,6 +309,7 @@ private object UISettingsTransformer: PreferenceTransformer<UISettings> {
     private const val KEY_DARKEN_IMAGE_ON_NIGHT = "ui_dark_img"
     private const val KEY_HIDE_EXPLORE = "ui_hide_explore"
     private const val KEY_HIDE_EXPLORE_HOT = "ui_hide_explore_hot"
+    private const val KEY_REFRESH_EXPLORE_ON_LAUNCH = "ui_refresh_explore_on_launch"
     private const val KEY_SETUP_FINISHED = "ui_setup"
     private const val KEY_REDUCE_EFFECT = "ui_reduce_effect"
     private const val KEY_HOME_SINGLE_FORUM_LIST = "ui_forum_list_in_home"

@@ -51,6 +51,8 @@ fun NavGraphBuilder.mainNavGraph(
     hazeState: HazeState? = null,
     parentAnimatedVisibilityScope: AnimatedVisibilityScope? = null,
     parentSharedTransitionScope: SharedTransitionScope? = null,
+    refreshExploreOnLaunch: Boolean = false,
+    onLaunchExploreRefreshConsumed: () -> Unit = {},
 ) {
     animatedMainComposable<MainDestination.Home>(
         hazeState = hazeState,
@@ -79,7 +81,11 @@ fun NavGraphBuilder.mainNavGraph(
     ) {
         val loggedIn = LocalAccount.current != null
         key(loggedIn) { // Force recreate
-            ExplorePage(loggedIn)
+            ExplorePage(
+                loggedIn = loggedIn,
+                refreshOnLaunch = refreshExploreOnLaunch,
+                onLaunchRefreshConsumed = onLaunchExploreRefreshConsumed,
+            )
         }
     }
 

@@ -17,17 +17,28 @@ enum class NavigationLabel {
 }
 
 /**
+ * 打开 App 后默认显示的主页标签
+ *
+ * @since 4.0.0-beta.4.8
+ * */
+enum class DefaultMainPage {
+    HOME, EXPLORE, NOTIFICATION, USER
+}
+
+/**
  * User UI Settings
  *
  * @param appIcon 应用图标
  * @param appIconThemed 应用图标使用动态取色
  * @param bottomNavFloating 主页底部导航栏悬浮模式
  * @param bottomNavLabel 主页底部导航栏标签显示模式
+ * @param defaultMainPage 打开 App 后默认显示的主页标签
  * @param darkAmoled 纯黑背景颜色
  * @param darkPreference 夜间模式偏好
  * @param darkenImage 夜间模式压暗缩略图
  * @param hideExplore 隐藏主页「动态」入口
  * @param hideExploreHot 隐藏主页「动态」中的热榜页
+ * @param refreshExploreOnLaunch 启动后首次进入「动态」时自动刷新
  * @param reduceEffect 降低模糊效果
  * @param setupFinished 设置向导已完成
  * @param homeForumList 吧列表单列显示
@@ -39,11 +50,13 @@ data class UISettings(
     val appIconThemed: Boolean = false,
     val bottomNavFloating: Boolean = false,
     val bottomNavLabel: NavigationLabel = NavigationLabel.ALWAYS,
+    val defaultMainPage: DefaultMainPage = DefaultMainPage.HOME,
     val darkAmoled: Boolean = false,
     val darkPreference: DarkPreference = DarkPreference.FOLLOW_SYSTEM,
     val darkenImage: Boolean = true,
     val hideExplore: Boolean = false,
     val hideExploreHot: Boolean = false,
+    val refreshExploreOnLaunch: Boolean = false,
     val reduceEffect: Boolean = false,
     val setupFinished: Boolean = false,
     val homeForumList: Boolean = false,

@@ -182,7 +182,11 @@ private fun ExplorePageTab(
 
 // Note: Obtain Root AnimatedVisibilityScope by LocalAnimatedVisibilityScope.current
 @Composable
-fun AnimatedVisibilityScope.ExplorePage(loggedIn: Boolean) {
+fun AnimatedVisibilityScope.ExplorePage(
+    loggedIn: Boolean,
+    refreshOnLaunch: Boolean = false,
+    onLaunchRefreshConsumed: () -> Unit = {},
+) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val navigator = LocalNavController.current
@@ -298,18 +302,43 @@ fun AnimatedVisibilityScope.ExplorePage(loggedIn: Boolean) {
                     fabHideStates = fabHideStates.set(index, hideFab)
                 }
                 val listState = listStates[index]
+                val refreshThisPageOnLaunch = refreshOnLaunch && index == currentPageIndex
 
                 when (pages[index]) {
                     ExplorePageItem.Concern -> {
-                        ConcernPage(modifier, contentPadding, listState, navigator, onHideFab)
+                        ConcernPage(
+                            modifier = modifier,
+                            contentPadding = contentPadding,
+                            listState = listState,
+                            navigator = navigator,
+                            onHideFab = onHideFab,
+                            refreshOnLaunch = refreshThisPageOnLaunch,
+                            onLaunchRefreshConsumed = onLaunchRefreshConsumed,
+                        )
                     }
 
                     ExplorePageItem.Personalized -> {
-                        PersonalizedPage(modifier, contentPadding, listState, navigator, onHideFab)
+                        PersonalizedPage(
+                            modifier = modifier,
+                            contentPadding = contentPadding,
+                            listState = listState,
+                            navigator = navigator,
+                            onHideFab = onHideFab,
+                            refreshOnLaunch = refreshThisPageOnLaunch,
+                            onLaunchRefreshConsumed = onLaunchRefreshConsumed,
+                        )
                     }
 
                     ExplorePageItem.Hot -> {
-                        HotPage(modifier, contentPadding, listState, navigator, onHideFab)
+                        HotPage(
+                            modifier = modifier,
+                            contentPadding = contentPadding,
+                            listState = listState,
+                            navigator = navigator,
+                            onHideFab = onHideFab,
+                            refreshOnLaunch = refreshThisPageOnLaunch,
+                            onLaunchRefreshConsumed = onLaunchRefreshConsumed,
+                        )
                     }
                 }
             }
