@@ -43,6 +43,28 @@ internal fun List<PcFrsTab>.toNavTabs(defaultTabId: Int? = null): List<NavTab> {
     }
 }
 
+internal data class ThreadDisplayTime(
+    val timeMillis: Long,
+    val type: ThreadTimeType,
+)
+
+internal fun selectThreadDisplayTime(
+    @ForumSortType sortType: Int,
+    createTime: Long,
+    replyTime: Long,
+): ThreadDisplayTime {
+    val type = if (sortType == ForumSortType.BY_SEND) ThreadTimeType.PUBLISH else ThreadTimeType.REPLY
+    val timestamp = if (type == ThreadTimeType.PUBLISH) {
+        createTime
+    } else {
+        replyTime.takeIf { it > 0 } ?: createTime
+    }
+    return ThreadDisplayTime(
+        timeMillis = DateTimeUtils.fixTimestamp(timestamp),
+        type = type,
+    )
+}
+
 internal suspend fun PcFrsPageResponse.toThreadItemList(
     tab: NavTab,
     @ForumSortType sortType: Int,
@@ -88,8 +110,7 @@ private suspend fun PcFeed.toThreadItem(
     val replyTime = businessInfoMap["last_time_int"]?.toLongOrNull()
         ?: businessInfoMap["last_time"]?.toLongOrNull()
         ?: 0
-    val timeType = if (sortType == ForumSortType.BY_SEND) ThreadTimeType.PUBLISH else ThreadTimeType.REPLY
-    val displayTime = if (timeType == ThreadTimeType.PUBLISH) createTime else replyTime.takeIf { it > 0 } ?: createTime
+    val displayTime = selectThreadDisplayTime(sortType, createTime, replyTime)
     val medias = components
         .flatMap { it.feedPic?.pics.orEmpty() }
         .map {
@@ -117,8 +138,8 @@ private suspend fun PcFeed.toThreadItem(
         blocked = isBlocked(authorId, arrayOf(title, abstractText)),
         content = buildThreadContent(title, abstractText, tabName, isGood = businessInfoMap["is_good"] == "1"),
         title = title,
-        lastTimeMill = DateTimeUtils.fixTimestamp(displayTime),
-        timeType = timeType,
+        lastTimeMill = displayTime.timeMillis,
+        timeType = displayTime.type,
         like = social?.agree?.let { Like(liked = it.hasAgree == 1, count = it.agreeNum) } ?: LikeZero,
         hotNum = businessInfoMap["view_num"]?.toIntOrNull() ?: 0,
         replyNum = social?.commentNum ?: 0,

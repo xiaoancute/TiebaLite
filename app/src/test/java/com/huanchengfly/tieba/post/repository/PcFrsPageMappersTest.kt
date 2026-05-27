@@ -2,16 +2,9 @@ package com.huanchengfly.tieba.post.repository
 
 import com.huanchengfly.tieba.post.api.models.web.PcFrsTab
 import com.huanchengfly.tieba.post.api.models.web.PcFrsPageResponse
-import com.huanchengfly.tieba.post.api.models.web.PcFeed
-import com.huanchengfly.tieba.post.api.models.web.PcFeedComponent
-import com.huanchengfly.tieba.post.api.models.web.PcFeedItem
-import com.huanchengfly.tieba.post.api.models.web.PcFeedSocial
-import com.huanchengfly.tieba.post.api.models.web.PcPageData
 import com.huanchengfly.tieba.post.api.models.web.PcNavTabInfo
 import com.huanchengfly.tieba.post.ui.models.ThreadTimeType
-import com.huanchengfly.tieba.post.ui.models.forum.NavTab
 import com.huanchengfly.tieba.post.ui.models.settings.ForumSortType
-import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -80,54 +73,26 @@ class PcFrsPageMappersTest {
     }
 
     @Test
-    fun `pc thread mapper uses reply time for reply sorting`() = runTest {
-        val result = pcThreadResponse().toThreadItemList(
-            tab = latestTab(),
+    fun `pc thread time uses reply time for reply sorting`() {
+        val result = selectThreadDisplayTime(
             sortType = ForumSortType.BY_REPLY,
-            showBothName = false,
-            isBlocked = { _, _ -> false },
+            createTime = 1_700_000_000L,
+            replyTime = 1_800_000_000L,
         )
 
-        assertEquals(1_800_000_000_000L, result.threads.single().lastTimeMill)
-        assertEquals(ThreadTimeType.REPLY, result.threads.single().timeType)
+        assertEquals(1_800_000_000_000L, result.timeMillis)
+        assertEquals(ThreadTimeType.REPLY, result.type)
     }
 
     @Test
-    fun `pc thread mapper uses publish time for send sorting`() = runTest {
-        val result = pcThreadResponse().toThreadItemList(
-            tab = latestTab(),
+    fun `pc thread time uses publish time for send sorting`() {
+        val result = selectThreadDisplayTime(
             sortType = ForumSortType.BY_SEND,
-            showBothName = false,
-            isBlocked = { _, _ -> false },
+            createTime = 1_700_000_000L,
+            replyTime = 1_800_000_000L,
         )
 
-        assertEquals(1_700_000_000_000L, result.threads.single().lastTimeMill)
-        assertEquals(ThreadTimeType.PUBLISH, result.threads.single().timeType)
-    }
-
-    private fun latestTab() = NavTab(tabId = 503, tabName = "最新", tabType = 14, isDefault = true)
-
-    private fun pcThreadResponse(): PcFrsPageResponse {
-        return PcFrsPageResponse(
-            pageData = PcPageData(
-                feedList = listOf(
-                    PcFeedItem(
-                        feed = PcFeed(
-                            businessInfoMap = mapOf(
-                                "thread_id" to "1",
-                                "title" to "标题",
-                                "abstract" to "内容",
-                                "user_id" to "2",
-                                "forum_id" to "3",
-                                "forum_name" to "test",
-                                "create_time" to "1700000000",
-                                "last_time_int" to "1800000000",
-                            ),
-                            components = listOf(PcFeedComponent(feedSocial = PcFeedSocial(tid = 1)))
-                        )
-                    )
-                )
-            )
-        )
+        assertEquals(1_700_000_000_000L, result.timeMillis)
+        assertEquals(ThreadTimeType.PUBLISH, result.type)
     }
 }
