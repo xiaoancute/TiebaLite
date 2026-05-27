@@ -236,9 +236,10 @@ class ForumRepository @Inject constructor(
             .loadThread(forumId, forumName, page, sortType, threadIds)
             .thread_list
             .mapUiModel(
+                sortType = sortType,
                 showBothName = habitSettings.first().showBothName,
                 blockedSetting = blockedSettings.first(),
-                isBlocked = blockRepo::isBlocked,
+                isBlocked = { uid, contents -> blockRepo.isBlocked(uid, *contents) },
             )
     }
 
