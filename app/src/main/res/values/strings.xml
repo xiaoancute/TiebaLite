@@ -114,6 +114,8 @@
     <string name="toast_no_permission_notification">未授予通知权限</string>
     <string name="toast_no_permission_save_photo">未授予「存储空间」权限，无法保存图片</string>
     <string name="text_ip_location">来自%s</string>
+    <string name="thread_time_publish">发布于 %1$s</string>
+    <string name="thread_time_reply">回复于 %1$s</string>
     <string name="tip_post_floor">第 %d 楼</string>
     <string name="my_info_service_center">服务中心</string>
     <string name="toast_success">成功</string>

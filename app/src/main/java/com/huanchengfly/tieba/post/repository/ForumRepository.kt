@@ -17,6 +17,7 @@ import com.huanchengfly.tieba.post.repository.source.network.ForumNetworkDataSou
 import com.huanchengfly.tieba.post.repository.user.SettingsRepository
 import com.huanchengfly.tieba.post.ui.models.ThreadItem
 import com.huanchengfly.tieba.post.ui.models.ThreadItemList
+import com.huanchengfly.tieba.post.ui.models.ThreadTimeType
 import com.huanchengfly.tieba.post.ui.models.forum.ForumData
 import com.huanchengfly.tieba.post.ui.models.forum.ForumDetail
 import com.huanchengfly.tieba.post.ui.models.forum.ForumManager
@@ -27,6 +28,7 @@ import com.huanchengfly.tieba.post.ui.models.forum.Rule
 import com.huanchengfly.tieba.post.ui.models.settings.BlockSettings
 import com.huanchengfly.tieba.post.ui.models.settings.ForumSortType
 import com.huanchengfly.tieba.post.ui.models.settings.HabitSettings
+import com.huanchengfly.tieba.post.utils.DateTimeUtils
 import com.huanchengfly.tieba.post.utils.StringUtil
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -103,6 +105,7 @@ class ForumRepository @Inject constructor(
             val showBothName = habitSettings.first().showBothName
             val typedThreads = pcData.toThreadItemList(
                 tab = tab,
+                sortType = sortType,
                 showBothName = showBothName,
                 isBlocked = blockRepo::isBlocked,
             )
@@ -141,7 +144,12 @@ class ForumRepository @Inject constructor(
         var forumManagers: List<ForumManager>? = null
         val showBothName = habitSettings.first().showBothName
         val typedThreads = ThreadItemList(
-            threads = data.thread_list.mapUiModel(blockedSettings.first(), showBothName, blockRepo::isBlocked),
+            threads = data.thread_list.mapUiModel(
+                sortType = sortType,
+                blockedSetting = blockedSettings.first(),
+                showBothName = showBothName,
+                isBlocked = blockRepo::isBlocked
+            ),
             threadIds = data.thread_id_list,
             hasMore = data.page!!.has_more == 1
         )
@@ -313,6 +321,7 @@ class ForumRepository @Inject constructor(
 }
 
 private suspend fun List<ThreadInfo>.mapUiModel(
+    @ForumSortType sortType: Int,
     blockedSetting: BlockSettings,
     showBothName: Boolean,
     isBlocked: suspend (uid: Long, content: Array<String>) -> Boolean,
@@ -321,12 +330,29 @@ private suspend fun List<ThreadInfo>.mapUiModel(
         withContext(Dispatchers.Default) {
             mapNotNull {
                 val notBlocked = !blockedSetting.blockVideo || it.videoInfo == null
-                if (notBlocked) it.mapUiModel(showBothName, isBlocked, threadDislikeMap = null) else null
+                if (notBlocked) {
+                    it.mapUiModel(showBothName, isBlocked, threadDislikeMap = null)
+                        .withForumTimeType(sortType, createTime = it.createTime)
+                } else null
             }
             .distinctById()
         }
     } else {
         emptyList()
+    }
+}
+
+private fun ThreadItem.withForumTimeType(@ForumSortType sortType: Int, createTime: Int): ThreadItem {
+    return if (sortType == ForumSortType.BY_SEND) {
+        copy(
+            lastTimeMill = createTime
+                .takeIf { it > 0 }
+                ?.let { DateTimeUtils.fixTimestamp(it.toLong()) }
+                ?: lastTimeMill,
+            timeType = ThreadTimeType.PUBLISH
+        )
+    } else {
+        copy(timeType = ThreadTimeType.REPLY)
     }
 }
 

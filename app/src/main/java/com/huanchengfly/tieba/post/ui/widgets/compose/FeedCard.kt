@@ -74,6 +74,7 @@ import com.huanchengfly.tieba.post.ui.common.windowsizeclass.isWindowWidthCompac
 import com.huanchengfly.tieba.post.ui.models.Author
 import com.huanchengfly.tieba.post.ui.models.SimpleForum
 import com.huanchengfly.tieba.post.ui.models.ThreadItem
+import com.huanchengfly.tieba.post.ui.models.ThreadTimeType
 import com.huanchengfly.tieba.post.ui.page.photoview.PhotoViewActivity
 import com.huanchengfly.tieba.post.ui.utils.getPhotoViewData
 import com.huanchengfly.tieba.post.ui.widgets.compose.video.VideoThumbnail
@@ -501,10 +502,17 @@ fun FeedCard(
 
     Card(
         header = {
+            val timeText = remember(thread.lastTimeMill, thread.timeType) {
+                val relativeTime = DateTimeUtils.getRelativeTimeString(context, thread.lastTimeMill)
+                when (thread.timeType) {
+                    ThreadTimeType.PUBLISH -> context.getString(R.string.thread_time_publish, relativeTime)
+                    ThreadTimeType.REPLY -> context.getString(R.string.thread_time_reply, relativeTime)
+                }
+            }
             SharedTransitionUserHeader(
                 user = thread.author,
                 extraKey = thread.id,
-                desc = remember { DateTimeUtils.getRelativeTimeString(context, thread.lastTimeMill) },
+                desc = timeText,
                 onClick = { onClickUser(thread) },
                 content = dislikeAction
             )

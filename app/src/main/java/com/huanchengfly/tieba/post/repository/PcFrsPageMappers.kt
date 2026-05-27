@@ -11,7 +11,9 @@ import com.huanchengfly.tieba.post.ui.models.LikeZero
 import com.huanchengfly.tieba.post.ui.models.SimpleForum
 import com.huanchengfly.tieba.post.ui.models.ThreadItem
 import com.huanchengfly.tieba.post.ui.models.ThreadItemList
+import com.huanchengfly.tieba.post.ui.models.ThreadTimeType
 import com.huanchengfly.tieba.post.ui.models.forum.NavTab
+import com.huanchengfly.tieba.post.ui.models.settings.ForumSortType
 import com.huanchengfly.tieba.post.ui.widgets.compose.buildThreadContent
 import com.huanchengfly.tieba.post.utils.DateTimeUtils
 import com.huanchengfly.tieba.post.utils.StringUtil
@@ -43,13 +45,14 @@ internal fun List<PcFrsTab>.toNavTabs(defaultTabId: Int? = null): List<NavTab> {
 
 internal suspend fun PcFrsPageResponse.toThreadItemList(
     tab: NavTab,
+    @ForumSortType sortType: Int,
     showBothName: Boolean,
     isBlocked: suspend (uid: Long, content: Array<String>) -> Boolean,
 ): ThreadItemList {
     val threads = pageData
         ?.feedList
         .orEmpty()
-        .mapNotNull { item -> item.feed?.toThreadItem(tab, showBothName, isBlocked) }
+        .mapNotNull { item -> item.feed?.toThreadItem(tab, sortType, showBothName, isBlocked) }
         .distinctBy { it.id }
     return ThreadItemList(
         threads = threads,
@@ -60,6 +63,7 @@ internal suspend fun PcFrsPageResponse.toThreadItemList(
 
 private suspend fun PcFeed.toThreadItem(
     tab: NavTab,
+    @ForumSortType sortType: Int,
     showBothName: Boolean,
     isBlocked: suspend (uid: Long, content: Array<String>) -> Boolean,
 ): ThreadItem? {
@@ -81,6 +85,11 @@ private suspend fun PcFeed.toThreadItem(
     val forumAvatar = businessInfoMap["forum_avatar"]
     val tabName = tab.tabName.takeIf { tab.isGeneralTab }
     val createTime = businessInfoMap["create_time"]?.toLongOrNull() ?: 0
+    val replyTime = businessInfoMap["last_time_int"]?.toLongOrNull()
+        ?: businessInfoMap["last_time"]?.toLongOrNull()
+        ?: 0
+    val timeType = if (sortType == ForumSortType.BY_SEND) ThreadTimeType.PUBLISH else ThreadTimeType.REPLY
+    val displayTime = if (timeType == ThreadTimeType.PUBLISH) createTime else replyTime.takeIf { it > 0 } ?: createTime
     val medias = components
         .flatMap { it.feedPic?.pics.orEmpty() }
         .map {
@@ -108,7 +117,8 @@ private suspend fun PcFeed.toThreadItem(
         blocked = isBlocked(authorId, arrayOf(title, abstractText)),
         content = buildThreadContent(title, abstractText, tabName, isGood = businessInfoMap["is_good"] == "1"),
         title = title,
-        lastTimeMill = DateTimeUtils.fixTimestamp(createTime),
+        lastTimeMill = DateTimeUtils.fixTimestamp(displayTime),
+        timeType = timeType,
         like = social?.agree?.let { Like(liked = it.hasAgree == 1, count = it.agreeNum) } ?: LikeZero,
         hotNum = businessInfoMap["view_num"]?.toIntOrNull() ?: 0,
         replyNum = social?.commentNum ?: 0,

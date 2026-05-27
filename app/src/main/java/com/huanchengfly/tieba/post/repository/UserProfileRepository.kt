@@ -22,6 +22,7 @@ import com.huanchengfly.tieba.post.ui.models.Like
 import com.huanchengfly.tieba.post.ui.models.LikeZero
 import com.huanchengfly.tieba.post.ui.models.SimpleForum
 import com.huanchengfly.tieba.post.ui.models.ThreadItem
+import com.huanchengfly.tieba.post.ui.models.ThreadTimeType
 import com.huanchengfly.tieba.post.ui.models.user.PermissionList
 import com.huanchengfly.tieba.post.ui.models.user.PostContent
 import com.huanchengfly.tieba.post.ui.models.user.PostListItem
@@ -221,6 +222,7 @@ class UserProfileRepository @Inject constructor(
                         title = it.title,
                         isTop = it.top_types == 1,
                         lastTimeMill = DateTimeUtils.fixTimestamp(it.create_time.toLong()),
+                        timeType = ThreadTimeType.PUBLISH,
                         like = it.agree?.let { Like(it) } ?: LikeZero,
                         replyNum = it.reply_num,
                         medias = it.media,

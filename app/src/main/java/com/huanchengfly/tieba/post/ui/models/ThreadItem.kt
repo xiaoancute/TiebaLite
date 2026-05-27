@@ -8,6 +8,10 @@ import com.huanchengfly.tieba.post.api.models.protos.VideoInfo
 import com.huanchengfly.tieba.post.arch.ImmutableHolder
 import com.huanchengfly.tieba.post.ui.models.explore.Dislike
 
+enum class ThreadTimeType {
+    PUBLISH, REPLY
+}
+
 /**
  * Ui Model of ThreadInfo
  * */
@@ -21,6 +25,7 @@ import com.huanchengfly.tieba.post.ui.models.explore.Dislike
     val title: String,
     val isTop: Boolean = false,
     val lastTimeMill: Long,
+    val timeType: ThreadTimeType = ThreadTimeType.REPLY,
     val like: Like = LikeZero,
     val hotNum: Int = 0,
     val replyNum: Int = 0,
@@ -41,6 +46,7 @@ import com.huanchengfly.tieba.post.ui.models.explore.Dislike
         content: AnnotatedString? = this.content,
         title: String = this.title,
         lastTimeMill: Long = this.lastTimeMill,
+        timeType: ThreadTimeType = this.timeType,
         like: Like = this.like,
         hotNum: Int = this.hotNum,
         replyNum: Int = this.replyNum,
@@ -59,6 +65,7 @@ import com.huanchengfly.tieba.post.ui.models.explore.Dislike
         title = title,
         isTop = this.isTop,
         lastTimeMill = lastTimeMill,
+        timeType = timeType,
         like = like,
         hotNum = hotNum,
         replyNum = replyNum,
