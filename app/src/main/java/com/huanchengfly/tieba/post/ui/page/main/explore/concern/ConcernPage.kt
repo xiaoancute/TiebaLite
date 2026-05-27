@@ -11,7 +11,10 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -60,10 +63,12 @@ fun ConcernPage(
     viewModel.uiEvent.collectCommonUiEventWithLifecycle()
 
     LaunchedFabStateEffect(listState, onHideFab, isRefreshing, isError = error != null)
+    var launchRefreshTriggered by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(refreshOnLaunch, isRefreshing) {
-        if (refreshOnLaunch && !isRefreshing) {
-            viewModel.onRefresh()
+        if (refreshOnLaunch && !launchRefreshTriggered && !isRefreshing) {
+            launchRefreshTriggered = true
             onLaunchRefreshConsumed()
+            viewModel.onRefresh()
         }
     }
 
