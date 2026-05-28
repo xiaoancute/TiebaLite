@@ -4,7 +4,6 @@ import com.huanchengfly.tieba.post.api.models.web.PcFrsTab
 import com.huanchengfly.tieba.post.api.models.web.PcFrsPageResponse
 import com.huanchengfly.tieba.post.api.models.web.PcNavTabInfo
 import com.huanchengfly.tieba.post.ui.models.ThreadTimeType
-import com.huanchengfly.tieba.post.ui.models.forum.NavTab
 import com.huanchengfly.tieba.post.ui.models.settings.ForumSortType
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -76,7 +75,6 @@ class PcFrsPageMappersTest {
     @Test
     fun `pc thread time uses reply time for reply sorting`() {
         val result = selectThreadDisplayTime(
-            tab = latestTab(),
             sortType = ForumSortType.BY_REPLY,
             createTime = 1_700_000_000L,
             replyTime = 1_800_000_000L,
@@ -89,7 +87,6 @@ class PcFrsPageMappersTest {
     @Test
     fun `pc thread time uses publish time for send sorting`() {
         val result = selectThreadDisplayTime(
-            tab = latestTab(),
             sortType = ForumSortType.BY_SEND,
             createTime = 1_700_000_000L,
             replyTime = 1_800_000_000L,
@@ -100,41 +97,26 @@ class PcFrsPageMappersTest {
     }
 
     @Test
-    fun `pc thread time uses plain relative time for hot tab`() {
+    fun `pc thread time uses reply time for hot tab`() {
         val result = selectThreadDisplayTime(
-            tab = NavTab(
-                tabId = NavTab.HOT_TAB_ID,
-                tabName = NavTab.HOT_TAB_NAME,
-                tabType = NavTab.HOT_TAB_TYPE,
-                isDefault = false
-            ),
             sortType = ForumSortType.BY_REPLY,
             createTime = 1_700_000_000L,
             replyTime = 1_800_000_000L,
         )
 
         assertEquals(1_800_000_000_000L, result.timeMillis)
-        assertEquals(ThreadTimeType.DEFAULT, result.type)
+        assertEquals(ThreadTimeType.REPLY, result.type)
     }
 
     @Test
-    fun `pc thread time uses plain relative time for general tab`() {
+    fun `pc thread time falls back to publish time when reply time is missing`() {
         val result = selectThreadDisplayTime(
-            tab = NavTab(
-                tabId = 20928,
-                tabName = "开黑",
-                tabType = 15,
-                isDefault = false,
-                isGeneralTab = true,
-            ),
             sortType = ForumSortType.BY_REPLY,
             createTime = 1_700_000_000L,
-            replyTime = 1_800_000_000L,
+            replyTime = 0L,
         )
 
-        assertEquals(1_800_000_000_000L, result.timeMillis)
-        assertEquals(ThreadTimeType.DEFAULT, result.type)
+        assertEquals(1_700_000_000_000L, result.timeMillis)
+        assertEquals(ThreadTimeType.REPLY, result.type)
     }
-
-    private fun latestTab() = NavTab(tabId = 503, tabName = NavTab.LATEST_TAB_NAME, tabType = 14, isDefault = true)
 }
