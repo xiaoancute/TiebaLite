@@ -49,15 +49,20 @@ internal data class ThreadDisplayTime(
 )
 
 internal fun selectThreadDisplayTime(
+    tab: NavTab,
     @ForumSortType sortType: Int,
     createTime: Long,
     replyTime: Long,
 ): ThreadDisplayTime {
-    val type = if (sortType == ForumSortType.BY_SEND) ThreadTimeType.PUBLISH else ThreadTimeType.REPLY
-    val timestamp = if (type == ThreadTimeType.PUBLISH) {
-        createTime
-    } else {
-        replyTime.takeIf { it > 0 } ?: createTime
+    val type = when {
+        tab.usesTimeSortLabel && sortType == ForumSortType.BY_SEND -> ThreadTimeType.PUBLISH
+        tab.usesTimeSortLabel -> ThreadTimeType.REPLY
+        else -> ThreadTimeType.DEFAULT
+    }
+    val timestamp = when (type) {
+        ThreadTimeType.PUBLISH -> createTime
+        ThreadTimeType.REPLY -> replyTime.takeIf { it > 0 } ?: createTime
+        ThreadTimeType.DEFAULT -> replyTime.takeIf { it > 0 } ?: createTime
     }
     return ThreadDisplayTime(
         timeMillis = DateTimeUtils.fixTimestamp(timestamp),
@@ -110,7 +115,7 @@ private suspend fun PcFeed.toThreadItem(
     val replyTime = businessInfoMap["last_time_int"]?.toLongOrNull()
         ?: businessInfoMap["last_time"]?.toLongOrNull()
         ?: 0
-    val displayTime = selectThreadDisplayTime(sortType, createTime, replyTime)
+    val displayTime = selectThreadDisplayTime(tab, sortType, createTime, replyTime)
     val medias = components
         .flatMap { it.feedPic?.pics.orEmpty() }
         .map {

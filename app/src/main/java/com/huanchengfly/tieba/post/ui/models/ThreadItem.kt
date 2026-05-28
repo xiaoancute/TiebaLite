@@ -9,7 +9,7 @@ import com.huanchengfly.tieba.post.arch.ImmutableHolder
 import com.huanchengfly.tieba.post.ui.models.explore.Dislike
 
 enum class ThreadTimeType {
-    PUBLISH, REPLY
+    DEFAULT, PUBLISH, REPLY
 }
 
 /**
@@ -25,7 +25,7 @@ enum class ThreadTimeType {
     val title: String,
     val isTop: Boolean = false,
     val lastTimeMill: Long,
-    val timeType: ThreadTimeType = ThreadTimeType.REPLY,
+    val timeType: ThreadTimeType = ThreadTimeType.DEFAULT,
     val like: Like = LikeZero,
     val hotNum: Int = 0,
     val replyNum: Int = 0,

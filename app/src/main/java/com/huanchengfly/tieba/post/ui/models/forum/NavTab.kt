@@ -29,6 +29,8 @@ data class NavTab(
 
     val supportsSorting: Boolean get() = tabId == FALLBACK_TAB_ID || tabName == LATEST_TAB_NAME || isGeneralTab
 
+    val usesTimeSortLabel: Boolean get() = tabId == FALLBACK_TAB_ID || tabName == LATEST_TAB_NAME
+
     val usesAppFrs: Boolean get() = tabId == FALLBACK_TAB_ID
 
     val pcSortType: Int get() = when {

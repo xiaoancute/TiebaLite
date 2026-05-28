@@ -505,6 +505,7 @@ fun FeedCard(
             val timeText = remember(thread.lastTimeMill, thread.timeType) {
                 val relativeTime = DateTimeUtils.getRelativeTimeString(context, thread.lastTimeMill)
                 when (thread.timeType) {
+                    ThreadTimeType.DEFAULT -> relativeTime
                     ThreadTimeType.PUBLISH -> context.getString(R.string.thread_time_publish, relativeTime)
                     ThreadTimeType.REPLY -> context.getString(R.string.thread_time_reply, relativeTime)
                 }
