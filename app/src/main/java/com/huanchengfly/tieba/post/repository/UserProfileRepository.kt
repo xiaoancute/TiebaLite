@@ -54,6 +54,7 @@ class UserProfileRepository @Inject constructor(
 
     private val networkDataSource = UserProfileNetworkDataSource
     private val habitSettings = settingsRepository.habitSettings
+    private val privacySettings = settingsRepository.privacySettings
 
     private val scope = AppBackgroundScope
 
@@ -116,7 +117,7 @@ class UserProfileRepository @Inject constructor(
                 val blockDays = anti?.days_tofree?.takeIf { anti.block_stat == 1 } ?: 0
                 userProfileDao.upsert(profile = mapToEntity(data, blockDays))
                 localDataSource.purgeByUid(uid)
-            } else if (recordHistory) {
+            } else if (recordHistory && !privacySettings.first().incognitoMode) {
                 userProfileDao.updateLastVisit(uid, timestamp = System.currentTimeMillis())
             }
             val cost = System.currentTimeMillis() - start

@@ -33,8 +33,7 @@ class FakeSettingsRepository @Inject constructor(): SettingsRepository {
     override val habitSettings: Settings<HabitSettings>
         get() = throw RuntimeException("Not yet implemented")
 
-    override val privacySettings: Settings<PrivacySettings>
-        get() = throw RuntimeException("Not yet implemented")
+    override val privacySettings: Settings<PrivacySettings> = FakeSettings(PrivacySettings())
 
     override val themeSettings: Settings<ThemeSettings>
         get() = throw RuntimeException("Not yet implemented")

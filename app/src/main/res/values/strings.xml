@@ -27,6 +27,8 @@
     <string name="title_settings_clipboard_link">剪贴板读取</string>
     <string name="summary_app_link">允许浏览器跳转至贴吧Lite.\n单击此处打开应用设置</string>
     <string name="summary_clipboard_link">读取并打开剪贴板中的贴吧链接</string>
+    <string name="settings_incognito_mode">不保存浏览记录</string>
+    <string name="summary_incognito_mode">开启后不保存帖子、吧和已缓存用户的访问记录</string>
     <string name="title_settings">设置</string>
     <string name="title_settings_custom">个性化</string>
     <string name="title_settings_privacy">隐私</string>

@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Build
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
+import androidx.compose.material.icons.outlined.AddModerator
 import androidx.compose.material.icons.outlined.ContentPasteSearch
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.runtime.Composable
@@ -30,12 +31,23 @@ fun PrivacySettingsPage(settings: Settings<PrivacySettings>, onBack: () -> Unit)
     ) {
         appLinkPreference()
 
+        incognitoModePreference()
+
         notificationPermissionPromptPreference()
 
         notificationSettingsPreference()
 
         clipboardPreference()
     }
+}
+
+fun SettingsSegmentedPrefsScope<PrivacySettings>.incognitoModePreference() {
+    toggleablePreference(
+        property = PrivacySettings::incognitoMode,
+        title = R.string.settings_incognito_mode,
+        summary = R.string.summary_incognito_mode,
+        leadingIcon = Icons.Outlined.AddModerator,
+    )
 }
 
 fun SettingsSegmentedPrefsScope<PrivacySettings>.appLinkPreference() = customPreference { shapes ->

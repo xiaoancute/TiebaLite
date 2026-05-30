@@ -15,10 +15,12 @@ import com.huanchengfly.tieba.post.models.database.UserProfile
 import com.huanchengfly.tieba.post.models.database.dao.ForumHistoryDao
 import com.huanchengfly.tieba.post.models.database.dao.ThreadHistoryDao
 import com.huanchengfly.tieba.post.models.database.dao.UserProfileDao
+import com.huanchengfly.tieba.post.repository.user.SettingsRepository
 import com.huanchengfly.tieba.post.utils.StringUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -30,8 +32,10 @@ import javax.inject.Singleton
  * */
 @Singleton
 class HistoryRepository @Inject constructor(
-    private val dataBase: TbLiteDatabase
+    private val dataBase: TbLiteDatabase,
+    settingsRepository: SettingsRepository,
 ) {
+    private val privacySettings = settingsRepository.privacySettings
 
     private val threadHistoryDao: ThreadHistoryDao = dataBase.threadHistoryDao()
 
@@ -70,6 +74,8 @@ class HistoryRepository @Inject constructor(
     }
 
     suspend fun saveHistory(history: History) {
+        if (privacySettings.first().incognitoMode) return
+
         withContext(NonCancellable) {
             when (history) {
                 is ThreadHistory -> threadHistoryDao.upsert(history)

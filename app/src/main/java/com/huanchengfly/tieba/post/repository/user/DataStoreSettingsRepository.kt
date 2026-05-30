@@ -201,17 +201,20 @@ private object PrivacySettingsTransformer : PreferenceTransformer<PrivacySetting
 
     override val get: (Preferences) -> PrivacySettings = {
         PrivacySettings(
+            incognitoMode = it[booleanPreferencesKey(KEY_PRIVACY_INCOGNITO_MODE)] == true,
             requestNotificationPermission = it[booleanPreferencesKey(KEY_PRIVACY_NOTIFICATION_PERMISSION)] ?: true,
             readClipBoardLink = it[booleanPreferencesKey(KEY_PRIVACY_CLIPBOARD)] ?: true
         )
     }
 
     override val set: (MutablePreferences, PrivacySettings) -> Unit = { it, settings ->
+        it.putBoolean(KEY_PRIVACY_INCOGNITO_MODE, settings.incognitoMode)
         it.putBoolean(KEY_PRIVACY_NOTIFICATION_PERMISSION, settings.requestNotificationPermission)
         it.putBoolean(KEY_PRIVACY_CLIPBOARD, settings.readClipBoardLink)
     }
 
     private const val KEY_PRIVACY_CLIPBOARD = "clipboard_link"
+    private const val KEY_PRIVACY_INCOGNITO_MODE = "incognito_mode"
     private const val KEY_PRIVACY_NOTIFICATION_PERMISSION = "notification_permission_prompt"
 }
 
