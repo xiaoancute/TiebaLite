@@ -1,6 +1,6 @@
 package com.huanchengfly.tieba.post.ui.page.settings.blocklist
 
-import androidx.activity.compose.BackHandler
+import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -299,7 +299,7 @@ private fun <T> BlockListScaffold(
 
     val selectedItems = remember { mutableStateSetOf<T>() }
     var selectMode by remember { mutableStateOf(false) }
-    BackHandler(enabled = selectMode) {
+    PredictiveBackHandler(enabled = selectMode) {
         selectMode = false
         selectedItems.clear()
     }
@@ -426,7 +426,7 @@ private fun BlockFloatingActionButtonMenu(
         )
     }
 
-    BackHandler(fabMenuExpanded) { fabMenuExpanded = false }
+    PredictiveBackHandler(enabled = fabMenuExpanded) { fabMenuExpanded = false }
 
     AnimatedVisibility(
         visible = visible,

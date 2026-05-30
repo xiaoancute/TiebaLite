@@ -1,6 +1,6 @@
 package com.huanchengfly.tieba.post.ui.page.search
 
-import androidx.activity.compose.BackHandler
+import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
@@ -205,7 +205,7 @@ fun SearchPage(
         derivedStateOf { isInputKeywordNotEmpty && inputKeyword != uiState.submittedKeyword }
     }
 
-    BackHandler(enabled = isKeywordNotEmpty && isInputKeywordNotEmpty) {
+    PredictiveBackHandler(enabled = isKeywordNotEmpty && isInputKeywordNotEmpty) {
         onKeywordSubmit("")
     }
 

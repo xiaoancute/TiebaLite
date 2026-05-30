@@ -3,7 +3,7 @@ package com.huanchengfly.tieba.post.ui.page.settings.theme
 import android.app.Activity.RESULT_OK
 import android.content.ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN
 import android.content.Intent
-import androidx.activity.compose.BackHandler
+import androidx.activity.compose.PredictiveBackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -297,7 +297,9 @@ fun AppThemePage(
                             onClick = onSaveThemeClicked
                         )
                     }
-                    BackHandler(enabled = themeChanged, onBack = saveThemeDialogState::show)
+                    PredictiveBackHandler(enabled = themeChanged) {
+                        saveThemeDialogState.show()
+                    }
                 }
             )
         },

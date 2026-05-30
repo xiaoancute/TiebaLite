@@ -1,6 +1,6 @@
 package com.huanchengfly.tieba.post.ui.page.thread
 
-import androidx.activity.compose.BackHandler
+import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
@@ -409,7 +409,9 @@ fun ThreadPage(
                     bottomSheetState.isVisible || collectMarkPid != lazyListState.middleVisiblePost(state)?.id
                 }
             }
-            BackHandler(enabled = interceptBack, onBack = onBackPressedCallback)
+            PredictiveBackHandler(enabled = interceptBack) {
+                onBackPressedCallback()
+            }
         }
     }
 

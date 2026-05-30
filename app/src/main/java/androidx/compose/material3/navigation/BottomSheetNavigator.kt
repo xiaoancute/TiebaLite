@@ -18,7 +18,7 @@
 
 package androidx.compose.material3.navigation
 
-import androidx.activity.compose.BackHandler
+import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.SheetState
@@ -253,7 +253,7 @@ public class BottomSheetNavigator(
                 }
             }
 
-            BackHandler {
+            PredictiveBackHandler {
                 animateToDismiss()
             }
 
@@ -302,4 +302,3 @@ public class BottomSheetNavigator(
         internal val content: @Composable ColumnScope.(NavBackStackEntry) -> Unit
     ) : NavDestination(navigator), FloatingWindow
 }
-

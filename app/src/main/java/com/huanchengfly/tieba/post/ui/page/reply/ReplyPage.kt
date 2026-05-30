@@ -7,7 +7,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.view.View
 import android.widget.Toast
-import androidx.activity.compose.BackHandler
+import androidx.activity.compose.PredictiveBackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts.PickMultipleVisualMedia
@@ -273,7 +273,7 @@ private fun ReplyPageContent(
     }
 
     StrongBox {
-        BackHandler(enabled = curKeyboardType != NONE) { // Close current panel when back
+        PredictiveBackHandler(enabled = curKeyboardType != NONE) { // Close current panel when back
             switchToPanel(NONE)
         }
     }

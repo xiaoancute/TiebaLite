@@ -1,6 +1,6 @@
 package com.huanchengfly.tieba.post.ui.page.history
 
-import androidx.activity.compose.BackHandler
+import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -162,7 +162,7 @@ fun HistoryPage(
 
     val selectedItems = remember { mutableStateSetOf<History>() }
     var selectMode by remember { mutableStateOf(false) }
-    BackHandler(enabled = selectMode) {
+    PredictiveBackHandler(enabled = selectMode) {
         selectMode = false
         selectedItems.clear()
     }

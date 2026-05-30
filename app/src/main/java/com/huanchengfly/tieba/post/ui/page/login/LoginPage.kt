@@ -4,7 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.webkit.CookieManager
 import android.webkit.WebView
-import androidx.activity.compose.BackHandler
+import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -147,7 +147,7 @@ fun LoginPage(
         }
     }
 
-    BackHandler(onBack = onBack) // Navigate to main page on setup
+    PredictiveBackHandler { onBack() } // Navigate to main page on setup
 }
 
 private class LoginWebViewClient(

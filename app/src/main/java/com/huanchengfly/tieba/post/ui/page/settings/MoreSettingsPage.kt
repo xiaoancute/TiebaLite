@@ -4,7 +4,7 @@ import android.annotation.SuppressLint
 import android.os.Build
 import android.text.format.Formatter
 import android.webkit.WebView
-import androidx.activity.compose.BackHandler
+import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Analytics
 import androidx.compose.material.icons.rounded.DeleteForever
@@ -109,7 +109,7 @@ private fun ImageCachePreference(modifier: Modifier = Modifier, shapes: ListItem
     val snackbarHostState = LocalSnackbarHostState.current
 
     var diskCacheJob: Job? by retain { mutableStateOf(null) }
-    BackHandler(diskCacheJob != null) {} // 硬控用户直到清除完成
+    PredictiveBackHandler(enabled = diskCacheJob != null) {} // 硬控用户直到清除完成
 
     var cacheSize: String? by rememberSaveable { mutableStateOf(null) }
     if (cacheSize == null) {
