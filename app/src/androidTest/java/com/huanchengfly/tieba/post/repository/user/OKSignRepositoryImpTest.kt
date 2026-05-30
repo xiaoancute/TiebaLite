@@ -100,8 +100,9 @@ class OKSignRepositoryImpTest {
     }
 
     @Test
-    fun testSignFail() {
+    fun testSignFailWithoutAutoStop() {
         val progressListener = TestProgressListener()
+        settingsRepo.signConfig.save { it.copy(autoStopOnSignFailure = false) }
 
         // Throw exceptions on next call on MSign and Sign
         networkDataSource.setNextOfficialSignThrow(IOException("一键签到失败!"))
@@ -111,6 +112,28 @@ class OKSignRepositoryImpTest {
         // Expect caught TiebaException in Sign
         runTest { okSignRepository.sign(listener = progressListener) }
         assertEquals(1, progressListener.failed.size)
+        assertEquals(TestData.DummyGetForumListBean.forumInfo.size - 1, progressListener.succeed)
+    }
+
+    @Test
+    fun testSignFailWithAutoStop() {
+        val progressListener = TestProgressListener()
+
+        // Throw exceptions on next call on MSign and Sign
+        networkDataSource.setNextOfficialSignThrow(IOException("一键签到失败!"))
+        networkDataSource.setNextSignThrow(TiebaException("签到失败!"))
+
+        // Expect caught IOException in MSign
+        // Expect throws TiebaException in Sign
+        assertThrows(TiebaException::class.java) {
+            runTest { okSignRepository.sign(listener = progressListener) }
+        }
+        assertEquals(1, progressListener.failed.size)
+    }
+
+    @Test
+    fun testSignUnexpectedFail() {
+        val progressListener = TestProgressListener()
 
         // Throw exceptions on next call on MSign and Sign
         networkDataSource.setNextOfficialSignThrow(IOException("一键签到失败!"))
@@ -146,7 +169,13 @@ private class TestProgressListener(): OKSignRepository.ProgressListener {
 
     override fun onSigned(progress: Int, forum: String, signBonusPoint: Int?) {}
 
-    override fun onFailed(progress: Int, forum: String, error: String) {
+    override fun onFailed(
+        progress: Int,
+        forum: String,
+        errorCode: Int?,
+        error: String,
+        finalFailure: Boolean
+    ) {
         failed.add(forum)
     }
 

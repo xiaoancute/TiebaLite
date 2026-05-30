@@ -124,6 +124,7 @@ import com.huanchengfly.tieba.post.ui.widgets.compose.placeholder
 import com.huanchengfly.tieba.post.ui.widgets.compose.rememberDialogState
 import com.huanchengfly.tieba.post.ui.widgets.compose.states.StateScreen
 import com.huanchengfly.tieba.post.utils.LocalAccount
+import com.huanchengfly.tieba.post.utils.StringUtil.getShortNumString
 import com.huanchengfly.tieba.post.utils.TiebaUtil
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
@@ -195,13 +196,23 @@ private fun ForumItemPlaceholder(showAvatar: Boolean) {
             Spacer(modifier = Modifier.width(14.dp))
         }
 
-        Text(
-            text = "",
-            modifier = Modifier
-                .weight(1.0f)
-                .placeholder(color = placeholderColor),
-            fontSize = 15.sp,
-        )
+        Column(modifier = Modifier.weight(1.0f)) {
+            Text(
+                text = "",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .placeholder(color = placeholderColor),
+                fontSize = 15.sp,
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "",
+                modifier = Modifier
+                    .width(64.dp)
+                    .placeholder(color = placeholderColor),
+                fontSize = 11.sp,
+            )
+        }
 
         Spacer(modifier = Modifier.width(8.dp))
         Box(
@@ -308,7 +319,10 @@ private fun ForumItemContent(forum: LikedForum, showAvatar: Boolean) {
             )
         }
 
-        Box(modifier = Modifier.weight(1.0f)) {  // Boxing for transition animation
+        Column(
+            modifier = Modifier.weight(1.0f),
+            verticalArrangement = Arrangement.Center
+        ) {
             Text(
                 text = forum.name,
                 modifier = Modifier.onCase(showAvatar) { // Enable transition on List Mode (showAvatar)
@@ -317,6 +331,13 @@ private fun ForumItemContent(forum: LikedForum, showAvatar: Boolean) {
                 overflow = TextOverflow.MiddleEllipsis,
                 maxLines = 1,
                 style = MaterialTheme.typography.titleSmall
+            )
+            Text(
+                text = stringResource(id = R.string.hot_num, forum.hotNum.getShortNumString()),
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 

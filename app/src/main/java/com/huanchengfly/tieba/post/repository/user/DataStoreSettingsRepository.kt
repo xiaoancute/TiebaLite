@@ -352,6 +352,7 @@ private object SignConfigTransformer: PreferenceTransformer<SignConfig> {
             autoSignSlow = it[booleanPreferencesKey(KEY_OKSIGN_SLOW)] ?: true,
             autoSignTime = hmTime ?: randomSignTime(),
             okSignOfficial = it[booleanPreferencesKey(KEY_OKSIGN_OFFICIAL)] ?: true,
+            autoStopOnSignFailure = it[booleanPreferencesKey(KEY_OKSIGN_FAIL_AUTO_STOP)] ?: true,
         )
     }
 
@@ -360,10 +361,12 @@ private object SignConfigTransformer: PreferenceTransformer<SignConfig> {
         it.putBoolean(KEY_OKSIGN_SLOW, config.autoSignSlow)
         it.putLong(KEY_OKSIGN_AUTO_TIME, config.autoSignTime.value)
         it.putBoolean(KEY_OKSIGN_OFFICIAL, config.okSignOfficial)
+        it.putBoolean(KEY_OKSIGN_FAIL_AUTO_STOP, config.autoStopOnSignFailure)
     }
 
     private const val KEY_OKSIGN_AUTO = "auto_sign"
     private const val KEY_OKSIGN_AUTO_TIME = "auto_sign_time"
+    private const val KEY_OKSIGN_FAIL_AUTO_STOP = "oksign_fail_auto_stop"
     private const val KEY_OKSIGN_OFFICIAL = "sign_using_official"
     private const val KEY_OKSIGN_SLOW = "sign_slow_mode"
 }

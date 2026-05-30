@@ -2,6 +2,7 @@ package com.huanchengfly.tieba.post.repository
 
 import android.database.sqlite.SQLiteConstraintException
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.huanchengfly.tieba.post.api.models.ForumGuideBean
 import com.huanchengfly.tieba.post.api.models.MsgBean
 import com.huanchengfly.tieba.post.api.retrofit.exception.TiebaNotLoggedInException
 import com.huanchengfly.tieba.post.coroutines.runTest
@@ -85,6 +86,39 @@ class HomeRepositoryTest {
         assertEquals(likedForums.size, forumFlow.first().size)
     }
 
+    @Test
+    fun testUpdateLikedForumsKeepsHotNum() = runTest {
+        val uid = dummyAccount.uid
+        val forumFlow: Flow<List<LikedForum>> = homeRepository.getLikedForums()
+        val forum = LocalLikedForum(
+            id = 99,
+            uid = uid,
+            avatar = "",
+            name = "Test Forum",
+            level = 10,
+            hotNum = 114514,
+            signInTimestamp = -1,
+        )
+
+        homeRepository.updateLikedForums(uid = uid, forums = listOf(forum))
+
+        assertEquals(114514, forumFlow.first().first().hotNum)
+    }
+
+    @Test
+    fun testMapEntityKeepsHotNum() = runTest {
+        val forums = listOf(
+            ForumGuideBean.LikeForum(
+                forumId = 99,
+                forumName = "Test Forum",
+                levelId = 10,
+                hotNum = 114514,
+            )
+        )
+
+        assertEquals(114514, forums.mapEntity(dummyAccount.uid).first().hotNum)
+    }
+
     @Test(expected = SQLiteConstraintException::class)
     fun testUpdateLikedForumsLoggedOut() = runTest {
         TestData.purgeAccount(database = tbLiteDatabase, settingsRepository = settingsRepo)
@@ -98,7 +132,14 @@ class HomeRepositoryTest {
 
         // Prepare dummy forum
         val uid = dummyAccount.uid
-        val dummyForum = LocalLikedForum(id = 99, uid, avatar = "", name = "Test Forum", level = 10, -1)
+        val dummyForum = LocalLikedForum(
+            id = 99,
+            uid = uid,
+            avatar = "",
+            name = "Test Forum",
+            level = 10,
+            signInTimestamp = -1,
+        )
 
         // Insert dummy forum
         homeRepository.updateLikedForums(uid, listOf(dummyForum))

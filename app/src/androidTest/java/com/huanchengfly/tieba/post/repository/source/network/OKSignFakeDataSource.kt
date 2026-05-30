@@ -1,10 +1,12 @@
 package com.huanchengfly.tieba.post.repository.source.network
 
 import com.huanchengfly.tieba.post.api.booleanToString
+import com.huanchengfly.tieba.post.api.models.CommonResponse
 import com.huanchengfly.tieba.post.api.models.ForumRecommend
 import com.huanchengfly.tieba.post.api.models.GetForumListBean
 import com.huanchengfly.tieba.post.api.models.MSignBean.Info
 import com.huanchengfly.tieba.post.api.models.SignResultBean.UserInfo
+import com.huanchengfly.tieba.post.api.retrofit.exception.TiebaApiException
 import com.huanchengfly.tieba.post.repository.source.TestData
 import com.huanchengfly.tieba.post.repository.user.OKSignRepositoryImp.Companion.ForumSignParam
 import javax.inject.Inject
@@ -61,12 +63,14 @@ class OKSignFakeDataSource @Inject constructor() : OKSignNetworkDataSource {
     override suspend fun requestSign(forumId: Long, forumName: String, tbs: String): UserInfo {
         signError?.let { signError = null; throw it }
 
-        val isSigned = !signFailForums.contains(forumName)
+        if (signFailForums.contains(forumName)) {
+            throw TiebaApiException(CommonResponse(errorCode = 9, errorMsg = "签到失败!"))
+        }
         return UserInfo(
-            isSignIn = isSigned.booleanToString().toInt(),
+            isSignIn = true.booleanToString().toInt(),
             contSignNum = 10,
             signTime = (System.currentTimeMillis() / 1000).toString(),
-            signBonusPoint = if (isSigned) 25 else 0
+            signBonusPoint = 25
         )
     }
 }

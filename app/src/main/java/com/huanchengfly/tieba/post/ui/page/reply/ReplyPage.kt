@@ -240,9 +240,11 @@ private fun ReplyPageContent(
     }
 
     fun showKeyboard() {
-        editTextView?.apply {
-            showKeyboard(this)
-            requestFocus()
+        editTextView?.post {
+            editTextView?.apply {
+                requestFocus()
+                showKeyboard(this)
+            }
         }
     }
 

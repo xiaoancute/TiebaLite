@@ -8,5 +8,6 @@ class LikedForum(
     val id: Long,
     val name: String = "",
     val signed: Boolean = false,
-    val level: String = ""
+    val level: String = "",
+    val hotNum: Int = 0
 )

@@ -8,6 +8,7 @@ import androidx.work.WorkInfo
 import com.huanchengfly.tieba.post.api.models.ForumGuideBean
 import com.huanchengfly.tieba.post.api.models.MSignBean
 import com.huanchengfly.tieba.post.api.retrofit.exception.TiebaException
+import com.huanchengfly.tieba.post.api.retrofit.exception.getErrorCode
 import com.huanchengfly.tieba.post.api.retrofit.exception.getErrorMessage
 import com.huanchengfly.tieba.post.arch.shareInBackground
 import com.huanchengfly.tieba.post.di.ApplicationScope
@@ -50,7 +51,13 @@ interface OKSignRepository {
 
         fun onSigned(progress: Int, forum: String, signBonusPoint: Int?)
 
-        fun onFailed(progress: Int, forum: String, error: String)
+        fun onFailed(
+            progress: Int,
+            forum: String,
+            errorCode: Int?,
+            error: String,
+            finalFailure: Boolean
+        )
 
         fun onMSignFailed(e: Throwable)
 
@@ -113,7 +120,13 @@ class OKSignRepositoryImp @Inject constructor(
                 listener?.onSigned(i, forumName, null)
             } else {
                 mSignFailed.add(forums.first { forum -> forum.forumId == info.forumId })
-                listener?.onFailed(i, forumName, info.error.usermsg)
+                listener?.onFailed(
+                    progress = i,
+                    forum = forumName,
+                    errorCode = info.error.errNo.toIntOrNull(),
+                    error = info.error.usermsg,
+                    finalFailure = false
+                )
             }
             delay(200)
         }
@@ -129,8 +142,10 @@ class OKSignRepositoryImp @Inject constructor(
         forums: List<ForumSignParam>,
         tbs: String,
         slowMode: Boolean,
+        autoStopOnFailure: Boolean,
         initialProgress: Int,
-        listener: ProgressListener?
+        listener: ProgressListener?,
+        onSignedForum: ((Long) -> Unit)? = null,
     ): LongSet {
         val succeed = mutableLongSetOf()
         var progress = initialProgress
@@ -141,11 +156,21 @@ class OKSignRepositoryImp @Inject constructor(
                 if (result.isSignIn == 1) {
                     listener?.onSigned(progress, forumName, result.signBonusPoint)
                     succeed.add(forumId)
+                    onSignedForum?.invoke(forumId)
                 }
             } catch (e: TiebaException) {
                 val message = e.getErrorMessage()
                 Log.w(TAG, "onNormalSign: Sign $forumName failed: $message")
-                listener?.onFailed(progress, forumName, message)
+                listener?.onFailed(
+                    progress = progress,
+                    forum = forumName,
+                    errorCode = e.getErrorCode(),
+                    error = message,
+                    finalFailure = autoStopOnFailure
+                )
+                if (autoStopOnFailure) {
+                    throw e
+                }
             } finally {
                 progress++
             }
@@ -217,13 +242,22 @@ class OKSignRepositoryImp @Inject constructor(
             currentCoroutineContext().ensureActive()
 
             // Sign forums with signFlow now
-            val succeedForumIds = normalSign(
-                forums = forums.toList(),
-                tbs = account.tbs,
-                initialProgress = succeed.size,
-                slowMode = signConfig.autoSignSlow,
-                listener = listener
-            )
+            val succeedForumIds = try {
+                normalSign(
+                    forums = forums.toList(),
+                    tbs = account.tbs,
+                    initialProgress = succeed.size,
+                    slowMode = signConfig.autoSignSlow,
+                    autoStopOnFailure = signConfig.autoStopOnSignFailure,
+                    listener = listener,
+                    onSignedForum = { forumId -> succeed.add(forumId) }
+                )
+            } catch (e: Throwable) {
+                if (succeed.isNotEmpty()) {
+                    notifyForumSignDataChanged()
+                }
+                throw e
+            }
             if (succeedForumIds.isNotEmpty()) {
                 succeed += succeedForumIds
             }

@@ -13,6 +13,7 @@ import androidx.room.Index
  * @param avatar forum avatar url
  * @param name forum name
  * @param level level in forum
+ * @param hotNum forum hot score
  * @param signInTimestamp last sign-in timestamp
  */
 @Entity(
@@ -38,6 +39,8 @@ data class LocalLikedForum(
     val avatar: String = "",
     val name: String = "",
     val level: Int,
+    @ColumnInfo(defaultValue = "0")
+    val hotNum: Int = 0,
     @ColumnInfo(name = "sign")
     val signInTimestamp: Long,
 )

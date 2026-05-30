@@ -9,6 +9,7 @@ data class SignConfig(
     val autoSignSlow: Boolean = true,
     val autoSignTime: HmTime = randomSignTime(),
     val okSignOfficial: Boolean = true,
+    val autoStopOnSignFailure: Boolean = true,
 )
 
 fun randomSignTime(): HmTime = HmTime(hourOfDay = (9..16).random(), minute = 0) // 9:00--16:00

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BatteryAlert
 import androidx.compose.material.icons.outlined.BrowseGallery
+import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.OfflinePin
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.WatchLater
@@ -146,6 +147,14 @@ fun OKSignSettingsPage(settings: Settings<SignConfig>, onBack: () -> Unit) {
                 title = R.string.title_oksign_use_official_oksign,
                 summary = R.string.summary_oksign_use_official_oksign,
                 leadingIcon = Icons.Outlined.Speed,
+                enabled = okSignAvailable
+            )
+
+            toggleablePreference(
+                property = SignConfig::autoStopOnSignFailure,
+                title = R.string.title_oksign_fail_auto_stop,
+                summary = R.string.summary_oksign_fail_auto_stop,
+                leadingIcon = Icons.Outlined.Cancel,
                 enabled = okSignAvailable
             )
         }

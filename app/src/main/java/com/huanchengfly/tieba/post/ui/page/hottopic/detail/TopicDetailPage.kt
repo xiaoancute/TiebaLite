@@ -59,9 +59,9 @@ import com.huanchengfly.tieba.post.ui.widgets.compose.CollapsingTopAppBar
 import com.huanchengfly.tieba.post.ui.widgets.compose.Container
 import com.huanchengfly.tieba.post.ui.widgets.compose.DefaultBackToTopFAB
 import com.huanchengfly.tieba.post.ui.widgets.compose.FeedCard
+import com.huanchengfly.tieba.post.ui.widgets.compose.LoadMoreIndicator
 import com.huanchengfly.tieba.post.ui.widgets.compose.PullToRefreshBox
 import com.huanchengfly.tieba.post.ui.widgets.compose.SwipeUpLazyLoadColumn
-import com.huanchengfly.tieba.post.ui.widgets.compose.defaultBottomIndicator
 import com.huanchengfly.tieba.post.ui.widgets.compose.states.StateScreen
 import com.huanchengfly.tieba.post.utils.StringUtil.getShortNumString
 import kotlinx.coroutines.launch
@@ -146,7 +146,9 @@ fun TopicDetailPage(
                             contentPadding = contentPadding,
                             isLoading = uiState.isLoadingMore,
                             onLazyLoad = viewModel::onLoadMore.takeIf { uiState.hasMore },
-                            bottomIndicator = defaultBottomIndicator,
+                            bottomIndicator = {
+                                LoadMoreIndicator(noMore = !uiState.hasMore, onThreshold = it)
+                            },
                         ) {
                             itemsIndexed(
                                 items = uiState.threads,

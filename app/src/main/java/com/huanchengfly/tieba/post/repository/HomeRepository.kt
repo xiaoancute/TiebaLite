@@ -200,6 +200,7 @@ class HomeRepository @Inject constructor(
                     avatar = it.avatar,
                     name = it.forumName,
                     level = it.levelId,
+                    hotNum = it.hotNum,
                     signInTimestamp = if (it.isSign == 1) now else -1, // set timestamp to now if signed
                 )
             }
@@ -208,13 +209,14 @@ class HomeRepository @Inject constructor(
         // Map entity to ui model
         private fun mapUiModel(forum: LocalLikedForum): LikedForum = forum.let {
             val today = DateTimeUtils.todayTimeMill()
-                LikedForum(
-                    avatar = it.avatar,
-                    id = it.id,
-                    name = it.name,
-                    signed = it.signInTimestamp >= today,
-                    level = "Lv.${it.level}"
-                )
+            LikedForum(
+                avatar = it.avatar,
+                id = it.id,
+                name = it.name,
+                signed = it.signInTimestamp >= today,
+                level = "Lv.${it.level}",
+                hotNum = it.hotNum
+            )
         }
 
         private fun mapForumPagingData(forums: PagingData<LocalLikedForum>): PagingData<LikedForum> {

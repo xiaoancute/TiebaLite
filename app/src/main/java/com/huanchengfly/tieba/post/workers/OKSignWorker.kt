@@ -68,7 +68,9 @@ class OKSignWorker @AssistedInject constructor(
         throw e
     } catch (e: Throwable) {
         Log.e(TAG, "onDoWork: ${e.getErrorMessage()}.", e)
-        notificationUpdater.onError(ConnectivityInterceptor.wrapException(e))
+        if (!notificationUpdater.hasFinalFailure) {
+            notificationUpdater.onError(ConnectivityInterceptor.wrapException(e))
+        }
         Result.failure(
             workDataOf(KEY_ERROR_MESSAGE to e.getErrorMessage())
         )
@@ -180,6 +182,8 @@ class OKSignWorker @AssistedInject constructor(
 
             private var total = 0
             private var name: String  = ""
+            var hasFinalFailure: Boolean = false
+                private set
 
             fun buildProgressNotification(title: String, content: String? = null): NotificationCompat.Builder {
                 return NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
@@ -233,10 +237,41 @@ class OKSignWorker @AssistedInject constructor(
                 onProgress(progress + 1, total)
             }
 
-            override fun onFailed(progress: Int, forum: String, error: String) {
+            @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
+            private fun showFailureNotification(content: String) {
+                NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
+                    .setContentTitle(context.getString(R.string.title_oksign_fail))
+                    .setTicker(context.getString(R.string.title_oksign_fail))
+                    .setContentText(content)
+                    .setStyle(NotificationCompat.BigTextStyle().bigText(content))
+                    .setSubText(context.getString(R.string.title_oksign))
+                    .setSmallIcon(R.drawable.ic_round_warning)
+                    .setAutoCancel(true)
+                    .setOngoing(false)
+                    .build()
+                    .let { notificationManager.notify(System.currentTimeMillis().toInt(), it) }
+            }
+
+            override fun onFailed(
+                progress: Int,
+                forum: String,
+                errorCode: Int?,
+                error: String,
+                finalFailure: Boolean
+            ) {
+                if (finalFailure) {
+                    hasFinalFailure = true
+                }
                 if (NotificationUtils.checkPermission(context)) {
-                    val content = context.getString(R.string.text_singing_progress_fail, forum, error)
+                    val content = if (errorCode == null) {
+                        context.getString(R.string.text_singing_progress_fail_without_code, forum, error)
+                    } else {
+                        context.getString(R.string.text_singing_progress_fail, forum, errorCode, error)
+                    }
                     updateProgressNotification(progress = progress + 1, content = content)
+                    if (finalFailure) {
+                        showFailureNotification(content)
+                    }
                 }
                 onProgress(progress + 1, total)
             }
