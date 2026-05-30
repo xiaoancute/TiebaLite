@@ -105,6 +105,11 @@
     <string name="button_like">点赞</string>
     <string name="title_copy_forum_name">复制吧名</string>
     <string name="title_clear_picture_cache">清除图片缓存</string>
+    <string name="title_auto_clear_picture_cache">自动清理图片缓存</string>
+    <string name="title_auto_clear_picture_cache_off">关闭</string>
+    <string name="title_auto_clear_picture_cache_on_launch">每次启动</string>
+    <string name="title_auto_clear_picture_cache_daily">每天</string>
+    <string name="title_auto_clear_picture_cache_three_days">每 3 天</string>
     <string name="toast_clear_picture_cache_success">成功清除图片缓存</string>
     <string name="tip_clearing_cache">清除缓存中</string>
     <string name="tip_cache">当前共有缓存 %1$s</string>

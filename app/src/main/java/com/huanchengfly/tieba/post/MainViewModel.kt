@@ -14,10 +14,12 @@ import com.huanchengfly.tieba.post.repository.user.Settings
 import com.huanchengfly.tieba.post.repository.user.SettingsRepository
 import com.huanchengfly.tieba.post.theme.ExtendedColorScheme
 import com.huanchengfly.tieba.post.ui.models.settings.HabitSettings
+import com.huanchengfly.tieba.post.ui.models.settings.AutoClearImageCacheInterval
 import com.huanchengfly.tieba.post.ui.models.settings.PrivacySettings
 import com.huanchengfly.tieba.post.ui.models.settings.Theme
 import com.huanchengfly.tieba.post.ui.models.settings.UISettings
 import com.huanchengfly.tieba.post.utils.AccountUtil
+import com.huanchengfly.tieba.post.utils.ImageCacheUtil
 import com.huanchengfly.tieba.post.utils.ThemeUtil
 import com.huanchengfly.tieba.post.utils.isIgnoringBatteryOptimizations
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -47,6 +49,8 @@ class MainViewModel @Inject constructor(
     private val forumRepo: ForumRepository,
     private val threadRepo: PbPageRepository
 ) : ViewModel() {
+
+    private var autoImageCacheCleanupChecked = false
 
     val account: SharedFlow<Account?> = AccountUtil.getInstance().currentAccount
 
@@ -94,6 +98,30 @@ class MainViewModel @Inject constructor(
 
     fun onNotificationPermissionDenied() {
         privacySettings.save { it.copy(requestNotificationPermission = false) }
+    }
+
+    suspend fun runAutomaticImageCacheCleanup() {
+        if (autoImageCacheCleanupChecked) return
+        autoImageCacheCleanupChecked = true
+
+        val habitSettings = settingsRepository.habitSettings.snapshot()
+        val now = System.currentTimeMillis()
+        if (!AutoClearImageCacheInterval.shouldClear(
+                interval = habitSettings.autoClearImageCacheInterval,
+                lastClearTime = habitSettings.lastAutoClearImageCacheTime,
+                now = now
+            )
+        ) {
+            return
+        }
+
+        runCatching {
+            ImageCacheUtil.clearImageAllCache(context.applicationContext)
+        }.onSuccess {
+            settingsRepository.habitSettings.save {
+                it.copy(lastAutoClearImageCacheTime = System.currentTimeMillis())
+            }
+        }
     }
 
     fun onClipBoardDetectDialogDismiss() = ClipBoardLinkDetector.clear()

@@ -121,6 +121,7 @@ class MainActivityV2 : BaseComposeActivity() {
         super.onCreate(savedInstanceState)
         lifecycleScope.launch {
             ClientUtils.refreshActiveTimestamp()
+            viewModel.runAutomaticImageCacheCleanup()
             delay(2000L)
             runCatching {
                 requestNotificationPermission()

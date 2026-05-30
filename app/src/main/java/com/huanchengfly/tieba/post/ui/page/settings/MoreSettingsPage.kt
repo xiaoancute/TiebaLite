@@ -29,23 +29,29 @@ import androidx.compose.ui.res.vectorResource
 import androidx.navigation.NavController
 import com.huanchengfly.tieba.post.R
 import com.huanchengfly.tieba.post.components.TiebaWebView.Companion.dumpWebViewVersion
+import com.huanchengfly.tieba.post.repository.user.Settings
+import com.huanchengfly.tieba.post.ui.models.settings.AutoClearImageCacheInterval
+import com.huanchengfly.tieba.post.ui.models.settings.HabitSettings
 import com.huanchengfly.tieba.post.ui.widgets.compose.LocalSnackbarHostState
 import com.huanchengfly.tieba.post.ui.widgets.compose.preference.SegmentedPreference
 import com.huanchengfly.tieba.post.ui.widgets.compose.preference.preference
 import com.huanchengfly.tieba.post.utils.ImageCacheUtil
 import com.huanchengfly.tieba.post.utils.buildAppSettingsIntent
+import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @SuppressLint("WebViewApiAvailability")
 @Composable
-fun MoreSettingsPage(navigator: NavController) {
+fun MoreSettingsPage(navigator: NavController, habitSettings: Settings<HabitSettings>) {
     val context = LocalContext.current
 
     SettingsScaffold(
         titleRes = R.string.title_settings_more,
         onBack = navigator::navigateUp,
+        settings = habitSettings,
+        initialValue = HabitSettings(),
     ) {
         group(title = R.string.summary_settings_more) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -77,6 +83,18 @@ fun MoreSettingsPage(navigator: NavController) {
         }
 
         group(title = R.string.settings_group_cache) {
+            listPref(
+                property = HabitSettings::autoClearImageCacheInterval,
+                title = R.string.title_auto_clear_picture_cache,
+                options = persistentMapOf(
+                    AutoClearImageCacheInterval.OFF to R.string.title_auto_clear_picture_cache_off,
+                    AutoClearImageCacheInterval.ON_LAUNCH to R.string.title_auto_clear_picture_cache_on_launch,
+                    AutoClearImageCacheInterval.DAILY to R.string.title_auto_clear_picture_cache_daily,
+                    AutoClearImageCacheInterval.THREE_DAYS to R.string.title_auto_clear_picture_cache_three_days,
+                ),
+                leadingIcon = Icons.Rounded.DeleteForever,
+            )
+
             customPreference {
                 ImageCachePreference(shapes = it)
             }

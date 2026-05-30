@@ -26,6 +26,7 @@ import com.huanchengfly.tieba.post.putInt
 import com.huanchengfly.tieba.post.putLong
 import com.huanchengfly.tieba.post.putString
 import com.huanchengfly.tieba.post.theme.TiebaBlue
+import com.huanchengfly.tieba.post.ui.models.settings.AutoClearImageCacheInterval
 import com.huanchengfly.tieba.post.ui.models.settings.BlockSettings
 import com.huanchengfly.tieba.post.ui.models.settings.ClientConfig
 import com.huanchengfly.tieba.post.ui.models.settings.DarkPreference
@@ -133,6 +134,8 @@ class DataStoreSettingsRepository @Inject constructor(
 private object HabitSettingsTransformer : PreferenceTransformer<HabitSettings> {
     override val get: (Preferences) -> HabitSettings = {
         HabitSettings(
+            autoClearImageCacheInterval = it[intPreferencesKey(KEY_AUTO_CLEAR_IMAGE_CACHE_INTERVAL)]
+                ?: AutoClearImageCacheInterval.OFF,
             collectedDesc = it[booleanPreferencesKey(KEY_COLLECTED_DESC)] == true,
             favoriteDesc = it[booleanPreferencesKey(KEY_FAVORITE_DESC)] == true,
             favoriteSeeLz = it[booleanPreferencesKey(KEY_FAVORITE_SEE_LZ)] ?: true,
@@ -142,6 +145,7 @@ private object HabitSettingsTransformer : PreferenceTransformer<HabitSettings> {
             hideReplyWarning = it[booleanPreferencesKey(KEY_REPLY_HIDE_WARNING)] == true,
             imageLoadType = it[intPreferencesKey(KEY_IMAGE_LOAD_TYPE)] ?: ImageUtil.SETTINGS_SMART_ORIGIN,
             imageWatermarkType = it[intPreferencesKey(KEY_IMAGE_WATERMARK_TYPE)] ?: WaterType.FORUM_NAME,
+            lastAutoClearImageCacheTime = it[longPreferencesKey(KEY_LAST_AUTO_CLEAR_IMAGE_CACHE_TIME)] ?: 0L,
             preloadNextPage = it[booleanPreferencesKey(KEY_PRELOAD_NEXT_PAGE)] == true,
             searchThreadSortType = it[intPreferencesKey(KEY_SEARCH_THREAD_SORT_DEFAULT)] ?: SearchThreadSortType.NEWEST,
             showBothName = it[booleanPreferencesKey(KEY_SHOW_NICKNAME)] == true,
@@ -150,6 +154,7 @@ private object HabitSettingsTransformer : PreferenceTransformer<HabitSettings> {
     }
 
     override val set: (MutablePreferences, HabitSettings) -> Unit = { it, habit ->
+        it[intPreferencesKey(KEY_AUTO_CLEAR_IMAGE_CACHE_INTERVAL)] = habit.autoClearImageCacheInterval
         it[booleanPreferencesKey(KEY_COLLECTED_DESC)] = habit.collectedDesc
         it[booleanPreferencesKey(KEY_FAVORITE_DESC)] = habit.favoriteDesc
         it[booleanPreferencesKey(KEY_FAVORITE_SEE_LZ)] = habit.favoriteSeeLz
@@ -159,6 +164,7 @@ private object HabitSettingsTransformer : PreferenceTransformer<HabitSettings> {
         it[booleanPreferencesKey(KEY_REPLY_HIDE_WARNING)] = habit.hideReplyWarning
         it[intPreferencesKey(KEY_IMAGE_LOAD_TYPE)] = habit.imageLoadType
         it[intPreferencesKey(KEY_IMAGE_WATERMARK_TYPE)] = habit.imageWatermarkType
+        it[longPreferencesKey(KEY_LAST_AUTO_CLEAR_IMAGE_CACHE_TIME)] = habit.lastAutoClearImageCacheTime
         it[booleanPreferencesKey(KEY_PRELOAD_NEXT_PAGE)] = habit.preloadNextPage
         it[intPreferencesKey(KEY_SEARCH_THREAD_SORT_DEFAULT)] = habit.searchThreadSortType
         it[booleanPreferencesKey(KEY_SHOW_NICKNAME)] = habit.showBothName
@@ -178,8 +184,10 @@ private object HabitSettingsTransformer : PreferenceTransformer<HabitSettings> {
     private const val KEY_FORUM_FAB_FUNCTION = "forum_fab"
 
     private const val KEY_FORUM_SORT_DEFAULT = "forum_sort_type"
+    private const val KEY_AUTO_CLEAR_IMAGE_CACHE_INTERVAL = "auto_clear_image_cache_interval"
     private const val KEY_IMAGE_LOAD_TYPE = "img_load_type"
     private const val KEY_IMAGE_WATERMARK_TYPE = "img_watermark"
+    private const val KEY_LAST_AUTO_CLEAR_IMAGE_CACHE_TIME = "last_auto_clear_image_cache_time"
     private const val KEY_POST_HIDE_MEDIA = "ui_post_hide_media"
     private const val KEY_PRELOAD_NEXT_PAGE = "preload_next_page"
     private const val KEY_REPLY_HIDE = "ui_reply_hide"

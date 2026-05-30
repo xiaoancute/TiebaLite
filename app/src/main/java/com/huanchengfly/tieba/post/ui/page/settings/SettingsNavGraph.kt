@@ -115,7 +115,7 @@ fun NavGraphBuilder.settingsGraph(navController: NavController, settingsRepo: Se
     }
 
     composable<SettingsDestination.More> {
-        MoreSettingsPage(navController)
+        MoreSettingsPage(navController, habitSettings = settingsRepo.habitSettings)
     }
 
     composable<SettingsDestination.OKSign> {

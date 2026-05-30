@@ -41,9 +41,37 @@ annotation class WaterType {
     }
 }
 
+@IntDef(
+    AutoClearImageCacheInterval.OFF,
+    AutoClearImageCacheInterval.ON_LAUNCH,
+    AutoClearImageCacheInterval.DAILY,
+    AutoClearImageCacheInterval.THREE_DAYS,
+)
+@Retention(AnnotationRetention.SOURCE)
+annotation class AutoClearImageCacheInterval {
+    companion object {
+        const val OFF = 0
+        const val ON_LAUNCH = 1
+        const val DAILY = 2
+        const val THREE_DAYS = 3
+
+        const val ONE_DAY_MILLIS = 24L * 60L * 60L * 1000L
+        const val THREE_DAYS_MILLIS = 3L * ONE_DAY_MILLIS
+
+        fun shouldClear(@AutoClearImageCacheInterval interval: Int, lastClearTime: Long, now: Long): Boolean =
+            when (interval) {
+                ON_LAUNCH -> true
+                DAILY -> lastClearTime <= 0L || now - lastClearTime >= ONE_DAY_MILLIS
+                THREE_DAYS -> lastClearTime <= 0L || now - lastClearTime >= THREE_DAYS_MILLIS
+                else -> false
+            }
+    }
+}
+
 /**
  * User habit
  *
+ * @param autoClearImageCacheInterval 图片缓存自动清理周期
  * @param collectedDesc 收藏贴倒序浏览
  * @param favoriteDesc 收藏贴自动开启倒序浏览
  * @param favoriteSeeLz 从收藏进入的贴子将自动切换至只看楼主
@@ -53,6 +81,7 @@ annotation class WaterType {
  * @param hideReplyWarning 隐藏回贴风险提示
  * @param imageLoadType 图片加载设置
  * @param imageWatermarkType 图片上传水印设置
+ * @param lastAutoClearImageCacheTime 上次自动清理图片缓存的时间戳
  * @param preloadNextPage 提前预加载下一页内容
  * @param searchThreadSortType 搜贴默认排序方式
  * @param showBothName 同时显示用户名和昵称
@@ -60,6 +89,7 @@ annotation class WaterType {
  * */
 @Immutable
 data class HabitSettings(
+    @AutoClearImageCacheInterval val autoClearImageCacheInterval: Int = AutoClearImageCacheInterval.OFF,
     val collectedDesc: Boolean = false,
     val favoriteDesc: Boolean = false,
     val favoriteSeeLz: Boolean = true,
@@ -69,6 +99,7 @@ data class HabitSettings(
     val hideReplyWarning: Boolean = false,
     val imageLoadType: Int = ImageUtil.SETTINGS_SMART_ORIGIN,
     @WaterType val imageWatermarkType: Int = WaterType.FORUM_NAME,
+    val lastAutoClearImageCacheTime: Long = 0L,
     val preloadNextPage: Boolean = false,
     @SearchThreadSortType val searchThreadSortType: Int = SearchThreadSortType.NEWEST,
     val showBothName: Boolean = false,
