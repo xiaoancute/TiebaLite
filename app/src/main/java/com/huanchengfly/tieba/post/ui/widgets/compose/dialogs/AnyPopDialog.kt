@@ -6,7 +6,7 @@ import android.content.ContextWrapper
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
-import androidx.activity.compose.PredictiveBackHandler
+import com.huanchengfly.tieba.post.ui.widgets.compose.SimplePredictiveBackHandler
 import androidx.compose.animation.Animatable
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -179,7 +179,7 @@ private fun DialogFullScreen(
                     content()
                 }
             }
-            PredictiveBackHandler(enabled = properties.dismissOnBackPress) {
+            SimplePredictiveBackHandler(enabled = properties.dismissOnBackPress) {
                 handleBackPress()
             }
         }

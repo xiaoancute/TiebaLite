@@ -26,7 +26,7 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
-import androidx.activity.compose.PredictiveBackHandler
+import com.huanchengfly.tieba.post.ui.widgets.compose.SimplePredictiveBackHandler
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -164,7 +164,7 @@ fun WebView(
 ) {
     val webView = state.webView
 
-    PredictiveBackHandler(enabled = captureBackPresses && navigator.canGoBack) {
+    SimplePredictiveBackHandler(enabled = captureBackPresses && navigator.canGoBack) {
         webView?.goBack()
     }
 

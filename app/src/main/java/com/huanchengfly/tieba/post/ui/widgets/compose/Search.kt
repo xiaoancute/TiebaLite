@@ -1,6 +1,6 @@
 package com.huanchengfly.tieba.post.ui.widgets.compose
 
-import androidx.activity.compose.PredictiveBackHandler
+import com.huanchengfly.tieba.post.ui.widgets.compose.SimplePredictiveBackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -351,7 +351,7 @@ fun SearchBox(
          rememberUpdatedState(WindowInsets.ime.getBottom(this) > 0)
     }
 
-    PredictiveBackHandler(enabled = isKeyboardOpen) {
+    SimplePredictiveBackHandler(enabled = isKeyboardOpen) {
         focusManager.clearFocus(force = true)
         keyboardController?.hide()
     }

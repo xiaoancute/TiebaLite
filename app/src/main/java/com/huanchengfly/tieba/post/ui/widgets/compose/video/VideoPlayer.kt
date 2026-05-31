@@ -1,6 +1,6 @@
 package com.huanchengfly.tieba.post.ui.widgets.compose.video
 
-import androidx.activity.compose.PredictiveBackHandler
+import com.huanchengfly.tieba.post.ui.widgets.compose.SimplePredictiveBackHandler
 import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -131,7 +131,7 @@ fun VideoPlayer(
         val isFullScreen = DisplayUtil.isLandscape
         if (videoPlayerController.supportFullScreen()) {
 
-            PredictiveBackHandler(enabled = isFullScreen) {
+            SimplePredictiveBackHandler(enabled = isFullScreen) {
                 videoPlayerController.toggleFullScreen()
             }
         }

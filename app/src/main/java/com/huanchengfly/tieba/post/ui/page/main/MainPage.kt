@@ -1,6 +1,6 @@
 package com.huanchengfly.tieba.post.ui.page.main
 
-import androidx.activity.compose.PredictiveBackHandler
+import com.huanchengfly.tieba.post.ui.widgets.compose.SimplePredictiveBackHandler
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContentTransitionScope
@@ -320,7 +320,7 @@ fun MainPage(
     }
 
     currentDestination?.let {
-        PredictiveBackHandler(enabled = it !== actualStartDestination) {
+        SimplePredictiveBackHandler(enabled = it !== actualStartDestination) {
             nestedNavController.popBackStack(route = actualStartDestination::class, inclusive = false, saveState = true)
         }
     }

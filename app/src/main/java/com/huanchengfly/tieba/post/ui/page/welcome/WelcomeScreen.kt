@@ -3,7 +3,7 @@ package com.huanchengfly.tieba.post.ui.page.welcome
 import android.os.Build
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
-import androidx.activity.compose.PredictiveBackHandler
+import com.huanchengfly.tieba.post.ui.widgets.compose.SimplePredictiveBackHandler
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -210,7 +210,7 @@ fun WelcomeScreen(navController: NavController, viewModel: WelcomeViewModel = hi
         }
     }
 
-    PredictiveBackHandler(enabled = backBtnEnabled) { onBackClicked() }
+    SimplePredictiveBackHandler(enabled = backBtnEnabled) { onBackClicked() }
 }
 
 @Composable

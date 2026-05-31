@@ -1,6 +1,6 @@
 package com.huanchengfly.tieba.post.ui.page.forum
 
-import androidx.activity.compose.PredictiveBackHandler
+import com.huanchengfly.tieba.post.ui.widgets.compose.SimplePredictiveBackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -596,7 +596,7 @@ private fun ForumFAB(
         )
     }
 
-    PredictiveBackHandler(enabled = expanded) { onExpandChanged(false) }
+    SimplePredictiveBackHandler(enabled = expanded) { onExpandChanged(false) }
 
     AnimatedVisibility(
         visible = visible,

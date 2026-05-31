@@ -18,7 +18,7 @@
 
 package androidx.compose.material3.navigation
 
-import androidx.activity.compose.PredictiveBackHandler
+import com.huanchengfly.tieba.post.ui.widgets.compose.SimplePredictiveBackHandler
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.SheetState
@@ -253,7 +253,7 @@ public class BottomSheetNavigator(
                 }
             }
 
-            PredictiveBackHandler {
+            SimplePredictiveBackHandler {
                 animateToDismiss()
             }
 
