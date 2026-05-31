@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package tieba.addPollPost;
+
+option java_package = "com.huanchengfly.tieba.post.api.models.protos.addPollPost";
+
+message AddPollPostRequestData {
+  uint64 thread_id = 1;
+  string options = 2;
+  uint64 forum_id = 4;
+}

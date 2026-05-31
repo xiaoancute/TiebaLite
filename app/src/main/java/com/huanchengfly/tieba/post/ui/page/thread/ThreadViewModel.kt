@@ -489,6 +489,35 @@ class ThreadViewModel @Inject constructor(
         }
     }
 
+    fun onPollSubmit(optionIds: Set<Int>) = launchInVM {
+        val options = formatPollOptionIds(optionIds)
+        if (options.isBlank()) return@launchInVM
+
+        val stateSnapshot = currentState
+        if (stateSnapshot.user == null) {
+            sendUiEvent(CommonUiEvent.Toast(context.getString(R.string.title_not_logged_in)))
+            return@launchInVM
+        }
+
+        runCatching {
+            threadRepo.submitPoll(forumId = forumId, threadId = threadId, options = options)
+        }.onFailure { e ->
+            sendUiEvent(CommonUiEvent.Toast(context.getString(R.string.toast_poll_failed, e.getErrorMessage())))
+        }.onSuccess {
+            _uiState.update { state ->
+                state.copy(
+                    thread = state.thread?.copy(
+                        pollInfo = state.thread.pollInfo?.copy(
+                            is_polled = 1,
+                            polled_value = options,
+                        )
+                    )
+                )
+            }
+            sendUiEvent(CommonUiEvent.Toast(context.getString(R.string.toast_poll_success)))
+        }
+    }
+
     fun onDeleteConfirmed(): Job = launchJobInVM {
         val post = _deletePost.getAndUpdate { null } ?: throw NullPointerException()
         if (post.id == currentState.firstPost!!.id) {

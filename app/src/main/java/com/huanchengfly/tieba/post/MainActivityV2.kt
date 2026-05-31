@@ -99,6 +99,20 @@ class MainActivityV2 : BaseComposeActivity() {
      * */
     private var welcomeScreen: Boolean? = null
 
+    private fun handleViewUri(uri: Uri) {
+        // Is TbLite DeepLink
+        if (isTbLiteDeepLink(uri.scheme)) {
+            pendingDeepLink = NavDeepLinkRequest.Builder.fromUri(uri).build()
+        } else {
+            pendingAppLink = appLinkToNavRoute(uri)
+        }
+        if (pendingDeepLink == null && pendingAppLink == null && uri.isHttp()) {
+            // TODO: Bug in Firefox custom Tab
+            // TiebaWebView.launchCustomTab(this, uri)
+            pendingAppLink = Destination.WebView(initialUrl = uri.toString(), customClient = false)
+        }
+    }
+
     private suspend fun requestNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             AccountUtil.isLoggedIn() &&
@@ -133,7 +147,7 @@ class MainActivityV2 : BaseComposeActivity() {
                 welcomeScreen = extras?.getBoolean(KEY_WELCOME_SETUP, false)
             }
             ShortcutInitializer.getTbShortcut(this)?.also { onNewShortcut(it) }
-            data?.normalizeScheme()?.let { pendingAppLink = appLinkToNavRoute(uri = it) }
+            data?.normalizeScheme()?.let(::handleViewUri)
         }
     }
 
@@ -152,17 +166,7 @@ class MainActivityV2 : BaseComposeActivity() {
         if (intent.action == Intent.ACTION_VIEW) {
             ShortcutInitializer.getTbShortcut(intent)?.also { onNewShortcut(it) }
             val uri = intent.data?.normalizeScheme() ?: return
-            // Is TbLite DeepLink
-            if (uri.scheme == TB_LITE_DOMAIN) {
-                pendingDeepLink = NavDeepLinkRequest.Builder.fromUri(uri).build()
-            } else {
-                pendingAppLink = appLinkToNavRoute(uri)
-            }
-            if (pendingDeepLink == null && pendingAppLink == null && uri.isHttp()) {
-                // TODO: Bug in Firefox custom Tab
-                // TiebaWebView.launchCustomTab(this, uri)
-                pendingAppLink = Destination.WebView(initialUrl = uri.toString(), customClient = false)
-            }
+            handleViewUri(uri)
         } else {
             super.onNewIntent(intent)
         }
@@ -274,6 +278,10 @@ class MainActivityV2 : BaseComposeActivity() {
     }
 
     companion object {
+
+        internal fun isTbLiteDeepLink(scheme: String?): Boolean {
+            return scheme == TB_LITE_DOMAIN
+        }
 
         private fun Context.appLinkToNavRoute(uri: Uri): Destination? {
             return ClipBoardLinkDetector.parseDeepLink(uri)

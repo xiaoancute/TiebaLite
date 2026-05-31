@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package tieba.addPollPost;
+
+option java_package = "com.huanchengfly.tieba.post.api.models.protos.addPollPost";
+
+import "AddPollPost/AddPollPostRequestData.proto";
+
+message AddPollPostRequest {
+  AddPollPostRequestData data = 1;
+}

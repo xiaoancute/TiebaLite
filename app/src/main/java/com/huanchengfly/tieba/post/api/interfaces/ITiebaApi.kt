@@ -2,6 +2,7 @@ package com.huanchengfly.tieba.post.api.interfaces
 
 import com.huanchengfly.tieba.post.api.models.*
 import com.huanchengfly.tieba.post.api.models.protos.addPost.AddPostResponse
+import com.huanchengfly.tieba.post.api.models.protos.addPollPost.AddPollPostResponse
 import com.huanchengfly.tieba.post.api.models.protos.forumGuide.ForumGuideResponse
 import com.huanchengfly.tieba.post.api.models.protos.forumRecommend.ForumRecommendResponse
 import com.huanchengfly.tieba.post.api.models.protos.forumRuleDetail.ForumRuleDetailResponse
@@ -1507,6 +1508,19 @@ interface ITiebaApi {
     fun getHistoryForumFlow(
         history: String,
     ): Flow<GetHistoryForumResponse>
+
+    /**
+     * 投票
+     *
+     * @param forumId 吧 ID
+     * @param threadId 贴 ID
+     * @param options 选项 ID，多个选项用英文逗号分隔
+     */
+    fun addPollPostProtobuf(
+        forumId: Long?,
+        threadId: Long,
+        options: String,
+    ): Flow<AddPollPostResponse>
 
     /**
      * 发帖

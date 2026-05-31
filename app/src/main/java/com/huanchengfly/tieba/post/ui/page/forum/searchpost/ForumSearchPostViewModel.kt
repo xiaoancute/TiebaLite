@@ -37,6 +37,11 @@ data class ForumSearchPostUiState(
     val isKeywordNotEmpty: Boolean = keyword.isNotEmpty() && keyword.isNotBlank()
 }
 
+internal fun normalizeForumSearchKeyword(keyword: String): String {
+    val normalized = keyword.trim()
+    return normalized.takeIf { it.any { char -> char.isLetterOrDigit() } }.orEmpty()
+}
+
 @HiltViewModel
 class ForumSearchPostViewModel @Inject constructor(
     private val searchRepo: SearchRepository,
@@ -84,21 +89,38 @@ class ForumSearchPostViewModel @Inject constructor(
     }
 
     private fun searchPostInternal(keyword: String, sort: Int? = null, filter: Int? = null) {
-        if (keyword.isEmpty() || keyword.isBlank()) {
+        val normalizedKeyword = normalizeForumSearchKeyword(keyword)
+        if (normalizedKeyword.isEmpty()) {
             _uiState.set {
-                ForumSearchPostUiState(isRefreshing = false, keyword = keyword, sortType = sortType, filterType = filterType)
+                ForumSearchPostUiState(
+                    isRefreshing = false,
+                    keyword = normalizedKeyword,
+                    sortType = sort ?: sortType,
+                    filterType = filter ?: filterType
+                )
             }
             return // on clear
         }
 
         val uiStateSnapshot = _uiState.updateAndGet {
-            ForumSearchPostUiState(keyword = keyword, sortType = sort ?: it.sortType, filterType = filter ?: it.filterType)
+            ForumSearchPostUiState(
+                keyword = normalizedKeyword,
+                sortType = sort ?: it.sortType,
+                filterType = filter ?: it.filterType
+            )
         }
 
         launchInVM {
             val sortType = uiStateSnapshot.sortType
             val filterType = uiStateSnapshot.filterType
-            val (hasMore, posts) = searchRepo.searchPost(keyword, forumName, forumId, sortType, filterType, page = 1)
+            val (hasMore, posts) = searchRepo.searchPost(
+                normalizedKeyword,
+                forumName,
+                forumId,
+                sortType,
+                filterType,
+                page = 1
+            )
             _uiState.update { it.copy(isRefreshing = false, hasMore = hasMore, data = posts) }
         }
     }
@@ -134,11 +156,14 @@ class ForumSearchPostViewModel @Inject constructor(
     }
 
     fun onSubmitKeyword(keyword: String) {
-        if (keyword != currentState.keyword) {
+        val normalizedKeyword = normalizeForumSearchKeyword(keyword)
+        if (normalizedKeyword != currentState.keyword) {
             launchInVM {
-                searchRepo.addPostHistory(forumId, keyword)
+                if (normalizedKeyword.isNotEmpty()) {
+                    searchRepo.addPostHistory(forumId, normalizedKeyword)
+                }
             }
-            searchPostInternal(keyword)
+            searchPostInternal(normalizedKeyword)
         }
     }
 
