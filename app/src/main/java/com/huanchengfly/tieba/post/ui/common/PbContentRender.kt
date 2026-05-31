@@ -8,6 +8,7 @@ import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.InlineTextContent
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -55,6 +56,7 @@ import com.huanchengfly.tieba.post.ui.widgets.compose.singleMediaFraction
 import com.huanchengfly.tieba.post.ui.widgets.compose.video.VideoThumbnail
 import com.huanchengfly.tieba.post.utils.ThemeUtil
 import com.huanchengfly.tieba.post.utils.launchUrl
+import kotlinx.coroutines.withTimeoutOrNull
 
 @Immutable
 interface PbContentRender {
@@ -267,55 +269,58 @@ fun PbContentText(
     val navigator = LocalNavController.current
 
     var layoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
-    EmoticonText(
-        text = text,
-        modifier = modifier.pointerInput(Unit) {
-            awaitEachGesture {
-                val change = awaitFirstDown()
-                val annotation =
-                    layoutResult?.getOffsetForPosition(change.position)?.let { offset ->
-                        text.getStringAnnotations(start = offset, end = offset)
-                            .fastFirstOrNull { it.tag == TAG_URL || it.tag == TAG_USER }
+    SelectionContainer {
+        EmoticonText(
+            text = text,
+            modifier = modifier.pointerInput(text) {
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false)
+                    val annotation =
+                        layoutResult?.getOffsetForPosition(down.position)?.let { offset ->
+                            text.getStringAnnotations(start = offset, end = offset)
+                                .fastFirstOrNull { it.tag == TAG_URL || it.tag == TAG_USER }
                     }
-                if (annotation != null) {
-                    if (change.pressed != change.previousPressed) change.consume()
-                    val up =
-                        waitForUpOrCancellation()?.also { if (it.pressed != it.previousPressed) it.consume() }
-                    if (up != null) {
-                        when (annotation.tag) {
-                            TAG_URL -> {
-                                val url = annotation.item
-                                launchUrl(context, navigator, url)
-                            }
+                    if (annotation != null) {
+                        val up = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
+                            waitForUpOrCancellation()
+                        }
+                        if (up != null) {
+                            up.consume()
+                            when (annotation.tag) {
+                                TAG_URL -> {
+                                    val url = annotation.item
+                                    launchUrl(context, navigator, url)
+                                }
 
-                            TAG_USER -> {
-                                val uid = annotation.item.toLong()
-                                navigator.navigateDebounced(Destination.UserProfile(uid))
+                                TAG_USER -> {
+                                    val uid = annotation.item.toLong()
+                                    navigator.navigateDebounced(Destination.UserProfile(uid))
+                                }
                             }
                         }
                     }
                 }
-            }
-        },
-        color = color,
-        fontSize = fontSize,
-        fontStyle = fontStyle,
-        fontWeight = fontWeight,
-        fontFamily = fontFamily,
-        letterSpacing = letterSpacing,
-        textDecoration = textDecoration,
-        textAlign = textAlign,
-        lineHeight = lineHeight,
-        lineSpacing = lineSpacing,
-        overflow = overflow,
-        softWrap = softWrap,
-        maxLines = maxLines,
-        minLines = minLines,
-        inlineContent = inlineContent,
-        onTextLayout = {
-            layoutResult = it
-            onTextLayout(it)
-        },
-        style = style
-    )
+            },
+            color = color,
+            fontSize = fontSize,
+            fontStyle = fontStyle,
+            fontWeight = fontWeight,
+            fontFamily = fontFamily,
+            letterSpacing = letterSpacing,
+            textDecoration = textDecoration,
+            textAlign = textAlign,
+            lineHeight = lineHeight,
+            lineSpacing = lineSpacing,
+            overflow = overflow,
+            softWrap = softWrap,
+            maxLines = maxLines,
+            minLines = minLines,
+            inlineContent = inlineContent,
+            onTextLayout = {
+                layoutResult = it
+                onTextLayout(it)
+            },
+            style = style
+        )
+    }
 }
