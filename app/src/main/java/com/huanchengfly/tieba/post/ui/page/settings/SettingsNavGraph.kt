@@ -1,10 +1,13 @@
 package com.huanchengfly.tieba.post.ui.page.settings
 
+import androidx.compose.runtime.Composable
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.huanchengfly.tieba.post.navigateDebounced
 import com.huanchengfly.tieba.post.repository.user.SettingsRepository
+import com.huanchengfly.tieba.post.ui.page.PredictiveNavigateUpHandler
 import com.huanchengfly.tieba.post.ui.page.settings.blocklist.ForumBlockListPage
 import com.huanchengfly.tieba.post.ui.page.settings.blocklist.KeywordBlockListPage
 import com.huanchengfly.tieba.post.ui.page.settings.blocklist.UserBlockListPage
@@ -60,43 +63,43 @@ sealed interface SettingsDestination {
 }
 
 fun NavGraphBuilder.settingsGraph(navController: NavController, settingsRepo: SettingsRepository) {
-    composable<SettingsDestination.Settings> {
+    settingsComposable<SettingsDestination.Settings>(navController) {
         SettingsPage(navController)
     }
 
-    composable<SettingsDestination.About> {
+    settingsComposable<SettingsDestination.About>(navController) {
         AboutPage(navController::navigateUp)
     }
 
-    composable<SettingsDestination.AccountManage> {
+    settingsComposable<SettingsDestination.AccountManage>(navController) {
         AccountManagePage(myLittleTailSettings = settingsRepo.myLittleTail, navController)
     }
 
-    composable<SettingsDestination.AppFont> {
+    settingsComposable<SettingsDestination.AppFont>(navController) {
         AppFontPage(navController::navigateUp)
     }
 
-    composable<SettingsDestination.BlockSettings> {
+    settingsComposable<SettingsDestination.BlockSettings>(navController) {
         BlockSettingsPage(settings = settingsRepo.blockSettings, navController)
     }
 
-    composable<SettingsDestination.ForumBlockList> {
+    settingsComposable<SettingsDestination.ForumBlockList>(navController) {
         ForumBlockListPage(onBack = navController::navigateUp)
     }
 
-    composable<SettingsDestination.KeywordBlockList> {
+    settingsComposable<SettingsDestination.KeywordBlockList>(navController) {
         KeywordBlockListPage(onBack = navController::navigateUp)
     }
 
-    composable<SettingsDestination.UserBlockList> {
+    settingsComposable<SettingsDestination.UserBlockList>(navController) {
         UserBlockListPage(onBack = navController::navigateUp)
     }
 
-    composable<SettingsDestination.UI> {
+    settingsComposable<SettingsDestination.UI>(navController) {
         UISettingsPage(settings = settingsRepo.uiSettings, navController)
     }
 
-    composable<SettingsDestination.Habit> {
+    settingsComposable<SettingsDestination.Habit>(navController) {
         HabitSettingsPage(
             habitSettings = settingsRepo.habitSettings,
             onStickyHeaderClicked = {
@@ -106,23 +109,33 @@ fun NavGraphBuilder.settingsGraph(navController: NavController, settingsRepo: Se
         )
     }
 
-    composable<SettingsDestination.Privacy> {
+    settingsComposable<SettingsDestination.Privacy>(navController) {
         PrivacySettingsPage(settingsRepo.privacySettings, onBack = navController::navigateUp)
     }
 
-    composable<SettingsDestination.StickyHeader> {
+    settingsComposable<SettingsDestination.StickyHeader>(navController) {
         StickyHeaderSettingsPage(settingsRepo.habitSettings, onBack = navController::navigateUp)
     }
 
-    composable<SettingsDestination.More> {
+    settingsComposable<SettingsDestination.More>(navController) {
         MoreSettingsPage(navController, habitSettings = settingsRepo.habitSettings)
     }
 
-    composable<SettingsDestination.OKSign> {
+    settingsComposable<SettingsDestination.OKSign>(navController) {
         OKSignSettingsPage(settings = settingsRepo.signConfig, onBack = navController::navigateUp)
     }
 
-    composable<SettingsDestination.WorkInfo> {
+    settingsComposable<SettingsDestination.WorkInfo>(navController) {
         WorkInfoPage(onBack = navController::navigateUp)
+    }
+}
+
+private inline fun <reified T : Any> NavGraphBuilder.settingsComposable(
+    navController: NavController,
+    noinline content: @Composable (NavBackStackEntry) -> Unit,
+) {
+    composable<T> { backStackEntry ->
+        PredictiveNavigateUpHandler(navController, backStackEntry)
+        content(backStackEntry)
     }
 }
