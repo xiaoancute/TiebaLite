@@ -29,6 +29,7 @@ class SimpleImageLoader(
     override fun load(view: ImageView, data: Photo, viewHolder: RecyclerView.ViewHolder) {
         val it = (data as? PhotoViewItem?)?.originUrl ?: return
 
+        view.contentDescription = view.context.getString(R.string.desc_image)
         view.setOnClickListener(onClick)
         glide.load(getGlideModel(url = it))
             .placeholder(view.drawable)
@@ -55,6 +56,7 @@ class SimpleImageLoader(
     override fun load(subsamplingView: SubsamplingScaleImageView, data: Photo, viewHolder: RecyclerView.ViewHolder) {
         if (data !is PhotoViewItem) throw RuntimeException("Not implemented: ${data::class.simpleName}")
 
+        subsamplingView.contentDescription = subsamplingView.context.getString(R.string.desc_image)
         subsamplingView.setOnClickListener(onClick)
         glide.downloadOnly()
             .error(R.drawable.ic_error)

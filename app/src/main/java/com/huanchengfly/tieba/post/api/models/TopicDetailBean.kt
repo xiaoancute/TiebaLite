@@ -119,6 +119,7 @@ data class ThreadInfoBean(
     val id: Long,
     @SerialName("feed_id")
     val feedId: Long,
+    val avatar: String = "",
     val title: String? = "",
     @SerialName("tid")
     val threadId: Long,

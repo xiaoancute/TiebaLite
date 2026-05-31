@@ -602,7 +602,8 @@ private fun UserAvatar(modifier: Modifier = Modifier, avatar: String?, uid: Long
                     )
                 }
                 .onNotNull(avatar) { sharedUserAvatar(uid = uid, extraKey = transitionKey) },
-            data = avatar
+            data = avatar,
+            contentDescription = stringResource(R.string.user_portrait)
         )
     }
 }

@@ -221,6 +221,7 @@ private fun SharedTransitionUserAvatar(
     Avatar(
         data = avatar,
         size = size,
+        contentDescription = stringResource(R.string.user_portrait),
         modifier = modifier
             .onNotNull(onClick) {
                 sharedUserAvatar(uid, extraKey)

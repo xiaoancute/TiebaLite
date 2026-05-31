@@ -291,7 +291,7 @@ fun VideoThumbnail(
         if (thumbnailUrl != null) {
             GlideImage(
                 model = thumbnailUrl,
-                contentDescription = null,
+                contentDescription = stringResource(id = R.string.desc_video),
                 modifier = Modifier.matchParentSize(),
                 contentScale = contentScale
             )

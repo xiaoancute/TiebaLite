@@ -1,6 +1,7 @@
 package com.huanchengfly.tieba.post.ui.common
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
@@ -156,10 +157,12 @@ value class TextContentRender(val value: AnnotatedString) : PbContentRender {
     override fun Render() {
         NetworkImage(
             modifier = Modifier
+                .focusable()
                 .clip(shape = MaterialTheme.shapes.small)
                 .fillMaxWidth(singleMediaFraction)
                 .aspectRatio(ratio = dimensions?.run { width * 1f / height } ?: 1.0f),
             imageUrl = picUrl,
+            contentDescription = stringResource(R.string.desc_image),
             photoViewDataProvider = { photoViewData },
         )
     }

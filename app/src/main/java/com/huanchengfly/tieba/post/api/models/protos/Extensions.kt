@@ -47,7 +47,7 @@ val List<Abstract>.abstractText: String
 val ThreadInfo.abstractText: String
     get() = richAbstract.joinToString(separator = "") {
         when (it.type) {
-            0 -> it.text.replace(abstractTextPattern, " ")
+            0, 40 -> it.text.replace(abstractTextPattern, " ")
             2 -> {
                 EmoticonManager.registerEmoticon(it.text, it.c)
                 EmoticonUtil.inlineTextFormat(name = it.c)
@@ -60,7 +60,7 @@ val ThreadInfo.abstractText: String
 val PostInfoList.abstractText: String
     get() = rich_abstract.joinToString(separator = "") {
         when (it.type) {
-            0 -> it.text.replace(abstractTextPattern, " ")
+            0, 40 -> it.text.replace(abstractTextPattern, " ")
             2 -> {
                 EmoticonManager.registerEmoticon(it.text, it.c)
                 EmoticonUtil.inlineTextFormat(name = it.c)

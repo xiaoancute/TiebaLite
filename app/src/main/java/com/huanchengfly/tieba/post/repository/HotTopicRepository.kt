@@ -156,7 +156,7 @@ class HotTopicRepository @Inject constructor(
                         isLongPic = it.isLongPic
                     )
                 },
-                simpleForum = SimpleForum(forumId, forumName, null),
+                simpleForum = SimpleForum(forumId, forumName, avatar.ifBlank { null }),
             )
         }
     }

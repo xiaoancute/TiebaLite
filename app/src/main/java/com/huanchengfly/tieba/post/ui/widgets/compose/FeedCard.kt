@@ -2,6 +2,7 @@ package com.huanchengfly.tieba.post.ui.widgets.compose
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -262,6 +263,7 @@ fun ForumInfoChip(
         avatarUrl?.let {
             Avatar(
                 data = avatarUrl,
+                contentDescription = stringResource(R.string.forum_portrait),
                 modifier = Modifier
                     .fillMaxHeight()
                     .aspectRatio(1f)
@@ -399,9 +401,12 @@ fun ThreadMedia(
                                 contentAlignment = Alignment.TopEnd
                             ) {
                                 NetworkImage(
-                                    modifier = Modifier.matchParentSize(),
+                                    modifier = Modifier
+                                        .matchParentSize()
+                                        .focusable(),
                                     imageUrl = medias[index].getPicUrl(habitSettings.imageLoadType),
                                     dimensions = IntSize(width = medias[index].width, height = medias[index].height),
+                                    contentDescription = stringResource(R.string.desc_image),
                                     contentScale = ContentScale.Crop,
                                     photoViewDataProvider = {
                                         getPhotoViewData(
