@@ -36,8 +36,8 @@ object QuickPreviewUtil {
         val word = uri.getQueryParameter("word")
         if (path.equals("/f", ignoreCase = true) || path.equals("/mo/q/m", ignoreCase = true)) {
             val kw = uri.getQueryParameter("kw")
-            if (kw != null) return kw
-            if (word != null) return word
+            if (!kw.isNullOrEmpty()) return kw
+            if (!word.isNullOrEmpty()) return word
         }
         return null
     }
