@@ -8,12 +8,15 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.TweenSpec
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -21,10 +24,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavBackStackEntry
-import androidx.navigation.NavController
 import androidx.navigation.NavDeepLink
 import androidx.navigation.NavGraph
 import androidx.navigation.NavGraphBuilder
@@ -109,16 +112,10 @@ fun RootNavGraph(
                         ) + DefaultFadeOut
                     },
                     popEnterTransition = {
-                        scaleIn(
-                            animationSpec = DefaultAnimationSpec,
-                            initialScale = 1.1f
-                        ) + DefaultFadeIn
+                        DefaultPopEnterTransition
                     },
                     popExitTransition = {
-                        scaleOut(
-                            animationSpec = DefaultAnimationSpec,
-                            targetScale = 0.9f
-                        ) + DefaultFadeOut
+                        DefaultPopExitTransition
                     },
                 )
             // }
@@ -133,25 +130,22 @@ private fun buildRootNavGraph(
 ): NavGraph {
     return navController.createGraph(startDestination) {
         animatedComposable<Destination.Main>(
-            navController = navController,
             popEnterTransition = { DefaultFadeIn },
         ) {
             MainPage(navController)
         }
 
-        rootComposable<Destination.AppTheme>(navController) {
+        composable<Destination.AppTheme> {
             AppThemePage(navController)
         }
 
         animatedComposable<Destination.History>(
-            navController = navController,
             deepLinks = listOf(navDeepLink<Destination.History>(basePath = "$TB_LITE_DOMAIN://history"))
         ) {
             HistoryPage(navController)
         }
 
-        rootComposable<Destination.Notification>(
-            navController = navController,
+        composable<Destination.Notification>(
             deepLinks = listOf(navDeepLink<Destination.Notification>(basePath = "$TB_LITE_DOMAIN://notifications"))
         ) { backStackEntry ->
             val type = backStackEntry.toRoute<Destination.Notification>().type
@@ -159,7 +153,6 @@ private fun buildRootNavGraph(
         }
 
         animatedComposable<Destination.Forum>(
-            navController = navController,
             deepLinks = listOf(navDeepLink<Destination.Forum>(basePath = "$TB_LITE_DOMAIN://forum"))
         ) { backStackEntry ->
             backStackEntry.toRoute<Destination.Forum>().run {
@@ -167,24 +160,23 @@ private fun buildRootNavGraph(
             }
         }
 
-        rootComposable<Destination.ForumDetail>(navController) { backStackEntry ->
+        composable<Destination.ForumDetail> { backStackEntry ->
             ForumDetailPage(
                 onBack = navController::navigateUp,
                 onManagerClicked = { navController.navigate(Destination.UserProfile(uid = it)) }
             )
         }
 
-        animatedComposable<Destination.ForumRuleDetail>(navController = navController) { backStackEntry ->
+        animatedComposable<Destination.ForumRuleDetail> { backStackEntry ->
             ForumRuleDetailPage(navController)
         }
 
-        animatedComposable<Destination.ForumSearchPost>(navController = navController) { backStackEntry ->
+        animatedComposable<Destination.ForumSearchPost> { backStackEntry ->
             val params = backStackEntry.toRoute<Destination.ForumSearchPost>()
             ForumSearchPostPage(params.forumName, navController)
         }
 
         animatedComposable<Destination.Thread>(
-            navController = navController,
             typeMap = mapOf(typeOf<ThreadFrom?>() to navTypeOf<ThreadFrom?>(isNullableAllowed = true))
         ) { backStackEntry ->
             with(backStackEntry.toRoute<Destination.Thread>()) {
@@ -194,13 +186,12 @@ private fun buildRootNavGraph(
         }
 
         animatedComposable<Destination.ThreadStore>(
-            navController = navController,
             deepLinks = listOf(navDeepLink<Destination.ThreadStore>(basePath = "$TB_LITE_DOMAIN://favorite"))
         ) {
             ThreadStorePage(navController)
         }
 
-        animatedComposable<Destination.SubPosts>(navController = navController) { backStackEntry ->
+        animatedComposable<Destination.SubPosts> { backStackEntry ->
             val params = backStackEntry.toRoute<Destination.SubPosts>()
             if (params.isSheet) {
                 SubPostsSheetPage(params, navController)
@@ -209,15 +200,15 @@ private fun buildRootNavGraph(
             }
         }
 
-        rootComposable<Destination.HotTopicList>(navController) {
+        composable<Destination.HotTopicList> {
             HotTopicListPage(navigator = navController)
         }
 
-        rootComposable<Destination.HotTopicDetail>(navController) {
+        composable<Destination.HotTopicDetail> {
             TopicDetailPage(navigator = navController)
         }
 
-        rootComposable<Destination.Login>(navController) {
+        composable<Destination.Login> {
             LoginPage(navController) {
                 if (navController.previousBackStackEntry == null) {
                     navController.navigate(Destination.Main) {
@@ -230,20 +221,19 @@ private fun buildRootNavGraph(
         }
 
         animatedComposable<Destination.Search>(
-            navController = navController,
             deepLinks = listOf(navDeepLink<Destination.Search>(basePath = "$TB_LITE_DOMAIN://search"))
         ) { backStackEntry ->
             val params = backStackEntry.toRoute<Destination.Search>()
             SearchPage(navController, initialKeyword = params.keyword)
         }
 
-        animatedComposable<Destination.UserProfile>(navController = navController) { backStackEntry ->
+        animatedComposable<Destination.UserProfile> { backStackEntry ->
             backStackEntry.toRoute<Destination.UserProfile>().run {
                 UserProfilePage(uid, avatar, nickname, username, transitionKey, navController)
             }
         }
 
-        rootComposable<Destination.WebView>(navController) { backStackEntry ->
+        composable<Destination.WebView> { backStackEntry ->
             val params = backStackEntry.toRoute<Destination.WebView>()
             WebViewPage(params.initialUrl, params.customClient, navController)
         }
@@ -252,7 +242,7 @@ private fun buildRootNavGraph(
             settingsGraph(navController, settingsRepo)
         }
 
-        rootComposable<Destination.CopyText>(navController) { backStackEntry ->
+        composable<Destination.CopyText> { backStackEntry ->
             val params = backStackEntry.toRoute<Destination.CopyText>()
             CopyTextDialogPage(text = params.text, onBack = navController::navigateUp)
         }
@@ -269,7 +259,7 @@ private fun buildRootNavGraph(
             ReplyPageBottomSheet(params, navController::navigateUp)
         }
 
-        rootComposable<Destination.Welcome>(navController) {
+        composable<Destination.Welcome> {
             WelcomeScreen(navController)
         }
     }
@@ -278,11 +268,26 @@ private fun buildRootNavGraph(
 private val DefaultAnimationSpec: TweenSpec<Float> =
     tween(durationMillis = 300, easing = FastOutSlowInEasing)
 
+private val DefaultOffsetAnimationSpec: FiniteAnimationSpec<IntOffset> =
+    tween(durationMillis = 300, easing = FastOutSlowInEasing)
+
 private val DefaultFadeIn: EnterTransition =
     fadeIn(animationSpec = tween(durationMillis = 300))
 
 private val DefaultFadeOut: ExitTransition =
     fadeOut(animationSpec = tween(durationMillis = 200))
+
+private val DefaultPopEnterTransition: EnterTransition =
+    slideInHorizontally(
+        animationSpec = DefaultOffsetAnimationSpec,
+        initialOffsetX = { -it / 4 }
+    ) + DefaultFadeIn
+
+private val DefaultPopExitTransition: ExitTransition =
+    slideOutHorizontally(
+        animationSpec = DefaultOffsetAnimationSpec,
+        targetOffsetX = { it }
+    ) + DefaultFadeOut
 
 /**
  * Add the [Composable] to the [NavGraphBuilder]
@@ -299,7 +304,6 @@ private val DefaultFadeOut: ExitTransition =
  * @param content composable for the destination
  */
 private inline fun <reified T : Any> NavGraphBuilder.animatedComposable(
-    navController: NavController,
     typeMap: Map<KType, @JvmSuppressWildcards NavType<*>> = emptyMap(),
     deepLinks: List<NavDeepLink> = emptyList(),
     noinline enterTransition:
@@ -336,7 +340,6 @@ private inline fun <reified T : Any> NavGraphBuilder.animatedComposable(
                         transition.targetState == EnterExitState.PostExit
                     )
                 ) {
-                    PredictiveNavigateUpHandler(navController, backStackEntry)
                     content(backStackEntry)
                 }
             }
@@ -350,21 +353,6 @@ private inline fun <reified T : Any> NavGraphBuilder.animatedComposable(
             this.sizeTransform = sizeTransform
         }
     )
-}
-
-private inline fun <reified T : Any> NavGraphBuilder.rootComposable(
-    navController: NavController,
-    typeMap: Map<KType, @JvmSuppressWildcards NavType<*>> = emptyMap(),
-    deepLinks: List<NavDeepLink> = emptyList(),
-    noinline content: @Composable (NavBackStackEntry) -> Unit,
-) {
-    composable<T>(
-        typeMap = typeMap,
-        deepLinks = deepLinks
-    ) { backStackEntry ->
-        PredictiveNavigateUpHandler(navController, backStackEntry)
-        content(backStackEntry)
-    }
 }
 
 private fun Modifier.blockPointerEvents(enabled: Boolean): Modifier =
