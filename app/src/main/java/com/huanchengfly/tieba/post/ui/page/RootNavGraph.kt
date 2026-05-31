@@ -47,7 +47,6 @@ import com.huanchengfly.tieba.post.repository.user.SettingsRepository
 import com.huanchengfly.tieba.post.ui.common.LocalAnimatedVisibilityScope
 import com.huanchengfly.tieba.post.ui.common.LocalSharedTransitionScope
 import com.huanchengfly.tieba.post.ui.page.Destination.Companion.navTypeOf
-import com.huanchengfly.tieba.post.ui.page.dialogs.CopyTextDialogPage
 import com.huanchengfly.tieba.post.ui.page.forum.ForumPage
 import com.huanchengfly.tieba.post.ui.page.forum.detail.ForumDetailPage
 import com.huanchengfly.tieba.post.ui.page.forum.rule.ForumRuleDetailPage
@@ -240,11 +239,6 @@ private fun buildRootNavGraph(
 
         navigation<Destination.Settings>(startDestination = SettingsDestination.Settings) {
             settingsGraph(navController, settingsRepo)
-        }
-
-        composable<Destination.CopyText> { backStackEntry ->
-            val params = backStackEntry.toRoute<Destination.CopyText>()
-            CopyTextDialogPage(text = params.text, onBack = navController::navigateUp)
         }
 
         // Bug: new MD3 ModalBottomSheet breaks our reply panel animation

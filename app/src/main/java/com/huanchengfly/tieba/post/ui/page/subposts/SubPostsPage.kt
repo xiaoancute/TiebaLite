@@ -65,7 +65,6 @@ import com.huanchengfly.tieba.post.ui.models.Like
 import com.huanchengfly.tieba.post.ui.models.PostData
 import com.huanchengfly.tieba.post.ui.models.SubPostItemData
 import com.huanchengfly.tieba.post.ui.models.UserData
-import com.huanchengfly.tieba.post.ui.page.Destination.CopyText
 import com.huanchengfly.tieba.post.ui.page.Destination.Reply
 import com.huanchengfly.tieba.post.ui.page.Destination.SubPosts
 import com.huanchengfly.tieba.post.ui.page.Destination.Thread
@@ -259,7 +258,7 @@ private fun SubPostsContent(
         }
 
         // non-nullable, initialize here for convenience
-        val onCopyClickedListener: (String) -> Unit = { navigator.navigate(CopyText(it)) }
+        val onCopyClickedListener: (String) -> Unit = { TiebaUtil.copyText(context, it) }
 
         BlurScaffold(
             topHazeBlock = {
