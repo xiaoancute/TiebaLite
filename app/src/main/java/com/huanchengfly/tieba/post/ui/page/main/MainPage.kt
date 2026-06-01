@@ -155,6 +155,24 @@ val MainDestination.iconRes: Int
         MainDestination.User -> R.drawable.ic_animated_rounded_person
     }
 
+@Stable
+internal data class MainTabNavigationOptions(
+    val popUpTo: MainDestination,
+    val inclusive: Boolean = true,
+    val saveState: Boolean = true,
+    val launchSingleTop: Boolean = true,
+    val restoreState: Boolean = true,
+)
+
+internal fun mainTabNavigationOptions(
+    currentDestination: MainDestination?,
+    fallbackStartDestination: MainDestination,
+): MainTabNavigationOptions {
+    return MainTabNavigationOptions(
+        popUpTo = currentDestination ?: fallbackStartDestination,
+    )
+}
+
 val bottomNavigationPlaceholder: @Composable () -> Unit = {
     val navigationSuiteType = calculateMainNavigationSuiteType()
     if (navigationSuiteType.isNavigationBar) {
@@ -236,11 +254,16 @@ fun MainPage(
                 items = destinations,
                 isSelected = { dest -> dest === currentDestination },
                 onSelect = { dest ->
+                    val navOptions = mainTabNavigationOptions(
+                        currentDestination = currentDestination,
+                        fallbackStartDestination = actualStartDestination,
+                    )
                     nestedNavController.navigate(route = dest) {
-                        launchSingleTop = true
-                        restoreState = true
-                        popUpTo(route = actualStartDestination) {
-                            saveState = true
+                        launchSingleTop = navOptions.launchSingleTop
+                        restoreState = navOptions.restoreState
+                        popUpTo(route = navOptions.popUpTo) {
+                            inclusive = navOptions.inclusive
+                            saveState = navOptions.saveState
                         }
                     }
                     if (dest == MainDestination.Notification) vm.onNavigateNotification()

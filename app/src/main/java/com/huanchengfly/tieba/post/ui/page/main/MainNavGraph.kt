@@ -62,11 +62,16 @@ fun NavGraphBuilder.mainNavGraph(
     ) {
         HomePage(
             onOpenExplore = {
+                val navOptions = mainTabNavigationOptions(
+                    currentDestination = MainDestination.Home,
+                    fallbackStartDestination = MainDestination.Home,
+                )
                 nestedNavController.navigate(route = MainDestination.Explore) {
-                    launchSingleTop = true
-                    restoreState = true
-                    popUpTo(MainDestination.Home) {
-                        saveState = true
+                    launchSingleTop = navOptions.launchSingleTop
+                    restoreState = navOptions.restoreState
+                    popUpTo(navOptions.popUpTo) {
+                        inclusive = navOptions.inclusive
+                        saveState = navOptions.saveState
                     }
                 }
             },
