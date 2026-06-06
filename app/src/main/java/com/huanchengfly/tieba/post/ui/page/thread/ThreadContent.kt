@@ -2,6 +2,9 @@ package com.huanchengfly.tieba.post.ui.page.thread
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -20,6 +23,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AlignVerticalTop
 import androidx.compose.material.icons.rounded.Star
@@ -46,6 +50,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -85,13 +90,13 @@ import com.huanchengfly.tieba.post.ui.widgets.compose.SharedTransitionUserHeader
 import com.huanchengfly.tieba.post.ui.widgets.compose.Sizes
 import com.huanchengfly.tieba.post.ui.widgets.compose.SwipeUpLazyLoadColumn
 import com.huanchengfly.tieba.post.ui.widgets.compose.defaultBottomIndicator
-import com.huanchengfly.tieba.post.ui.widgets.compose.rememberMenuState
 import com.huanchengfly.tieba.post.ui.widgets.compose.states.DefaultEmptyScreen
 import com.huanchengfly.tieba.post.ui.widgets.compose.states.StateScreenScope
 import com.huanchengfly.tieba.post.ui.widgets.compose.stickyHeaderBackground
 import com.huanchengfly.tieba.post.utils.DateTimeUtils
 import com.huanchengfly.tieba.post.utils.TiebaUtil
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import java.text.NumberFormat
 
 sealed class Type(val key: String) {
@@ -439,7 +444,6 @@ private fun LazyListScope.postTipItem(isDesc: Boolean) = this.item("LatestPostsT
 
 @Composable
 private fun PostCardItem(viewModel: ThreadViewModel, post: PostData, localUid: Long?, collectPid: Long) {
-    val context = LocalContext.current
     val navigator = LocalNavController.current
     val loggedIn = localUid != null
     val onUserClickedListener: () -> Unit = {
@@ -456,12 +460,8 @@ private fun PostCardItem(viewModel: ThreadViewModel, post: PostData, localUid: L
             onUserClick = onUserClickedListener,
             onLikeClick = viewModel::onPostLikeClicked,
             onReplyClick = viewModel::onReplyClicked.takeUnless { viewModel.hideReply },
-            onSubPostReplyClick = viewModel::onReplySubPost.takeUnless { viewModel.hideReply },
             onOpenSubPosts = { subPostId ->
                 viewModel.onOpenSubPost(post, subPostId)
-            },
-            onMenuCopyClick = {
-                TiebaUtil.copyText(context, it)
             },
             onMenuFavoriteClick = {
                 val isPostCollected = post.id == collectPid
@@ -480,9 +480,6 @@ private fun PostCardItem(viewModel: ThreadViewModel, post: PostData, localUid: L
             onUserClick = onUserClickedListener,
             onLikeClick = viewModel::onPostLikeClicked,
             onOpenSubPosts = { subPostId -> viewModel.onOpenSubPost(post, subPostId) },
-            onMenuCopyClick = {
-                TiebaUtil.copyText(context, it)
-            }
         )
     }
 }
@@ -585,9 +582,7 @@ fun PostCard(
     onUserClick: () -> Unit = {},
     onLikeClick: ((PostData) -> Unit)? = null,
     onReplyClick: ((PostData) -> Unit)? = null,
-    onSubPostReplyClick: ((PostData, SubPostItemData) -> Unit)? = null,
     onOpenSubPosts: (subPostId: Long) -> Unit = {},
-    onMenuCopyClick: (String) -> Unit,
     onMenuFavoriteClick: (() -> Unit)? = null,
     onMenuDeleteClick: (() -> Unit)? = null
 ) {
@@ -610,36 +605,33 @@ fun PostCard(
         },
         hideBlockedContent = immersiveMode,
     ) {
-        LongClickMenu(
-            shape = MaterialTheme.shapes.medium,
-            menuContent = {
-                if (onReplyClick != null) {
-                    TextMenuItem(text = R.string.btn_reply) {
-                        onReplyClick(post)
+        Card(
+            header = {
+                if (immersiveMode) return@Card
+                LongClickMenu(
+                    shape = MaterialTheme.shapes.medium,
+                    menuContent = {
+                        if (onReplyClick != null) {
+                            TextMenuItem(text = R.string.btn_reply) {
+                                onReplyClick(post)
+                            }
+                        }
+                        TextMenuItem(text = R.string.title_report) {
+                            coroutineScope.launch {
+                                TiebaUtil.reportPost(context, navigator, post.id.toString())
+                            }
+                        }
+                        if (onMenuFavoriteClick != null) {
+                            TextMenuItem(
+                                text = if (isCollected) R.string.title_collect_on else R.string.title_collect_floor,
+                                onClick = onMenuFavoriteClick
+                            )
+                        }
+                        if (onMenuDeleteClick != null) {
+                            TextMenuItem(text = R.string.title_delete, onClick = onMenuDeleteClick)
+                        }
                     }
-                }
-                TextMenuItem(text = R.string.menu_copy) {
-                    onMenuCopyClick(if (post.floor == 1) post.title + "\n" + post.plainText else post.plainText)
-                }
-                TextMenuItem(text = R.string.title_report) {
-                    coroutineScope.launch {
-                        TiebaUtil.reportPost(context, navigator, post.id.toString())
-                    }
-                }
-                if (onMenuFavoriteClick != null) {
-                    TextMenuItem(
-                        text = if (isCollected) R.string.title_collect_on else R.string.title_collect_floor,
-                        onClick = onMenuFavoriteClick
-                    )
-                }
-                if (onMenuDeleteClick != null) {
-                    TextMenuItem(text = R.string.title_delete, onClick = onMenuDeleteClick)
-                }
-            }
-        ) {
-            Card(
-                header = {
-                    if (immersiveMode) return@Card
+                ) {
                     SharedTransitionUserHeader(
                         author = author,
                         desc = remember { post.getDescText(context) },
@@ -650,85 +642,83 @@ fun PostCard(
                             PostLikeButton(like = post.like, onClick = { onLikeClick(post) })
                         }
                     }
-                },
-                content = {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = paddingModifier.fillMaxWidth()
-                    ) {
-                        if (showTitle) {
+                }
+            },
+            content = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = paddingModifier.fillMaxWidth()
+                ) {
+                    if (showTitle) {
+                        SelectionContainer {
                             Text(
                                 text = post.title,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontSize = 15.sp
                             )
                         }
-
-                        if (isCollected) {
-                            Chip(
-                                text = stringResource(id = R.string.title_collected_floor),
-                                invertColor = true,
-                                prefixIcon = {
-                                    Icon(
-                                        imageVector = Icons.Rounded.Star,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                }
-                            )
-                        }
-
-                        post.contentRenders.fastForEach { it.Render() }
                     }
 
-                    if (post.subPosts == null || post.subPostNumber <= 0 || immersiveMode) return@Card
-
-                    Surface(
-                        modifier = paddingModifier,
-                        shape = MaterialTheme.shapes.small,
-                        tonalElevation = 4.dp
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(vertical = 10.dp),
-                            verticalArrangement = Arrangement.spacedBy(2.dp)
-                        ) {
-                            post.subPosts.fastForEach { item ->
-                                BlockableContent(
-                                    blocked = item.blocked,
-                                    blockedTip = {
-                                        SubPostBlockedTip(modifier = Modifier.padding(horizontal = 12.dp))
-                                    },
-                                    hideBlockedContent = false // filtered in repository
-                                ) {
-                                    SubPostItem(
-                                        subPost = item,
-                                        modifier = Modifier
-                                            .padding(horizontal = 12.dp)
-                                            .fillMaxWidth(),
-                                        onReplyClick = onSubPostReplyClick?.let {
-                                            { onSubPostReplyClick(post, item) }
-                                        },
-                                        onOpenSubPosts = onOpenSubPosts,
-                                        onMenuCopyClick = onMenuCopyClick
-                                    )
-                                }
+                    if (isCollected) {
+                        Chip(
+                            text = stringResource(id = R.string.title_collected_floor),
+                            invertColor = true,
+                            prefixIcon = {
+                                Icon(
+                                    imageVector = Icons.Rounded.Star,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp)
+                                )
                             }
+                        )
+                    }
 
-                            if (post.subPostNumber <= post.subPosts.size) return@Column
-                            Text(
-                                text = stringResource(R.string.open_all_sub_posts, post.subPostNumber),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { onOpenSubPosts(0) }
-                                    .padding(vertical = 2.dp, horizontal = 12.dp),
-                                color = MaterialTheme.colorScheme.primary,
-                                style = MaterialTheme.typography.labelLarge,
-                            )
+                    post.contentRenders.fastForEach { it.Render() }
+                }
+
+                if (post.subPosts == null || post.subPostNumber <= 0 || immersiveMode) return@Card
+
+                Surface(
+                    modifier = paddingModifier,
+                    shape = MaterialTheme.shapes.small,
+                    tonalElevation = 4.dp
+                ) {
+                    Column(
+                        modifier = Modifier.padding(vertical = 10.dp),
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        post.subPosts.fastForEach { item ->
+                            BlockableContent(
+                                blocked = item.blocked,
+                                blockedTip = {
+                                    SubPostBlockedTip(modifier = Modifier.padding(horizontal = 12.dp))
+                                },
+                                hideBlockedContent = false // filtered in repository
+                            ) {
+                                SubPostItem(
+                                    subPost = item,
+                                    modifier = Modifier
+                                        .padding(horizontal = 12.dp)
+                                        .fillMaxWidth(),
+                                    onOpenSubPosts = onOpenSubPosts,
+                                )
+                            }
                         }
+
+                        if (post.subPostNumber <= post.subPosts.size) return@Column
+                        Text(
+                            text = stringResource(R.string.open_all_sub_posts, post.subPostNumber),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onOpenSubPosts(0) }
+                                .padding(vertical = 2.dp, horizontal = 12.dp),
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.labelLarge,
+                        )
                     }
                 }
-            )
-        }
+            }
+        )
     }
 }
 
@@ -736,44 +726,32 @@ fun PostCard(
 private fun SubPostItem(
     subPost: SubPostItemData,
     modifier: Modifier = Modifier,
-    onReplyClick: (() -> Unit)?,
     onOpenSubPosts: (Long) -> Unit,
-    onMenuCopyClick: (String) -> Unit,
 ) {
-    val context = LocalContext.current
-    val navigator = LocalNavController.current
-    val coroutineScope = rememberCoroutineScope()
-    val menuState = rememberMenuState()
-
-    LongClickMenu(
-        menuState = menuState,
-        menuContent = {
-            if (onReplyClick != null) {
-                TextMenuItem(text = R.string.title_reply, onClick = onReplyClick)
-            }
-            TextMenuItem(text = R.string.menu_copy) {
-                onMenuCopyClick(subPost.plainText)
-            }
-            TextMenuItem(text = R.string.title_report) {
-                coroutineScope.launch {
-                    TiebaUtil.reportPost(context, navigator, subPost.id.toString())
-                }
-            }
-        },
-        shape = MaterialTheme.shapes.extraSmall,
-        onClick = { onOpenSubPosts(subPost.id) }
-    ) {
-        PbContentText(
-            text = subPost.abstractContent!!,
-            modifier = modifier,
-            overflow = TextOverflow.Ellipsis,
-            maxLines = 4,
-            lineSpacing = 0.4.sp,
-            inlineContent = if (subPost.isLz) ThreadViewModel.cachedLzInlineContent else null,
-            style = MaterialTheme.typography.bodyMedium,
-        )
-    }
+    PbContentText(
+        text = subPost.abstractContent!!,
+        modifier = modifier.openOnTapWithoutBlockingSelection { onOpenSubPosts(subPost.id) },
+        overflow = TextOverflow.Ellipsis,
+        maxLines = 4,
+        lineSpacing = 0.4.sp,
+        inlineContent = if (subPost.isLz) ThreadViewModel.cachedLzInlineContent else null,
+        style = MaterialTheme.typography.bodyMedium,
+    )
 }
+
+private fun Modifier.openOnTapWithoutBlockingSelection(onTap: () -> Unit): Modifier =
+    pointerInput(onTap) {
+        awaitEachGesture {
+            awaitFirstDown(requireUnconsumed = false)
+            val up = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
+                waitForUpOrCancellation()
+            }
+            if (up != null) {
+                up.consume()
+                onTap()
+            }
+        }
+    }
 
 @Preview("LoadPreviousButton")
 @Composable

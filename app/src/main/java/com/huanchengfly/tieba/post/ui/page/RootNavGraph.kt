@@ -220,7 +220,10 @@ private fun buildRootNavGraph(
         }
 
         animatedComposable<Destination.Search>(
-            deepLinks = listOf(navDeepLink<Destination.Search>(basePath = "$TB_LITE_DOMAIN://search"))
+            deepLinks = listOf(
+                navDeepLink<Destination.Search>(basePath = "$TB_LITE_DOMAIN://search"),
+                navDeepLink { uriPattern = "$TB_LITE_DOMAIN://search?keyword={keyword}" },
+            )
         ) { backStackEntry ->
             val params = backStackEntry.toRoute<Destination.Search>()
             SearchPage(navController, initialKeyword = params.keyword)

@@ -38,8 +38,8 @@ android {
         minSdk = libs.versions.minSdk.get().toInt()
         //noinspection OldTargetApi
         targetSdk = libs.versions.targetSdk.get().toInt()
-        versionCode = 391009
-        versionName = "4.0.0 Beta 4.14"
+        versionCode = 391010
+        versionName = "4.0.0 Beta 4.15"
         // Configure custom runner to set up the Hilt test application
         testInstrumentationRunner = "$applicationId.TbLiteTestRunner"
         vectorDrawables {

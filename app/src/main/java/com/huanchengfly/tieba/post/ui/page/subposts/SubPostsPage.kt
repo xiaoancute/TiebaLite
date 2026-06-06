@@ -257,9 +257,6 @@ private fun SubPostsContent(
             navigator.navigateDebounced(route = Thread(threadId, forumId, postId = postId))
         }
 
-        // non-nullable, initialize here for convenience
-        val onCopyClickedListener: (String) -> Unit = { TiebaUtil.copyText(context, it) }
-
         BlurScaffold(
             topHazeBlock = {
                 blurEnabled = !topAppBarScrollBehavior.isFullyCollapsed &&
@@ -329,7 +326,6 @@ private fun SubPostsContent(
                                     navigator.navigateDebounced(UserProfile(postItem.author))
                                 },
                                 onReplyClick = onReplyPostClickedListener,
-                                onMenuCopyClick = onCopyClickedListener,
                                 onMenuDeleteClick = viewModel::onDeletePost.takeIf { postItem.author.id == myUid } // Check is my Post
                             )
                             HorizontalDivider(thickness = 2.dp)
@@ -360,7 +356,6 @@ private fun SubPostsContent(
                         },
                         onAgree = viewModel::onSubPostLikeClicked,
                         onMenuReplyClick = onReplySubPostClickedListener,
-                        onMenuCopyClick = onCopyClickedListener,
                         onMenuReportClick = {
                             coroutineScope.launch {
                                 TiebaUtil.reportPost(context, navigator, postId = it.id.toString())
@@ -453,7 +448,6 @@ private fun SubPostItem(
     onUserClick: (UserData) -> Unit = {},
     onAgree: (SubPostItemData) -> Unit = {},
     onMenuReplyClick: ((SubPostItemData) -> Unit)?,
-    onMenuCopyClick: ((String) -> Unit)? = null,
     onMenuReportClick: (SubPostItemData) -> Unit = {},
     onMenuDeleteClick: ((SubPostItemData) -> Unit)? = null,
 ) =
@@ -467,34 +461,28 @@ private fun SubPostItem(
 {
     val context = LocalContext.current
 
-    LongClickMenu(
-        indication = null,
-        menuContent = {
-            if (onMenuReplyClick != null) {
-                TextMenuItem(text = stringResource(id = R.string.btn_reply)) {
-                    onMenuReplyClick(item)
-                }
-            }
-
-            if (onMenuCopyClick != null) {
-                TextMenuItem(text = stringResource(id = R.string.menu_copy)) {
-                    onMenuCopyClick(item.plainText)
-                }
-            }
-
-            TextMenuItem(text = stringResource(id = R.string.title_report)) {
-                onMenuReportClick(item)
-            }
-
-            if (onMenuDeleteClick != null) {
-                TextMenuItem(text = stringResource(id = R.string.title_delete)) {
-                    onMenuDeleteClick(item)
-                }
-            }
-        }
+    Column(
+        modifier = Modifier.padding(16.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
+        LongClickMenu(
+            indication = null,
+            menuContent = {
+                if (onMenuReplyClick != null) {
+                    TextMenuItem(text = stringResource(id = R.string.btn_reply)) {
+                        onMenuReplyClick(item)
+                    }
+                }
+
+                TextMenuItem(text = stringResource(id = R.string.title_report)) {
+                    onMenuReportClick(item)
+                }
+
+                if (onMenuDeleteClick != null) {
+                    TextMenuItem(text = stringResource(id = R.string.title_delete)) {
+                        onMenuDeleteClick(item)
+                    }
+                }
+            }
         ) {
             SharedTransitionUserHeader(
                 author = item.author,
@@ -504,15 +492,15 @@ private fun SubPostItem(
             ) {
                 PostLikeButton(like = item.like, onClick = { onAgree(item) })
             }
+        }
 
-            Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 44.dp, top = 8.dp)
-            ) {
-                item.content!!.fastForEach { it.Render() }
-            }
+        Column(
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 44.dp, top = 8.dp)
+        ) {
+            item.content!!.fastForEach { it.Render() }
         }
     }
 }

@@ -2,6 +2,7 @@ package com.huanchengfly.tieba.post.ui.models.settings
 
 import androidx.annotation.IntDef
 import androidx.compose.runtime.Immutable
+import com.huanchengfly.tieba.post.ui.models.search.ForumSearchPostSortType
 import com.huanchengfly.tieba.post.ui.models.search.SearchThreadSortType
 import com.huanchengfly.tieba.post.utils.ImageUtil
 
@@ -83,6 +84,7 @@ annotation class AutoClearImageCacheInterval {
  * @param imageWatermarkType 图片上传水印设置
  * @param lastAutoClearImageCacheTime 上次自动清理图片缓存的时间戳
  * @param preloadNextPage 提前预加载下一页内容
+ * @param forumSearchPostSortType 吧内搜贴默认排序方式
  * @param searchThreadSortType 搜贴默认排序方式
  * @param showBothName 同时显示用户名和昵称
  * @param stickyHeader 帖子页面是否使用StickyHeader
@@ -101,6 +103,7 @@ data class HabitSettings(
     @WaterType val imageWatermarkType: Int = WaterType.FORUM_NAME,
     val lastAutoClearImageCacheTime: Long = 0L,
     val preloadNextPage: Boolean = false,
+    @ForumSearchPostSortType val forumSearchPostSortType: Int = ForumSearchPostSortType.NEWEST,
     @SearchThreadSortType val searchThreadSortType: Int = SearchThreadSortType.NEWEST,
     val showBothName: Boolean = false,
     val stickyHeader: Boolean = true,

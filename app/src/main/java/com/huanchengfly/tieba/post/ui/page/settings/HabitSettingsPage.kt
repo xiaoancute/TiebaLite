@@ -15,6 +15,7 @@ import androidx.compose.material.icons.rounded.UnfoldLess
 import androidx.compose.runtime.Composable
 import com.huanchengfly.tieba.post.R
 import com.huanchengfly.tieba.post.repository.user.Settings
+import com.huanchengfly.tieba.post.ui.models.search.ForumSearchPostSortType
 import com.huanchengfly.tieba.post.ui.models.search.SearchThreadSortType
 import com.huanchengfly.tieba.post.ui.icons.PageHeader
 import com.huanchengfly.tieba.post.ui.models.settings.ForumSortType
@@ -65,6 +66,7 @@ fun HabitSettingsPage(
 
         group(title = R.string.settings_group_search) {
             searchThreadSortPreference()
+            forumSearchPostSortPreference()
         }
 
         group(title = R.string.settings_group_thread) {
@@ -146,6 +148,18 @@ fun SettingsSegmentedPrefsScope<HabitSettings>.searchThreadSortPreference() {
             SearchThreadSortType.NEWEST to R.string.title_search_order_new,
             SearchThreadSortType.OLDEST to R.string.title_search_order_old,
             SearchThreadSortType.RELATIVE to R.string.title_search_order_relevant,
+        ),
+        leadingIcon = Icons.Rounded.Search
+    )
+}
+
+fun SettingsSegmentedPrefsScope<HabitSettings>.forumSearchPostSortPreference() {
+    listPref(
+        property = HabitSettings::forumSearchPostSortType,
+        title = R.string.title_settings_forum_search_post_sort_type,
+        options = persistentMapOf(
+            ForumSearchPostSortType.NEWEST to R.string.title_search_post_sort_by_time,
+            ForumSearchPostSortType.RELATIVE to R.string.title_search_post_sort_by_relevant,
         ),
         leadingIcon = Icons.Rounded.Search
     )

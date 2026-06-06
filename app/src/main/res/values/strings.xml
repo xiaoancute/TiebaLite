@@ -184,6 +184,7 @@
     <string name="toast_photo_saved">图片保存在 %1$s</string>
     <string name="title_settings_default_sort_type">吧默认排序方式</string>
     <string name="title_settings_search_thread_sort_type">搜贴默认排序方式</string>
+    <string name="title_settings_forum_search_post_sort_type">吧内搜贴默认排序方式</string>
     <string name="title_preload_next_page">预加载下一页</string>
     <string name="summary_preload_next_page">接近列表底部时提前加载，减少继续下滑时的等待</string>
     <string name="toast_load_failed">加载失败</string>

@@ -41,6 +41,7 @@ import com.huanchengfly.tieba.post.ui.models.settings.ThemeSettings
 import com.huanchengfly.tieba.post.ui.models.settings.UISettings
 import com.huanchengfly.tieba.post.ui.models.settings.WaterType
 import com.huanchengfly.tieba.post.ui.models.settings.randomSignTime
+import com.huanchengfly.tieba.post.ui.models.search.ForumSearchPostSortType
 import com.huanchengfly.tieba.post.ui.models.search.SearchThreadSortType
 import com.huanchengfly.tieba.post.utils.HmTime
 import com.huanchengfly.tieba.post.utils.ImageUtil
@@ -147,6 +148,8 @@ private object HabitSettingsTransformer : PreferenceTransformer<HabitSettings> {
             imageWatermarkType = it[intPreferencesKey(KEY_IMAGE_WATERMARK_TYPE)] ?: WaterType.FORUM_NAME,
             lastAutoClearImageCacheTime = it[longPreferencesKey(KEY_LAST_AUTO_CLEAR_IMAGE_CACHE_TIME)] ?: 0L,
             preloadNextPage = it[booleanPreferencesKey(KEY_PRELOAD_NEXT_PAGE)] == true,
+            forumSearchPostSortType = it[intPreferencesKey(KEY_FORUM_SEARCH_POST_SORT_DEFAULT)]
+                ?: ForumSearchPostSortType.NEWEST,
             searchThreadSortType = it[intPreferencesKey(KEY_SEARCH_THREAD_SORT_DEFAULT)] ?: SearchThreadSortType.NEWEST,
             showBothName = it[booleanPreferencesKey(KEY_SHOW_NICKNAME)] == true,
             stickyHeader = it[booleanPreferencesKey(KEY_STICKY_HEADER)] ?: true,
@@ -166,6 +169,7 @@ private object HabitSettingsTransformer : PreferenceTransformer<HabitSettings> {
         it[intPreferencesKey(KEY_IMAGE_WATERMARK_TYPE)] = habit.imageWatermarkType
         it[longPreferencesKey(KEY_LAST_AUTO_CLEAR_IMAGE_CACHE_TIME)] = habit.lastAutoClearImageCacheTime
         it[booleanPreferencesKey(KEY_PRELOAD_NEXT_PAGE)] = habit.preloadNextPage
+        it[intPreferencesKey(KEY_FORUM_SEARCH_POST_SORT_DEFAULT)] = habit.forumSearchPostSortType
         it[intPreferencesKey(KEY_SEARCH_THREAD_SORT_DEFAULT)] = habit.searchThreadSortType
         it[booleanPreferencesKey(KEY_SHOW_NICKNAME)] = habit.showBothName
         it[booleanPreferencesKey(KEY_STICKY_HEADER)] = habit.stickyHeader
@@ -192,6 +196,7 @@ private object HabitSettingsTransformer : PreferenceTransformer<HabitSettings> {
     private const val KEY_PRELOAD_NEXT_PAGE = "preload_next_page"
     private const val KEY_REPLY_HIDE = "ui_reply_hide"
     private const val KEY_REPLY_HIDE_WARNING = "ui_reply_hide_warn"
+    private const val KEY_FORUM_SEARCH_POST_SORT_DEFAULT = "forum_search_post_sort_type"
     private const val KEY_SEARCH_THREAD_SORT_DEFAULT = "search_thread_sort_type"
     private const val KEY_SHOW_NICKNAME = "ui_show_both_name"
     private const val KEY_STICKY_HEADER = "ui_sticky_header"

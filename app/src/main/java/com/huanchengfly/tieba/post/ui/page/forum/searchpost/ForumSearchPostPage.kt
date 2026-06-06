@@ -53,6 +53,7 @@ import com.huanchengfly.tieba.post.arch.collectUiEventWithLifecycle
 import com.huanchengfly.tieba.post.arch.isOverlapping
 import com.huanchengfly.tieba.post.navigateDebounced
 import com.huanchengfly.tieba.post.ui.common.theme.compose.clickableNoIndication
+import com.huanchengfly.tieba.post.ui.models.search.ForumSearchPostSortType
 import com.huanchengfly.tieba.post.ui.models.search.SearchThreadInfo
 import com.huanchengfly.tieba.post.ui.page.Destination.SubPosts
 import com.huanchengfly.tieba.post.ui.page.Destination.Thread

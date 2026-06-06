@@ -7,6 +7,8 @@ import com.huanchengfly.tieba.post.arch.TbLiteExceptionHandler
 import com.huanchengfly.tieba.post.arch.UiState
 import com.huanchengfly.tieba.post.arch.stateInViewModel
 import com.huanchengfly.tieba.post.repository.SearchRepository
+import com.huanchengfly.tieba.post.repository.user.SettingsRepository
+import com.huanchengfly.tieba.post.ui.models.search.ForumSearchPostSortType
 import com.huanchengfly.tieba.post.ui.models.search.SearchThreadInfo
 import com.huanchengfly.tieba.post.ui.page.Destination
 import com.huanchengfly.tieba.post.ui.page.search.SearchUiEvent
@@ -30,7 +32,7 @@ data class ForumSearchPostUiState(
     val hasMore: Boolean = false,
     val keyword: String = "",
     val data: List<SearchThreadInfo> = emptyList(),
-    val sortType: Int = ForumSearchPostSortType.NEWEST,
+    @ForumSearchPostSortType val sortType: Int = ForumSearchPostSortType.NEWEST,
     val filterType: Int = ForumSearchPostFilterType.ALL,
 ) : UiState {
 
@@ -45,6 +47,7 @@ internal fun normalizeForumSearchKeyword(keyword: String): String {
 @HiltViewModel
 class ForumSearchPostViewModel @Inject constructor(
     private val searchRepo: SearchRepository,
+    private val settingsRepo: SettingsRepository,
     savedStateHandle: SavedStateHandle
 ) : BaseStateViewModel<ForumSearchPostUiState>() {
 
@@ -64,6 +67,13 @@ class ForumSearchPostViewModel @Inject constructor(
         .stateInViewModel(initialValue = emptyList())
 
     override fun createInitialState(): ForumSearchPostUiState = ForumSearchPostUiState()
+
+    init {
+        launchInVM {
+            val sortType = settingsRepo.habitSettings.snapshot().forumSearchPostSortType
+            _uiState.update { it.copy(sortType = sortType) }
+        }
+    }
 
     fun onClearHistory(): Unit = launchInVM {
         runCatching {
@@ -174,7 +184,7 @@ class ForumSearchPostViewModel @Inject constructor(
         }
     }
 
-    fun onSortTypeChanged(sortType: Int) {
+    fun onSortTypeChanged(@ForumSearchPostSortType sortType: Int) {
         val uiStateSnapshot = currentState
         if (uiStateSnapshot.sortType != sortType) {
             searchPostInternal(keyword = uiStateSnapshot.keyword, sort = sortType)
@@ -183,11 +193,6 @@ class ForumSearchPostViewModel @Inject constructor(
 }
 
 private const val TAG = "ForumSearchPostViewMode"
-
-object ForumSearchPostSortType {
-    const val NEWEST = 1
-    const val RELATIVE = 2
-}
 
 object ForumSearchPostFilterType {
     const val ONLY_THREAD = 1
