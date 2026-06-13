@@ -2,9 +2,7 @@ package com.huanchengfly.tieba.post.ui.page.thread
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -96,7 +94,6 @@ import com.huanchengfly.tieba.post.ui.widgets.compose.stickyHeaderBackground
 import com.huanchengfly.tieba.post.utils.DateTimeUtils
 import com.huanchengfly.tieba.post.utils.TiebaUtil
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
 import java.text.NumberFormat
 
 sealed class Type(val key: String) {
@@ -741,16 +738,9 @@ private fun SubPostItem(
 
 private fun Modifier.openOnTapWithoutBlockingSelection(onTap: () -> Unit): Modifier =
     pointerInput(onTap) {
-        awaitEachGesture {
-            awaitFirstDown(requireUnconsumed = false)
-            val up = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
-                waitForUpOrCancellation()
-            }
-            if (up != null) {
-                up.consume()
-                onTap()
-            }
-        }
+        detectTapGestures(
+            onTap = { onTap() }
+        )
     }
 
 @Preview("LoadPreviousButton")

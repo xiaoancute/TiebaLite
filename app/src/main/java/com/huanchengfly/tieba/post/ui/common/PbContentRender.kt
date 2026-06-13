@@ -2,9 +2,7 @@ package com.huanchengfly.tieba.post.ui.common
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.InlineTextContent
@@ -56,7 +54,6 @@ import com.huanchengfly.tieba.post.ui.widgets.compose.singleMediaFraction
 import com.huanchengfly.tieba.post.ui.widgets.compose.video.VideoThumbnail
 import com.huanchengfly.tieba.post.utils.ThemeUtil
 import com.huanchengfly.tieba.post.utils.launchUrl
-import kotlinx.coroutines.withTimeoutOrNull
 
 @Immutable
 interface PbContentRender {
@@ -273,19 +270,14 @@ fun PbContentText(
         EmoticonText(
             text = text,
             modifier = modifier.pointerInput(text) {
-                awaitEachGesture {
-                    val down = awaitFirstDown(requireUnconsumed = false)
-                    val annotation =
-                        layoutResult?.getOffsetForPosition(down.position)?.let { offset ->
-                            text.getStringAnnotations(start = offset, end = offset)
-                                .fastFirstOrNull { it.tag == TAG_URL || it.tag == TAG_USER }
-                    }
-                    if (annotation != null) {
-                        val up = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
-                            waitForUpOrCancellation()
+                detectTapGestures(
+                    onTap = { offset ->
+                        val annotation =
+                            layoutResult?.getOffsetForPosition(offset)?.let { position ->
+                                text.getStringAnnotations(start = position, end = position)
+                                    .fastFirstOrNull { it.tag == TAG_URL || it.tag == TAG_USER }
                         }
-                        if (up != null) {
-                            up.consume()
+                        if (annotation != null) {
                             when (annotation.tag) {
                                 TAG_URL -> {
                                     val url = annotation.item
@@ -299,7 +291,7 @@ fun PbContentText(
                             }
                         }
                     }
-                }
+                )
             },
             color = color,
             fontSize = fontSize,
