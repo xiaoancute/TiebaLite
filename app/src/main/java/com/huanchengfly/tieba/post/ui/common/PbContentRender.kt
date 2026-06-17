@@ -244,6 +244,27 @@ class VideoContentRender(
     override fun toString(): String = PbContentRender.MEDIA_VIDEO
 }
 
+internal sealed interface PbContentTextTapTarget {
+    data class Url(val value: String) : PbContentTextTapTarget
+    data class User(val uid: Long) : PbContentTextTapTarget
+    data object Default : PbContentTextTapTarget
+}
+
+internal fun resolvePbContentTextTapTarget(
+    text: AnnotatedString,
+    position: Int,
+    hasDefaultClick: Boolean
+): PbContentTextTapTarget? {
+    val annotation = text.getStringAnnotations(start = position, end = position)
+        .fastFirstOrNull { it.tag == TAG_URL || it.tag == TAG_USER }
+
+    return when (annotation?.tag) {
+        TAG_URL -> PbContentTextTapTarget.Url(annotation.item)
+        TAG_USER -> PbContentTextTapTarget.User(annotation.item.toLong())
+        else -> PbContentTextTapTarget.Default.takeIf { hasDefaultClick }
+    }
+}
+
 @Composable
 fun PbContentText(
     text: AnnotatedString,
@@ -264,6 +285,7 @@ fun PbContentText(
     minLines: Int = 1,
     inlineContent: Map<String, InlineTextContent>? = null,
     onTextLayout: (TextLayoutResult) -> Unit = {},
+    onClick: (() -> Unit)? = null,
     style: TextStyle = LocalTextStyle.current,
 ) {
     val context = LocalContext.current
@@ -273,26 +295,26 @@ fun PbContentText(
     SelectionContainer {
         EmoticonText(
             text = text,
-            modifier = modifier.pointerInput(text) {
+            modifier = modifier.pointerInput(text, onClick) {
                 detectTapGestures(
                     onTap = { offset ->
-                        val annotation =
+                        val tapTarget =
                             layoutResult?.getOffsetForPosition(offset)?.let { position ->
-                                text.getStringAnnotations(start = position, end = position)
-                                    .fastFirstOrNull { it.tag == TAG_URL || it.tag == TAG_USER }
-                        }
-                        if (annotation != null) {
-                            when (annotation.tag) {
-                                TAG_URL -> {
-                                    val url = annotation.item
-                                    launchUrl(context, navigator, url)
-                                }
-
-                                TAG_USER -> {
-                                    val uid = annotation.item.toLong()
-                                    navigator.navigateDebounced(Destination.UserProfile(uid))
-                                }
+                                resolvePbContentTextTapTarget(
+                                    text = text,
+                                    position = position,
+                                    hasDefaultClick = onClick != null
+                                )
                             }
+
+                        when (tapTarget) {
+                            is PbContentTextTapTarget.Url -> launchUrl(context, navigator, tapTarget.value)
+                            is PbContentTextTapTarget.User -> {
+                                navigator.navigateDebounced(Destination.UserProfile(tapTarget.uid))
+                            }
+
+                            PbContentTextTapTarget.Default -> onClick?.invoke()
+                            null -> Unit
                         }
                     }
                 )

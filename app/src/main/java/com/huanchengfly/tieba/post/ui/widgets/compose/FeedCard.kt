@@ -532,7 +532,8 @@ fun FeedCard(
                     lineSpacing = 0.8.sp,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 5,
-                    style = MaterialTheme.typography.bodyLarge
+                    style = MaterialTheme.typography.bodyLarge,
+                    onClick = { onClick(thread) }
                 )
             }
 
