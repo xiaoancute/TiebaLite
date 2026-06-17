@@ -103,11 +103,12 @@ class ForumRepository @Inject constructor(
                 frsCommonInfo = cached.forum.pcFrsCommonInfo,
             )
             val showBothName = habitSettings.first().showBothName
+            val block = blockedSettings.first()
             val typedThreads = pcData.toThreadItemList(
                 tab = tab,
                 sortType = sortType,
                 showBothName = showBothName,
-                isBlocked = blockRepo::isBlocked,
+                isBlocked = { uid, content -> blockRepo.isBlocked(uid, content, block.blockWaterPost) },
             )
             if (page == 1 && cacheable && loadType == 1) {
                 val mergedResults = cached.tabResults + (tab.tabId to typedThreads)
@@ -143,12 +144,13 @@ class ForumRepository @Inject constructor(
         )
         var forumManagers: List<ForumManager>? = null
         val showBothName = habitSettings.first().showBothName
+        val block = blockedSettings.first()
         val typedThreads = ThreadItemList(
             threads = data.thread_list.mapUiModel(
                 sortType = sortType,
-                blockedSetting = blockedSettings.first(),
+                blockedSetting = block,
                 showBothName = showBothName,
-                isBlocked = blockRepo::isBlocked
+                isBlocked = { uid, content -> blockRepo.isBlocked(uid, content, block.blockWaterPost) },
             ),
             threadIds = data.thread_id_list,
             hasMore = data.page!!.has_more == 1
@@ -232,14 +234,15 @@ class ForumRepository @Inject constructor(
     ).second
 
     suspend fun threadList(forumId: Long, forumName: String, page: Int, sortType: Int, threadIds: List<Long>): List<ThreadItem> {
+        val block = blockedSettings.first()
         return networkDataSource
             .loadThread(forumId, forumName, page, sortType, threadIds)
             .thread_list
             .mapUiModel(
                 sortType = sortType,
                 showBothName = habitSettings.first().showBothName,
-                blockedSetting = blockedSettings.first(),
-                isBlocked = { uid, contents -> blockRepo.isBlocked(uid, *contents) },
+                blockedSetting = block,
+                isBlocked = { uid, contents -> blockRepo.isBlocked(uid, contents, block.blockWaterPost) },
             )
     }
 

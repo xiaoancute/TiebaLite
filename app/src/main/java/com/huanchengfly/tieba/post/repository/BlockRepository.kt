@@ -177,7 +177,22 @@ class BlockRepository @Inject constructor(
         return if (userRule != null) {
             !userRule.whitelisted
         } else {
-            isBlocked(blacklist = blacklist.first(), whitelist = whitelist.first(), contents = contents)
+            isBlocked(blacklist.first(), whitelist.first(), *contents)
+        }
+    }
+
+    suspend fun isBlocked(uid: Long, contents: Array<String>, blockWaterPost: Boolean): Boolean {
+        val userRule = localDataSource.getUser(uid)
+        // user rule matched, skip keyword and built-in content checks
+        return if (userRule != null) {
+            !userRule.whitelisted
+        } else {
+            isBlocked(
+                blacklist.first(),
+                whitelist.first(),
+                blockWaterPost,
+                *contents,
+            )
         }
     }
 
@@ -186,6 +201,19 @@ class BlockRepository @Inject constructor(
             true
         } else {
             isBlocked(uid, *contents)
+        }
+    }
+
+    suspend fun isBlocked(
+        forumName: String,
+        uid: Long,
+        contents: Array<String>,
+        blockWaterPost: Boolean,
+    ): Boolean {
+        return if (localDataSource.getForum(forumName) != null) {
+            true
+        } else {
+            isBlocked(uid, contents, blockWaterPost)
         }
     }
 
@@ -239,6 +267,21 @@ class BlockRepository @Inject constructor(
                 false
             } else {
                 contents.anyMatches(predicates = blacklist)
+            }
+        }
+
+        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+        fun isBlocked(
+            blacklist: List<Predicate<String>>,
+            whitelist: List<Predicate<String>>,
+            blockWaterPost: Boolean,
+            vararg contents: String,
+        ): Boolean {
+            return if (contents.anyMatches(predicates = whitelist)) {
+                false
+            } else {
+                contents.anyMatches(predicates = blacklist) ||
+                        blockWaterPost && WaterPostBlocker.isWaterPost(*contents)
             }
         }
     }

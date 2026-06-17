@@ -121,6 +121,13 @@ fun BlockSettingsPage(
                 summary = R.string.settings_block_video_summary,
                 leadingIcon = Icons.Outlined.VideocamOff
             )
+
+            toggleablePreference(
+                property = BlockSettings::blockWaterPost,
+                title = R.string.settings_block_water_post,
+                summary = R.string.settings_block_water_post_summary,
+                leadingIcon = Icons.Outlined.Block
+            )
         }
 
         group(title = R.string.settings_group_block_rule) {
@@ -144,6 +151,7 @@ fun BlockSettingsPage(
 
             preference(
                 title = R.string.settings_block_keyword,
+                summary = R.string.settings_block_keyword_summary,
                 leadingIcon = Icons.Outlined.Block,
                 trailingIcon = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
                 onClick = {

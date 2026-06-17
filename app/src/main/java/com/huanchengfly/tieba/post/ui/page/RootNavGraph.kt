@@ -59,6 +59,7 @@ import com.huanchengfly.tieba.post.ui.page.main.MainPage
 import com.huanchengfly.tieba.post.ui.page.main.notifications.NotificationsPage
 import com.huanchengfly.tieba.post.ui.page.main.notifications.list.NotificationsType
 import com.huanchengfly.tieba.post.ui.page.reply.ReplyPageBottomSheet
+import com.huanchengfly.tieba.post.ui.page.reply.buildTiebaWebReplyUrl
 import com.huanchengfly.tieba.post.ui.page.search.SearchPage
 import com.huanchengfly.tieba.post.ui.page.settings.SettingsDestination
 import com.huanchengfly.tieba.post.ui.page.settings.settingsGraph
@@ -253,7 +254,19 @@ private fun buildRootNavGraph(
             )
         ) { backStackEntry ->
             val params = backStackEntry.toRoute<Destination.Reply>()
-            ReplyPageBottomSheet(params, navController::navigateUp)
+            ReplyPageBottomSheet(
+                params = params,
+                onBack = navController::navigateUp,
+                onOpenWebReply = { threadId, postId ->
+                    navController.navigateUp()
+                    navController.navigate(
+                        Destination.WebView(
+                            initialUrl = buildTiebaWebReplyUrl(threadId, postId),
+                            customClient = false,
+                        )
+                    )
+                }
+            )
         }
 
         composable<Destination.Welcome> {

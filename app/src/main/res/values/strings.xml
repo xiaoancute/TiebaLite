@@ -294,6 +294,7 @@
     <string name="btn_cancel_reply">放弃回贴</string>
     <string name="btn_continue_reply">无视风险，继续回贴</string>
     <string name="button_official_client_reply">使用官方客户端回贴</string>
+    <string name="button_web_reply">使用网页版回贴</string>
     <string name="toast_official_client_not_install">未安装官方版客户端</string>
     <string name="summary_ignore_battery_optimization">点击此处忽略电池优化以允许应用启动自动签到</string>
     <string name="title_ignore_battery_optimization">忽略“电池优化”</string>
@@ -421,9 +422,12 @@
     <string name="release_to_load">松开加载</string>
     <string name="settings_block_forum">屏蔽吧管理</string>
     <string name="settings_block_keyword">屏蔽词管理</string>
+    <string name="settings_block_keyword_summary">自定义关键词和正则，也可补充水帖规则</string>
     <string name="settings_block_user">屏蔽用户管理</string>
     <string name="settings_hide_blocked_content">彻底隐藏被屏蔽的内容</string>
     <string name="settings_block_video_summary">屏蔽动态页面和吧页面的所有视频贴</string>
+    <string name="settings_block_water_post">屏蔽水帖</string>
+    <string name="settings_block_water_post_summary">屏蔽 +3、顶、插眼、马克等短水帖；自定义规则可在屏蔽词管理添加</string>
     <string name="desc_image">图片</string>
     <string name="desc_image_failed">图片加载失败</string>
     <string name="desc_image_empty_url">图片链接为空</string>

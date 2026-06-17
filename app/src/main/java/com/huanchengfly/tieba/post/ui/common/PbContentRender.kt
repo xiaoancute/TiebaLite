@@ -87,7 +87,11 @@ private fun highlightContent(content: String): AnnotatedString {
 value class PureTextContentRender(val value: String) : PbContentRender {
 
     @Composable
-    override fun Render() = Text(text = value, style = MaterialTheme.typography.bodyLarge)
+    override fun Render() {
+        SelectionContainer {
+            Text(text = value, style = MaterialTheme.typography.bodyLarge)
+        }
+    }
 
     override fun toAnnotationString(): AnnotatedString = AnnotatedString(value)
 

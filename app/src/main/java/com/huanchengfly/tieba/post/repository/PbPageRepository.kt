@@ -242,13 +242,14 @@ class PbPageRepository @Inject constructor(
     @WorkerThread
     private suspend fun SubPostList.mapToUiModel(lzId: Long, abstract: Boolean): SubPostItemData {
         val habit = habitSettings.first()
+        val block = blockSettings.first()
         val author = author!!.mapToUiModel(lzId = lzId, showBothName = habit.showBothName)
         val contentRenders = content.buildRenders(imageLoadType = habit.imageLoadType)
         val plainText = content.plainText.orEmpty()
         return SubPostItemData(
             author = author,
             id = id,
-            blocked = blockRepo.isBlocked(author.id, plainText),
+            blocked = blockRepo.isBlocked(author.id, arrayOf(plainText), block.blockWaterPost),
             time = time.toLong(),
             like = agree?.let { Like(agree = it) } ?: LikeZero,
             plainText = plainText,
@@ -281,6 +282,7 @@ class PbPageRepository @Inject constructor(
      * */
     private suspend fun Post.mapToUiModel(lzId: Long, blockable: Boolean): PostData {
         val habit = habitSettings.first()
+        val block = blockSettings.first()
         val plainText = content.plainText.orEmpty()
         val author = author!!.mapToUiModel(lzId, showBothName = habit.showBothName)
         return PostData(
@@ -292,7 +294,7 @@ class PbPageRepository @Inject constructor(
             },
             time = DateTimeUtils.fixTimestamp(time.toLong()),
             like = agree?.let { Like(agree = it) } ?: LikeZero,
-            blocked = blockable && blockRepo.isBlocked(author.id, plainText),
+            blocked = blockable && blockRepo.isBlocked(author.id, arrayOf(plainText), block.blockWaterPost),
             plainText = plainText,
             contentRenders = this.buildContentRenders(imageLoadType = habit.imageLoadType),
             subPosts = sub_post_list?.sub_post_list?.mapToUiModel(lzId, abstract = true),

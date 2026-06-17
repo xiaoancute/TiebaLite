@@ -14,6 +14,7 @@ import com.huanchengfly.tieba.post.ui.models.Author
 import com.huanchengfly.tieba.post.ui.models.Like
 import com.huanchengfly.tieba.post.ui.models.SimpleForum
 import com.huanchengfly.tieba.post.ui.models.ThreadItem
+import com.huanchengfly.tieba.post.ui.models.settings.BlockSettings
 import com.huanchengfly.tieba.post.ui.models.settings.HabitSettings
 import com.huanchengfly.tieba.post.ui.widgets.compose.buildThreadContent
 import com.huanchengfly.tieba.post.utils.DateTimeUtils
@@ -33,6 +34,9 @@ class HotTopicRepository @Inject constructor(
 
     val habitSettings: Settings<HabitSettings>
         get() = settingsRepo.habitSettings
+
+    private val blockSettings: Settings<BlockSettings>
+        get() = settingsRepo.blockSettings
 
     suspend fun loadTopicList(): List<NewTopicList> {
         return networkDataSource.topicList().topic_list
@@ -93,8 +97,14 @@ class HotTopicRepository @Inject constructor(
 
         return withContext(Dispatchers.Default) {
             val habit = habitSettings.snapshot()
+            val block = blockSettings.snapshot()
             threads.map {
-                it.threadInfo.mapUiModel(showBothName = habit.showBothName, isBlocked = blockRepo::isBlocked)
+                it.threadInfo.mapUiModel(
+                    showBothName = habit.showBothName,
+                    isBlocked = { forumName, uid, content ->
+                        blockRepo.isBlocked(forumName, uid, content, block.blockWaterPost)
+                    },
+                )
             }
         }
     }

@@ -336,17 +336,20 @@ private object BlockTransformer: PreferenceTransformer<BlockSettings> {
     override val get: (Preferences) -> BlockSettings = {
         BlockSettings(
             blockVideo = it[booleanPreferencesKey(KEY_BLOCK_VIDEO)] == true,
-            hideBlocked = it[booleanPreferencesKey(KEY_HIDE_BLOCKED)] == true
+            hideBlocked = it[booleanPreferencesKey(KEY_HIDE_BLOCKED)] == true,
+            blockWaterPost = it[booleanPreferencesKey(KEY_BLOCK_WATER_POST)] == true,
         )
     }
 
     override val set: (MutablePreferences, BlockSettings) -> Unit = { it, block ->
         it[booleanPreferencesKey(KEY_BLOCK_VIDEO)] = block.blockVideo
         it[booleanPreferencesKey(KEY_HIDE_BLOCKED)] = block.hideBlocked
+        it[booleanPreferencesKey(KEY_BLOCK_WATER_POST)] = block.blockWaterPost
     }
 
     private const val KEY_HIDE_BLOCKED = "ui_post_hide_blocked"
     private const val KEY_BLOCK_VIDEO = "ui_block_video"
+    private const val KEY_BLOCK_WATER_POST = "ui_block_water_post"
 }
 
 private object SignConfigTransformer: PreferenceTransformer<SignConfig> {

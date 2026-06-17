@@ -24,6 +24,7 @@ import com.huanchengfly.tieba.post.ui.models.explore.Dislike
 import com.huanchengfly.tieba.post.ui.models.explore.HotTab
 import com.huanchengfly.tieba.post.ui.models.explore.HotTopicData
 import com.huanchengfly.tieba.post.ui.models.explore.RecommendTopic
+import com.huanchengfly.tieba.post.ui.models.settings.BlockSettings
 import com.huanchengfly.tieba.post.ui.page.main.explore.ExplorePageItem
 import com.huanchengfly.tieba.post.ui.widgets.compose.buildThreadContent
 import com.huanchengfly.tieba.post.utils.AccountUtil
@@ -89,7 +90,11 @@ class ExploreRepository @Inject constructor(
             localDataSource.saveHotThread(tabCode, data)
         }
 
-        return data.mapUiModel(habit.showBothName, blockRepo::isBlocked)
+        val block = blockSettings.snapshot()
+        return data.mapUiModel(
+            showBothName = habit.showBothName,
+            isBlocked = { uid, content -> blockRepo.isBlocked(uid, content, block.blockWaterPost) },
+        )
     }
 
     suspend fun loadPersonalized(page: Int, cached: Boolean): List<ThreadItem> {
@@ -111,8 +116,10 @@ class ExploreRepository @Inject constructor(
 
         return data.mapUiModel(
             showBothName = habitSettings.snapshot().showBothName,
-            blockVideo = blockSettings.snapshot().blockVideo,
-            isBlocked = blockRepo::isBlocked,
+            blockSettings = blockSettings.snapshot(),
+            isBlocked = { forumName, uid, content, blockWaterPost ->
+                blockRepo.isBlocked(forumName, uid, content, blockWaterPost)
+            },
             dislikeProvider = this::getCachedDislike
         )
     }
@@ -134,7 +141,11 @@ class ExploreRepository @Inject constructor(
             localDataSource.saveUserLikeFirstPage(uid, data)
         }
         val showBothName = habitSettings.snapshot().showBothName
-        val threads = data.threadInfo.mapUiModel(showBothName, blockRepo::isBlocked)
+        val block = blockSettings.snapshot()
+        val threads = data.threadInfo.mapUiModel(
+            showBothName = showBothName,
+            isBlocked = { uid, content -> blockRepo.isBlocked(uid, content, block.blockWaterPost) },
+        )
         return UserLikeThreads(data.requestUnix, data.pageTag, data.hasMore == 1, threads)
     }
 
@@ -147,7 +158,11 @@ class ExploreRepository @Inject constructor(
     suspend fun loadUserLike(pageTag: String, lastRequestUnix: Long): UserLikeThreads {
         val data = networkDataSource.loadMoreUserLikeThread(pageTag, lastRequestUnix)
         val showBothName = habitSettings.snapshot().showBothName
-        val threads = data.threadInfo.mapUiModel(showBothName, isBlocked = blockRepo::isBlocked)
+        val block = blockSettings.snapshot()
+        val threads = data.threadInfo.mapUiModel(
+            showBothName = showBothName,
+            isBlocked = { uid, content -> blockRepo.isBlocked(uid, content, block.blockWaterPost) },
+        )
         return UserLikeThreads(data.requestUnix, data.pageTag, data.hasMore == 1, threads)
     }
 
@@ -278,8 +293,8 @@ class ExploreRepository @Inject constructor(
 
         private suspend fun PersonalizedResponseData.mapUiModel(
             showBothName: Boolean,
-            blockVideo: Boolean,
-            isBlocked: suspend (forumName: String, uid: Long, content: Array<String>) -> Boolean,
+            blockSettings: BlockSettings,
+            isBlocked: suspend (forumName: String, uid: Long, content: Array<String>, blockWaterPost: Boolean) -> Boolean,
             dislikeProvider: (DislikeReason) -> Dislike
         ): List<ThreadItem> {
             // associate dislikeResource by thread id
@@ -290,13 +305,13 @@ class ExploreRepository @Inject constructor(
             )
             return withContext(Dispatchers.Default) {
                 thread_list
-                    .filter { !blockVideo || it.videoInfo == null }
+                    .filter { !blockSettings.blockVideo || it.videoInfo == null }
                     .map {
                         it.mapUiModel(
                             showBothName = showBothName,
                             isBlocked = { uid, content ->
                                 // 4.0.0-beta.4.4: Add forum name filter
-                                isBlocked(it.forumName, uid, content)
+                                isBlocked(it.forumName, uid, content, blockSettings.blockWaterPost)
                             },
                             threadDislikeMap = threadDislikeMap
                         )

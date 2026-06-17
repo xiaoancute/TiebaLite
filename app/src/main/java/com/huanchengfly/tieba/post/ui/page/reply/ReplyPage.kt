@@ -144,6 +144,7 @@ enum class ReplyType {
 fun ReplyPageBottomSheet(
     params: Reply,
     onBack: () -> Unit,
+    onOpenWebReply: (threadId: Long, postId: Long?) -> Unit,
     viewModel: ReplyViewModel = pageViewModel(),
 ) {
     Box(
@@ -159,6 +160,7 @@ fun ReplyPageBottomSheet(
             ReplyPageContent(
                 viewModel = viewModel,
                 onBack = onBack,
+                onOpenWebReply = onOpenWebReply,
                 forumName = params.forumName,
                 postId = params.postId,
                 subPostId = params.subPostId,
@@ -174,6 +176,7 @@ fun ReplyPageBottomSheet(
 private fun ReplyPageContent(
     viewModel: ReplyViewModel,
     onBack: () -> Unit,
+    onOpenWebReply: (threadId: Long, postId: Long?) -> Unit,
     forumName: String,
     postId: Long? = null,
     subPostId: Long? = null,
@@ -476,7 +479,11 @@ private fun ReplyPageContent(
             showKeyboard()
         }
     } else {
-        ReplyWarningDialog(vm = viewModel, onBack = onBack)
+        ReplyWarningDialog(
+            vm = viewModel,
+            onBack = onBack,
+            onOpenWebReply = onOpenWebReply,
+        )
     }
 }
 
@@ -704,7 +711,11 @@ private fun Context.launchOfficialApp(threadId: Long, postId: Long?) {
 }
 
 @Composable
-private fun ReplyWarningDialog(vm: ReplyViewModel, onBack: () -> Unit) {
+private fun ReplyWarningDialog(
+    vm: ReplyViewModel,
+    onBack: () -> Unit,
+    onOpenWebReply: (threadId: Long, postId: Long?) -> Unit,
+) {
     val context = LocalContext.current
     // Show warning dialog only once
     var dismissed by rememberSaveable { mutableStateOf(false) }
@@ -716,6 +727,7 @@ private fun ReplyWarningDialog(vm: ReplyViewModel, onBack: () -> Unit) {
             dialogState = warningDialogState,
             onDismiss = { dismissed = true },
             onLaunchOfficialApp = { context.launchOfficialApp(vm.threadId, vm.postId) },
+            onOpenWebReply = { onOpenWebReply(vm.threadId, vm.postId) },
             onBack = onBack
         )
     }
@@ -732,6 +744,7 @@ private fun ReplyWarningDialog(
     dialogState: DialogState,
     onDismiss: () -> Unit,
     onLaunchOfficialApp: () -> Unit,
+    onOpenWebReply: () -> Unit,
     onBack: () -> Unit,
 ) {
     Dialog(
@@ -748,6 +761,11 @@ private fun ReplyWarningDialog(
                     modifier = Modifier.fillMaxWidth(),
                     text = stringResource(id = R.string.button_official_client_reply),
                     onClick = onLaunchOfficialApp
+                )
+                DialogPositiveButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = stringResource(id = R.string.button_web_reply),
+                    onClick = onOpenWebReply
                 )
                 DialogNegativeButton(
                     modifier = Modifier.fillMaxWidth(),
