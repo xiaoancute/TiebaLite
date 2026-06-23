@@ -2,7 +2,6 @@ package com.huanchengfly.tieba.post.ui.page.thread
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -48,7 +47,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -69,6 +67,9 @@ import com.huanchengfly.tieba.post.api.models.protos.PollOption
 import com.huanchengfly.tieba.post.navigateDebounced
 import com.huanchengfly.tieba.post.theme.TiebaLiteTheme
 import com.huanchengfly.tieba.post.ui.common.PbContentText
+import com.huanchengfly.tieba.post.ui.common.PbContentRender
+import com.huanchengfly.tieba.post.ui.common.PicContentRender
+import com.huanchengfly.tieba.post.ui.common.PicWaterfallContentRender
 import com.huanchengfly.tieba.post.ui.common.theme.compose.clickableNoIndication
 import com.huanchengfly.tieba.post.ui.models.PostData
 import com.huanchengfly.tieba.post.ui.models.SubPostItemData
@@ -572,6 +573,34 @@ private fun SubPostBlockedTip(modifier: Modifier = Modifier) {
 }
 
 @Composable
+private fun PostContentRenders(contentRenders: List<PbContentRender>) {
+    var imageGroup: MutableList<PicContentRender>? = null
+
+    @Composable
+    fun flushImages() {
+        imageGroup?.let {
+            if (it.size == 1) {
+                it.single().Render()
+            } else {
+                PicWaterfallContentRender(it)
+            }
+        }
+        imageGroup = null
+    }
+
+    contentRenders.forEach { render ->
+        if (render is PicContentRender) {
+            if (imageGroup == null) imageGroup = mutableListOf()
+            imageGroup?.add(render)
+        } else {
+            flushImages()
+            render.Render()
+        }
+    }
+    flushImages()
+}
+
+@Composable
 fun PostCard(
     post: PostData,
     immersiveMode: Boolean = false,
@@ -670,7 +699,7 @@ fun PostCard(
                         )
                     }
 
-                    post.contentRenders.fastForEach { it.Render() }
+                    PostContentRenders(post.contentRenders)
                 }
 
                 if (post.subPosts == null || post.subPostNumber <= 0 || immersiveMode) return@Card
@@ -727,21 +756,15 @@ private fun SubPostItem(
 ) {
     PbContentText(
         text = subPost.abstractContent!!,
-        modifier = modifier.openOnTapWithoutBlockingSelection { onOpenSubPosts(subPost.id) },
+        modifier = modifier,
         overflow = TextOverflow.Ellipsis,
         maxLines = 4,
         lineSpacing = 0.4.sp,
         inlineContent = if (subPost.isLz) ThreadViewModel.cachedLzInlineContent else null,
         style = MaterialTheme.typography.bodyMedium,
+        onClick = { onOpenSubPosts(subPost.id) },
     )
 }
-
-private fun Modifier.openOnTapWithoutBlockingSelection(onTap: () -> Unit): Modifier =
-    pointerInput(onTap) {
-        detectTapGestures(
-            onTap = { onTap() }
-        )
-    }
 
 @Preview("LoadPreviousButton")
 @Composable

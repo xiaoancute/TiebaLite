@@ -65,6 +65,7 @@ fun QuotePostCard(
     quoteContent: AnnotatedString,
     mainPostTitle: AnnotatedString,
     mainPostContent: AnnotatedString?,
+    onQuotePostClick: () -> Unit,
     onMainPostClick: () -> Unit,
     modifier: Modifier = Modifier,
     medias: @Composable () -> Unit,
@@ -78,10 +79,12 @@ fun QuotePostCard(
             style = MaterialTheme.typography.bodyMedium,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
+            onClick = onQuotePostClick,
         )
         MainPostCard(
             mainPostTitle = mainPostTitle,
             mainPostContent = mainPostContent,
+            onClick = onMainPostClick,
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(MaterialTheme.shapes.small)
@@ -97,6 +100,7 @@ fun MainPostCard(
     modifier: Modifier = Modifier,
     mainPostTitle: AnnotatedString,
     mainPostContent: AnnotatedString?,
+    onClick: () -> Unit,
     medias: @Composable () -> Unit,
 ) {
     Column(
@@ -108,6 +112,7 @@ fun MainPostCard(
             style = MaterialTheme.typography.titleSmall,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
+            onClick = onClick,
         )
 
         if (!mainPostContent.isNullOrBlank()) {
@@ -116,6 +121,7 @@ fun MainPostCard(
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
+                onClick = onClick,
             )
         }
         medias()
@@ -150,6 +156,7 @@ fun SearchThreadItem(
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 3,
                 style = MaterialTheme.typography.bodyMedium,
+                onClick = { onClick(item) },
             )
 
             val medias: @Composable () -> Unit = {
@@ -173,6 +180,7 @@ fun SearchThreadItem(
                         quoteContent = item.postInfoContent,
                         mainPostTitle = item.mainPostTitle,
                         mainPostContent = item.mainPostContent,
+                        onQuotePostClick = onQuotePostClick,
                         onMainPostClick = onMainPostClick,
                         modifier = cardModifier.clickable(onClick = onQuotePostClick),
                         medias = medias,
@@ -181,6 +189,7 @@ fun SearchThreadItem(
                     MainPostCard(
                         mainPostTitle = item.mainPostTitle,
                         mainPostContent = item.mainPostContent,
+                        onClick = onMainPostClick,
                         modifier = cardModifier.clickable(onClick = onMainPostClick),
                         medias = medias,
                     )

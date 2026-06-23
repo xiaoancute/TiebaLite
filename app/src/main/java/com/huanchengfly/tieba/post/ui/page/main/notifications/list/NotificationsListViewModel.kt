@@ -50,7 +50,7 @@ class NotificationsListViewModel @AssistedInject constructor(
     @Assisted private val type: NotificationsType,
     @ApplicationContext private val context: Context,
     private val blockRepo: BlockRepository,
-    settingsRepo: SettingsRepository,
+    private val settingsRepo: SettingsRepository,
 ) :
     BaseViewModel<NotificationsListUiIntent, NotificationsListPartialChange, NotificationsListUiState, NotificationsListUiEvent>() {
 
@@ -62,7 +62,12 @@ class NotificationsListViewModel @AssistedInject constructor(
 
     override fun createPartialChangeProducer():
             PartialChangeProducer<NotificationsListUiIntent, NotificationsListPartialChange, NotificationsListUiState> {
-        return NotificationsListPartialChangeProducer(context, type, blockRepo::isBlocked)
+        return NotificationsListPartialChangeProducer(
+            context = context,
+            type = type,
+            isBlocked = blockRepo::isBlocked,
+            mutedThreadIds = { settingsRepo.mutedReplyThreadIds.snapshot() }
+        )
     }
 
     override fun dispatchEvent(partialChange: NotificationsListPartialChange): UiEvent? =
@@ -85,6 +90,7 @@ private class NotificationsListPartialChangeProducer(
     private val context: Context,
     private val type: NotificationsType,
     private val isBlocked: suspend (uid: Long, content: String) -> Boolean,
+    private val mutedThreadIds: suspend () -> Set<String>,
 ) : PartialChangeProducer<NotificationsListUiIntent, NotificationsListPartialChange, NotificationsListUiState> {
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun toPartialChangeFlow(intentFlow: Flow<NotificationsListUiIntent>): Flow<NotificationsListPartialChange> =
@@ -103,7 +109,7 @@ private class NotificationsListPartialChangeProducer(
         }).map<MessageListBean, NotificationsListPartialChange.Refresh> { messageListBean ->
             val data =
                 ((if (type == NotificationsType.ReplyMe) messageListBean.replyList else messageListBean.atList)
-                    ?: emptyList()).mapUiModel(context, type, isBlocked)
+                    ?: emptyList()).mapUiModel(context, type, isBlocked, mutedThreadIds())
             NotificationsListPartialChange.Refresh.Success(
                 data = data,
                 hasMore = messageListBean.page?.hasMore == "1"
@@ -120,7 +126,7 @@ private class NotificationsListPartialChangeProducer(
         }).map<MessageListBean, NotificationsListPartialChange.LoadMore> { messageListBean ->
             val data =
                 ((if (type == NotificationsType.ReplyMe) messageListBean.replyList else messageListBean.atList)
-                    ?: emptyList()).mapUiModel(context, type, isBlocked)
+                    ?: emptyList()).mapUiModel(context, type, isBlocked, mutedThreadIds())
             NotificationsListPartialChange.LoadMore.Success(
                 currentPage = page,
                 data = data,
@@ -214,62 +220,64 @@ private suspend fun List<MessageInfoBean>.mapUiModel(
     context: Context,
     type: NotificationsType,
     isBlocked: suspend (uid: Long, content: String) -> Boolean,
+    mutedThreadIds: Set<String>,
 ): List<MessageItemData> {
     return withContext(Dispatchers.Default) {
         val isReply = type == NotificationsType.ReplyMe
-        map {
-            val isFloor = it.isFloor == "1"
-            val replyUser = it.replyer!!.run {
-                ReplyUser(
-                    id = id?.toLongOrNull() ?: throw TiebaException("Invalid reply user ID: $id"),
-                    nameShow = nameShow ?: name ?: "",
-                    avatarUrl = if (portrait.isNullOrEmpty()) null else StringUtil.getAvatarUrl(portrait),
-                    isFans = isFans == "1"
-                )
-            }
-
-            // Note: conditions from NotificationsListPage, do not touch
-            val title = when {
-                it.title.isNullOrEmpty() -> null
-
-                isReply && !isFloor -> {
-                    context.getString(R.string.text_message_list_item_reply_my_thread, it.title)
+        filterNot { isReply && it.threadId != null && it.threadId in mutedThreadIds }
+            .map {
+                val isFloor = it.isFloor == "1"
+                val replyUser = it.replyer!!.run {
+                    ReplyUser(
+                        id = id?.toLongOrNull() ?: throw TiebaException("Invalid reply user ID: $id"),
+                        nameShow = nameShow ?: name ?: "",
+                        avatarUrl = if (portrait.isNullOrEmpty()) null else StringUtil.getAvatarUrl(portrait),
+                        isFans = isFans == "1"
+                    )
                 }
 
-                !isReply -> it.title
+                // Note: conditions from NotificationsListPage, do not touch
+                val title = when {
+                    it.title.isNullOrEmpty() -> null
 
-                else -> null
+                    isReply && !isFloor -> {
+                        context.getString(R.string.text_message_list_item_reply_my_thread, it.title)
+                    }
+
+                    !isReply -> it.title
+
+                    else -> null
+                }
+
+                val quoteContent = if (!it.quoteContent.isNullOrEmpty() && isReply && isFloor) {
+                    it.quoteContent.emoticonString
+                } else {
+                    null
+                }
+
+                MessageItemData(
+                    replyUser = replyUser,
+                    threadId = it.threadId?.toLongOrNull() ?: throw TiebaException("Invalid thread ID ${it.threadId}."),
+                    postId = it.postId?.toLongOrNull() ?: throw TiebaException("Invalid post ID ${it.postId}."),
+                    isBlocked = isBlocked(replyUser.id, it.content.orEmpty()),
+                    isFloor = isFloor,
+                    title = title?.emoticonString,
+                    content = it.content?.emoticonString,
+                    time = DateTimeUtils.fixTimestamp(it.time!!.toLong()),
+                    quoteContent = quoteContent,
+                    quoteUser = it.quoteUser?.run {
+                        Author(
+                            id = id?.toLongOrNull() ?: throw TiebaException("Invalid quote user ID: $id"),
+                            name = nameShow ?: name ?: "",
+                            avatarUrl = StringUtil.getAvatarUrl(portrait)
+                        )
+                    },
+                    quotePid = it.quotePid?.toLongOrNull(),
+                    forumName = it.forumName,
+                    threadType = it.threadType,
+                    unread = it.unread
+                )
             }
-
-            val quoteContent = if (!it.quoteContent.isNullOrEmpty() && isReply && isFloor) {
-                it.quoteContent.emoticonString
-            } else {
-                null
-            }
-
-            MessageItemData(
-                replyUser = replyUser,
-                threadId = it.threadId?.toLongOrNull() ?: throw TiebaException("Invalid thread ID ${it.threadId}."),
-                postId = it.postId?.toLongOrNull() ?: throw TiebaException("Invalid post ID ${it.postId}."),
-                isBlocked = isBlocked(replyUser.id, it.content.orEmpty()),
-                isFloor = isFloor,
-                title = title?.emoticonString,
-                content = it.content?.emoticonString,
-                time = DateTimeUtils.fixTimestamp(it.time!!.toLong()),
-                quoteContent = quoteContent,
-                quoteUser = it.quoteUser?.run {
-                    Author(
-                        id = id?.toLongOrNull() ?: throw TiebaException("Invalid quote user ID: $id"),
-                        name = nameShow ?: name ?: "",
-                        avatarUrl = StringUtil.getAvatarUrl(portrait)
-                    )
-                },
-                quotePid = it.quotePid?.toLongOrNull(),
-                forumName = it.forumName,
-                threadType = it.threadType,
-                unread = it.unread
-            )
-        }
     }
 }
 

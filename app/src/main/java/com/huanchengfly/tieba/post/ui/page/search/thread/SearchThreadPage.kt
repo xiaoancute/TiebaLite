@@ -102,7 +102,13 @@ fun SearchThreadPage(
                             val transitionKey = item.lazyListKey.toString()
                             navigator.navigateDebounced(UserProfile(user = item.author, transitionKey))
                         },
-                        onForumClick = forumClickListener
+                        onForumClick = forumClickListener,
+                        onQuotePostClick = {
+                            navigator.navigateDebounced(Thread(threadId = item.tid, postId = item.pid))
+                        },
+                        onMainPostClick = {
+                            navigator.navigateDebounced(Thread(threadId = item.tid))
+                        },
                     )
                 }
             }

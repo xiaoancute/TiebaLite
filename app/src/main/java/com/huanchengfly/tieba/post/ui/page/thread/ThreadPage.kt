@@ -38,6 +38,8 @@ import androidx.compose.material.icons.rounded.FaceRetouchingOff
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.Notifications
+import androidx.compose.material.icons.rounded.NotificationsOff
 import androidx.compose.material.icons.rounded.Report
 import androidx.compose.material.icons.rounded.RocketLaunch
 import androidx.compose.material.icons.rounded.Share
@@ -535,6 +537,7 @@ fun ThreadPage(
                         isCollected = state.thread?.collected == true,
                         isImmersiveMode = viewModel.isImmersiveMode,
                         isDesc = isDesc,
+                        replyNotificationMuted = viewModel.replyNotificationMuted,
                         onSeeLzClick = viewModel::onSeeLzChanged,
                         onCollectClick = {
                             if (state.user == null) {
@@ -558,6 +561,7 @@ fun ThreadPage(
                             val sortType = if (notDesc) ThreadSortType.BY_DESC else ThreadSortType.DEFAULT
                             viewModel.onSortChanged(sortType)
                         },
+                        onReplyNotificationMuteClick = viewModel::toggleReplyNotificationMuted,
                         onShareClick = viewModel::onShareThread,
                         onCopyLinkClick = viewModel::onCopyThreadLink,
                         onReportClick = {
@@ -631,10 +635,12 @@ private fun ThreadMenu(
     isCollected: Boolean,
     isImmersiveMode: Boolean,
     isDesc: Boolean,
+    replyNotificationMuted: Boolean,
     onSeeLzClick: () -> Unit,
     onCollectClick: () -> Unit,
     onImmersiveModeClick: () -> Unit,
     onDescClick: () -> Unit,
+    onReplyNotificationMuteClick: () -> Unit,
     onShareClick: () -> Unit,
     onCopyLinkClick: () -> Unit,
     onReportClick: () -> Unit,
@@ -737,6 +743,25 @@ private fun ThreadMenu(
                 },
                 modifier = Modifier.fillMaxWidth(),
             )
+            ListMenuItem(
+                icon = if (replyNotificationMuted) {
+                    Icons.Rounded.Notifications
+                } else {
+                    Icons.Rounded.NotificationsOff
+                },
+                text = stringResource(
+                    id = if (replyNotificationMuted) {
+                        R.string.title_unmute_thread_reply_notification
+                    } else {
+                        R.string.title_mute_thread_reply_notification
+                    }
+                ),
+                onClick = {
+                    requestCloseMenu()
+                    onReplyNotificationMuteClick()
+                },
+                modifier = Modifier.fillMaxWidth(),
+            )
             if (onDeleteClick != null) {
                 ListMenuItem(
                     icon = Icons.Rounded.Delete,
@@ -790,6 +815,8 @@ private fun CollectionsUpdateDialog(markedPost: PostData, onUpdate: (PostData) -
             onUpdate(markedPost)
         },
         onDismiss = onBack,
+        confirmText = stringResource(R.string.button_update_and_exit),
+        cancelText = stringResource(R.string.button_exit_directly),
     ) {
         Text(stringResource(R.string.message_update_collect_mark, markedPost.floor))
     }

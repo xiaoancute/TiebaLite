@@ -477,7 +477,7 @@ fun OriginThreadCard(
     ) {
         Column {
             contentRenders.fastForEach {
-                it.Render()
+                it.Render(onClick = onClick)
             }
         }
         ThreadMedia(
@@ -552,7 +552,8 @@ fun FeedCard(
                         .clip(MaterialTheme.shapes.small)
                         .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                         .clickable { onClickOriginThread(it.item) }
-                        .padding(16.dp)
+                        .padding(16.dp),
+                    onClick = { onClickOriginThread(it.item) }
                 )
             }
 

@@ -3,6 +3,9 @@ package com.huanchengfly.tieba.post.ui.common
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.InlineTextContent
@@ -21,6 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
@@ -33,8 +37,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastFirstOrNull
 import com.bumptech.glide.integration.compose.GlideImage
@@ -58,7 +64,7 @@ import com.huanchengfly.tieba.post.utils.launchUrl
 @Immutable
 interface PbContentRender {
     @Composable
-    fun Render()
+    fun Render(onClick: (() -> Unit)? = null)
 
     fun toAnnotationString(): AnnotatedString = highlightContent(toString())
 
@@ -87,9 +93,16 @@ private fun highlightContent(content: String): AnnotatedString {
 value class PureTextContentRender(val value: String) : PbContentRender {
 
     @Composable
-    override fun Render() {
+    override fun Render(onClick: (() -> Unit)?) {
+        val modifier = if (onClick != null) {
+            Modifier.pointerInput(value, onClick) {
+                detectTapGestures(onTap = { onClick() })
+            }
+        } else {
+            Modifier
+        }
         SelectionContainer {
-            Text(text = value, style = MaterialTheme.typography.bodyLarge)
+            Text(text = value, modifier = modifier, style = MaterialTheme.typography.bodyLarge)
         }
     }
 
@@ -107,11 +120,12 @@ value class TextContentRender(val value: AnnotatedString) : PbContentRender {
     override fun toString(): String = value.text
 
     @Composable
-    override fun Render() {
+    override fun Render(onClick: (() -> Unit)?) {
         PbContentText(
             text = value,
             style = MaterialTheme.typography.bodyLarge,
-            lineSpacing = 0.8.sp
+            lineSpacing = 0.8.sp,
+            onClick = onClick
         )
     }
 
@@ -157,13 +171,27 @@ value class TextContentRender(val value: AnnotatedString) : PbContentRender {
 ) : PbContentRender {
 
     @Composable
-    override fun Render() {
+    override fun Render(onClick: (() -> Unit)?) {
+        ImageRender(modifier = Modifier.fillMaxWidth(singleMediaFraction))
+    }
+
+    @Composable
+    fun FullWidthRender() {
+        ImageRender(modifier = Modifier.fillMaxWidth())
+    }
+
+    @Composable
+    private fun ImageRender(modifier: Modifier = Modifier) {
         NetworkImage(
-            modifier = Modifier
+            modifier = modifier
                 .focusable()
                 .clip(shape = MaterialTheme.shapes.small)
-                .fillMaxWidth(singleMediaFraction)
-                .aspectRatio(ratio = dimensions?.run { width * 1f / height } ?: 1.0f),
+                .aspectRatio(
+                    ratio = dimensions
+                        ?.takeIf { it.width > 0 && it.height > 0 }
+                        ?.run { width * 1f / height }
+                        ?: 1.0f
+                ),
             imageUrl = picUrl,
             contentDescription = stringResource(R.string.desc_image),
             photoViewDataProvider = { photoViewData },
@@ -184,13 +212,68 @@ value class TextContentRender(val value: AnnotatedString) : PbContentRender {
     override fun toString(): String = PbContentRender.MEDIA_PICTURE
 }
 
+@Composable
+fun PicWaterfallContentRender(
+    images: List<PicContentRender>,
+    modifier: Modifier = Modifier,
+    horizontalSpacing: Dp = 8.dp,
+    verticalSpacing: Dp = 8.dp,
+) {
+    if (images.isEmpty()) return
+
+    val columns = when {
+        LocalConfiguration.current.screenWidthDp >= 840 -> 3
+        !isWindowWidthCompact() -> 2
+        else -> 1
+    }
+    val columnGroups = remember(images, columns) {
+        assignImagesToColumns(images, columns)
+    }
+
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(horizontalSpacing)
+    ) {
+        columnGroups.forEach { columnImages ->
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(verticalSpacing)
+            ) {
+                columnImages.forEach { image ->
+                    image.FullWidthRender()
+                }
+            }
+        }
+    }
+}
+
+private fun assignImagesToColumns(
+    images: List<PicContentRender>,
+    columns: Int,
+): List<List<PicContentRender>> {
+    if (columns <= 1) return listOf(images)
+
+    val columnHeights = FloatArray(columns) { 0f }
+    val result = MutableList(columns) { mutableListOf<PicContentRender>() }
+    images.forEach { image ->
+        val ratio = image.dimensions
+            ?.takeIf { it.width > 0 && it.height > 0 }
+            ?.run { height.toFloat() / width }
+            ?: 1f
+        val columnIndex = columnHeights.indices.minByOrNull { columnHeights[it] } ?: 0
+        result[columnIndex].add(image)
+        columnHeights[columnIndex] += ratio
+    }
+    return result
+}
+
 @Immutable
 class VoiceContentRender(
     val voiceMd5: String,
     val duration: Int
 ) : PbContentRender {
     @Composable
-    override fun Render() {
+    override fun Render(onClick: (() -> Unit)?) {
         val voiceUrl = remember {
             "https://tiebac.baidu.com/c/p/voice?voice_md5=$voiceMd5&play_from=pb_voice_play"
         }
@@ -213,7 +296,7 @@ class VideoContentRender(
     }
 
     @Composable
-    override fun Render() {
+    override fun Render(onClick: (() -> Unit)?) {
         val widthFraction = if (isWindowWidthCompact()) 1f else 0.5f
 
         val picModifier = Modifier

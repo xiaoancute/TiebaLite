@@ -17,6 +17,7 @@ import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.google.android.material.color.utilities.Variant
 import com.huanchengfly.tieba.post.getColor
@@ -126,6 +127,9 @@ class DataStoreSettingsRepository @Inject constructor(
     override val uiSettings: Settings<UISettings> = ComplexSettings(UISettingsTransformer)
 
     override val signConfig: Settings<SignConfig> = ComplexSettings(SignConfigTransformer)
+
+    override val mutedReplyThreadIds: Settings<Set<String>> =
+        SimpleSettings(stringSetPreferencesKey("muted_reply_thread_ids"), emptySet<String>())
 
     override val UUIDSettings: Settings<String> = SimpleSettings(stringPreferencesKey("uuid"), "")
 

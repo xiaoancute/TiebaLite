@@ -79,6 +79,8 @@
     <string name="toast_exit_account_success">退出登录成功，请重新登录</string>
     <string name="toast_exit_account_switched">退出登录成功，已切换至账号 %1$s</string>
     <string name="button_cancel">取消</string>
+    <string name="button_exit_directly">直接退出</string>
+    <string name="button_update_and_exit">更新并退出</string>
     <string name="button_discard">放弃更改</string>
     <string name="title_delete">删除</string>
     <string name="tip_lz">楼主</string>
@@ -251,6 +253,8 @@
     <string name="btn_close">关闭</string>
     <string name="title_uncollected">未收藏</string>
     <string name="title_collected">已收藏</string>
+    <string name="title_mute_thread_reply_notification">屏蔽此帖回复提醒</string>
+    <string name="title_unmute_thread_reply_notification">恢复此帖回复提醒</string>
     <string name="text_stat_follow">关注</string>
     <string name="text_stat_fans">粉丝</string>
     <string name="text_stat_tbage">吧龄</string>
@@ -410,6 +414,8 @@
     <string name="message_update_collect_mark_success">更新收藏楼层成功</string>
     <string name="open_all_sub_posts">查看全部 %d 条回复</string>
     <string name="message_store_thread_update">贴子更新到了第 %d 楼</string>
+    <string name="toast_thread_reply_notification_muted">已屏蔽此帖回复提醒</string>
+    <string name="toast_thread_reply_notification_unmuted">已恢复此帖回复提醒</string>
     <string name="tip_blocked_post">由于你的屏蔽设置，第 %d 楼已被屏蔽</string>
     <string name="tip_blocked_sub_post">由于你的屏蔽设置，该回复已被屏蔽</string>
     <string name="settings_block_video">不看视频贴</string>

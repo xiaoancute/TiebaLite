@@ -51,6 +51,11 @@ interface SettingsRepository {
     val signConfig: Settings<SignConfig>
 
     /**
+     * Thread IDs whose reply notifications should be hidden in the in-app message list.
+     */
+    val mutedReplyThreadIds: Settings<Set<String>>
+
+    /**
      * Settings of client [UUID].
      *
      * @see UIDUtil.uUID

@@ -44,6 +44,8 @@ class FakeSettingsRepository @Inject constructor(): SettingsRepository {
     override val signConfig: Settings<SignConfig> =
         FakeSettings(SignConfig(autoSignTime = HmTime(12, 0)))
 
+    override val mutedReplyThreadIds: Settings<Set<String>> = FakeSettings(emptySet<String>())
+
     override val UUIDSettings: Settings<String>
         get() = throw RuntimeException("Not yet implemented")
 

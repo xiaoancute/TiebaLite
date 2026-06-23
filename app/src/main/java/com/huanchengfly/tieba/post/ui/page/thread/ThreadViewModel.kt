@@ -76,7 +76,7 @@ class ThreadViewModel @Inject constructor(
     private val historyRepo: HistoryRepository,
     private val storeRepo: ThreadStoreRepository,
     private val threadRepo: PbPageRepository,
-    settingsRepository: SettingsRepository,
+    private val settingsRepository: SettingsRepository,
     savedStateHandle: SavedStateHandle
 ) : BaseStateViewModel<ThreadUiState>() {
 
@@ -103,6 +103,9 @@ class ThreadViewModel @Inject constructor(
         private set
 
     var hideReply by mutableStateOf(false)
+        private set
+
+    var replyNotificationMuted by mutableStateOf(false)
         private set
 
     private val isRefreshing: Boolean
@@ -157,6 +160,11 @@ class ThreadViewModel @Inject constructor(
         requestLoad(page = 0, postId = postId, scrollToReply = params.scrollToReply)
         viewModelScope.launch {
             hideReply = settingsRepository.habitSettings.snapshot().hideReply
+        }
+        viewModelScope.launch {
+            settingsRepository.mutedReplyThreadIds.collect {
+                replyNotificationMuted = threadId.toString() in it
+            }
         }
     }
 
@@ -428,6 +436,28 @@ class ThreadViewModel @Inject constructor(
                 emitUiEvent(ThreadStoreUiEvent.Delete.Success)
             }
         }
+    }
+
+    fun toggleReplyNotificationMuted() {
+        val targetThreadId = threadId.toString()
+        settingsRepository.mutedReplyThreadIds.save { mutedThreadIds ->
+            if (targetThreadId in mutedThreadIds) {
+                mutedThreadIds - targetThreadId
+            } else {
+                mutedThreadIds + targetThreadId
+            }
+        }
+        sendUiEvent(
+            CommonUiEvent.Toast(
+                context.getString(
+                    if (replyNotificationMuted) {
+                        R.string.toast_thread_reply_notification_unmuted
+                    } else {
+                        R.string.toast_thread_reply_notification_muted
+                    }
+                )
+            )
+        )
     }
 
     fun onPostLikeClicked(post: PostData) {
