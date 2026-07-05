@@ -17,6 +17,19 @@ class WaterPostBlockerTest {
     }
 
     @Test
+    fun `blocks expanded short marker water posts`() {
+        assertTrue(WaterPostBlocker.isWaterPost("蹲蹲"))
+        assertTrue(WaterPostBlocker.isWaterPost("坐等"))
+        assertTrue(WaterPostBlocker.isWaterPost("前排"))
+        assertTrue(WaterPostBlocker.isWaterPost("留爪"))
+        assertTrue(WaterPostBlocker.isWaterPost("m"))
+        assertTrue(WaterPostBlocker.isWaterPost("mark一下"))
+        assertTrue(WaterPostBlocker.isWaterPost("顶顶顶"))
+        assertTrue(WaterPostBlocker.isWaterPost("看看看"))
+        assertTrue(WaterPostBlocker.isWaterPost("插个眼"))
+    }
+
+    @Test
     fun `blocks repeated single character noise`() {
         assertTrue(WaterPostBlocker.isWaterPost("111111"))
         assertTrue(WaterPostBlocker.isWaterPost("哈哈哈哈哈哈"))
@@ -29,6 +42,10 @@ class WaterPostBlockerTest {
         assertFalse(WaterPostBlocker.isWaterPost("楼主说的经验+3其实是游戏机制"))
         assertFalse(WaterPostBlocker.isWaterPost("插眼这个说法现在是不是很少用了"))
         assertFalse(WaterPostBlocker.isWaterPost("顶级理解，写得很清楚"))
+        assertFalse(WaterPostBlocker.isWaterPost("前排提醒一下这个设置会误伤"))
+        assertFalse(WaterPostBlocker.isWaterPost("收藏了很多有用资料"))
+        assertFalse(WaterPostBlocker.isWaterPost("这个代码码住了吗"))
+        assertFalse(WaterPostBlocker.isWaterPost("m 系列芯片挺强"))
     }
 
     @Test
