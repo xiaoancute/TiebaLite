@@ -8,6 +8,7 @@ import com.huanchengfly.tieba.post.api.models.protos.forumRuleDetail.ForumRuleDe
 import com.huanchengfly.tieba.post.api.models.protos.frsPage.FrsPageResponse
 import com.huanchengfly.tieba.post.api.models.protos.GeneralTabList.GeneralTabListResponse
 import com.huanchengfly.tieba.post.api.models.protos.getBawuInfo.GetBawuInfoResponse
+import com.huanchengfly.tieba.post.api.models.protos.getDislikeList.GetDislikeListResponse
 import com.huanchengfly.tieba.post.api.models.protos.getForumDetail.GetForumDetailResponse
 import com.huanchengfly.tieba.post.api.models.protos.getHistoryForum.GetHistoryForumResponse
 import com.huanchengfly.tieba.post.api.models.protos.getLevelInfo.GetLevelInfoResponse
@@ -44,6 +45,11 @@ interface OfficialProtobufTiebaApi {
     fun hotThreadListFlow(
         @Body body: MyMultipartBody,
     ): Flow<HotThreadListResponse>
+
+    @POST("/c/u/user/getDislikeList?cmd=309692")
+    fun getDislikeListFlow(
+        @Body body: MyMultipartBody,
+    ): Flow<GetDislikeListResponse>
 
     @POST("/c/f/recommend/topicList?cmd=309289")
     fun topicListFlow(
