@@ -157,6 +157,7 @@ private object HabitSettingsTransformer : PreferenceTransformer<HabitSettings> {
             searchThreadSortType = it[intPreferencesKey(KEY_SEARCH_THREAD_SORT_DEFAULT)] ?: SearchThreadSortType.NEWEST,
             showBothName = it[booleanPreferencesKey(KEY_SHOW_NICKNAME)] == true,
             stickyHeader = it[booleanPreferencesKey(KEY_STICKY_HEADER)] ?: true,
+            videoAutoplay = it[booleanPreferencesKey(KEY_VIDEO_AUTOPLAY)] ?: true
         )
     }
 
@@ -177,6 +178,7 @@ private object HabitSettingsTransformer : PreferenceTransformer<HabitSettings> {
         it[intPreferencesKey(KEY_SEARCH_THREAD_SORT_DEFAULT)] = habit.searchThreadSortType
         it[booleanPreferencesKey(KEY_SHOW_NICKNAME)] = habit.showBothName
         it[booleanPreferencesKey(KEY_STICKY_HEADER)] = habit.stickyHeader
+        it[booleanPreferencesKey(KEY_VIDEO_AUTOPLAY)] = habit.videoAutoplay
         it -= intPreferencesKey(KEY_FORUM_FAB_FUNCTION)
     }
 
@@ -204,6 +206,7 @@ private object HabitSettingsTransformer : PreferenceTransformer<HabitSettings> {
     private const val KEY_SEARCH_THREAD_SORT_DEFAULT = "search_thread_sort_type"
     private const val KEY_SHOW_NICKNAME = "ui_show_both_name"
     private const val KEY_STICKY_HEADER = "ui_sticky_header"
+    private const val KEY_VIDEO_AUTOPLAY = "ui_video_autoplay"
 }
 
 private object PrivacySettingsTransformer : PreferenceTransformer<PrivacySettings> {

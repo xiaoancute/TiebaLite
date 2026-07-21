@@ -1,13 +1,13 @@
 package com.huanchengfly.tieba.post.api.retrofit.interfaces
 
 import com.huanchengfly.tieba.post.api.models.protos.addPost.AddPostResponse
-import com.huanchengfly.tieba.post.api.models.protos.addPollPost.AddPollPostResponse
+import com.huanchengfly.tieba.post.api.models.protos.addPollPost.AddPollPostReponse
 import com.huanchengfly.tieba.post.api.models.protos.forumGuide.ForumGuideResponse
 import com.huanchengfly.tieba.post.api.models.protos.forumRecommend.ForumRecommendResponse
 import com.huanchengfly.tieba.post.api.models.protos.forumRuleDetail.ForumRuleDetailResponse
 import com.huanchengfly.tieba.post.api.models.protos.frsPage.FrsPageResponse
+import com.huanchengfly.tieba.post.api.models.protos.GeneralTabList.GeneralTabListResponse
 import com.huanchengfly.tieba.post.api.models.protos.getBawuInfo.GetBawuInfoResponse
-import com.huanchengfly.tieba.post.api.models.protos.getDislikeList.GetDislikeListResponse
 import com.huanchengfly.tieba.post.api.models.protos.getForumDetail.GetForumDetailResponse
 import com.huanchengfly.tieba.post.api.models.protos.getHistoryForum.GetHistoryForumResponse
 import com.huanchengfly.tieba.post.api.models.protos.getLevelInfo.GetLevelInfoResponse
@@ -44,11 +44,6 @@ interface OfficialProtobufTiebaApi {
     fun hotThreadListFlow(
         @Body body: MyMultipartBody,
     ): Flow<HotThreadListResponse>
-
-    @POST("/c/u/user/getDislikeList?cmd=309692")
-    fun getDislikeListFlow(
-        @Body body: MyMultipartBody,
-    ): Flow<GetDislikeListResponse>
 
     @POST("/c/f/recommend/topicList?cmd=309289")
     fun topicListFlow(
@@ -144,5 +139,10 @@ interface OfficialProtobufTiebaApi {
     @POST("/c/c/post/addPollPost?cmd=309006&format=protobuf")
     fun addPollPostProtobuf(
         @Body body: MyMultipartBody,
-    ): Flow<AddPollPostResponse>
+    ): Flow<AddPollPostReponse>
+
+    @POST("/c/f/frs/generalTabList?cmd=309622&format=protobuf")
+    fun generalTabListFlow(
+        @Body body: MyMultipartBody,
+    ): Flow<GeneralTabListResponse>
 }

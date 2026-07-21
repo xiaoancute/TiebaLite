@@ -27,7 +27,7 @@ typealias SimpleForum = Triple<Long, String, String?>
     val originThreadInfo: ImmutableHolder<OriginThreadInfo>?,
     val replyNum: Int,
     val simpleForum: SimpleForum,
-    val pollInfo: PollInfo?,
+    val pollInfo: ThreadPollInfo?,
 ) {
 
     /**
@@ -47,7 +47,7 @@ typealias SimpleForum = Triple<Long, String, String?>
         originThreadInfo: ImmutableHolder<OriginThreadInfo>? = this.originThreadInfo,
         replyNum: Int = this.replyNum,
         simpleForum: SimpleForum = this.simpleForum,
-        pollInfo: PollInfo? = this.pollInfo,
+        pollInfo: ThreadPollInfo? = this.pollInfo,
     ) = ThreadInfoData(
         id = this.id,
         title = title,
@@ -67,5 +67,9 @@ typealias SimpleForum = Triple<Long, String, String?>
      * */
     fun updateLikeStatus(liked: Boolean, loading: Boolean): ThreadInfoData = copy(
         like = like.updateLikeStatus(liked).setLoading(loading)
+    )
+
+    fun updatePollStatus(loading: Boolean): ThreadInfoData = copy(
+        pollInfo = pollInfo?.copy(isLoading = loading)
     )
 }

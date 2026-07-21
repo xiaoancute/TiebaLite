@@ -1,5 +1,6 @@
 package com.huanchengfly.tieba.post.ui.page.thread
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,11 +21,13 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AlignVerticalTop
+import androidx.compose.material.icons.rounded.Poll
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.sharp.AccessTime
+import androidx.compose.material.icons.sharp.Check
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -37,16 +40,15 @@ import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.NonRestartableComposable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -58,21 +60,19 @@ import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
 import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.huanchengfly.tieba.post.LocalHabitSettings
 import com.huanchengfly.tieba.post.MacrobenchmarkConstant.testColumn
 import com.huanchengfly.tieba.post.PaddingNone
 import com.huanchengfly.tieba.post.R
-import com.huanchengfly.tieba.post.api.models.protos.PollInfo
 import com.huanchengfly.tieba.post.api.models.protos.PollOption
 import com.huanchengfly.tieba.post.navigateDebounced
 import com.huanchengfly.tieba.post.theme.TiebaLiteTheme
 import com.huanchengfly.tieba.post.ui.common.PbContentText
-import com.huanchengfly.tieba.post.ui.common.PbContentRender
-import com.huanchengfly.tieba.post.ui.common.PicContentRender
-import com.huanchengfly.tieba.post.ui.common.PicWaterfallContentRender
 import com.huanchengfly.tieba.post.ui.common.theme.compose.clickableNoIndication
+import com.huanchengfly.tieba.post.ui.common.theme.compose.onNotNull
 import com.huanchengfly.tieba.post.ui.models.PostData
 import com.huanchengfly.tieba.post.ui.models.SubPostItemData
+import com.huanchengfly.tieba.post.ui.models.ThreadPollInfo
+import com.huanchengfly.tieba.post.ui.page.Destination.CopyText
 import com.huanchengfly.tieba.post.ui.page.Destination.Thread
 import com.huanchengfly.tieba.post.ui.page.Destination.UserProfile
 import com.huanchengfly.tieba.post.ui.page.LocalNavController
@@ -84,11 +84,13 @@ import com.huanchengfly.tieba.post.ui.widgets.compose.Chip
 import com.huanchengfly.tieba.post.ui.widgets.compose.LoadMoreIndicator
 import com.huanchengfly.tieba.post.ui.widgets.compose.LongClickMenu
 import com.huanchengfly.tieba.post.ui.widgets.compose.OriginThreadCard
+import com.huanchengfly.tieba.post.ui.widgets.compose.OutlinedIconTextButton
 import com.huanchengfly.tieba.post.ui.widgets.compose.ProvideContentColor
 import com.huanchengfly.tieba.post.ui.widgets.compose.SharedTransitionUserHeader
 import com.huanchengfly.tieba.post.ui.widgets.compose.Sizes
 import com.huanchengfly.tieba.post.ui.widgets.compose.SwipeUpLazyLoadColumn
 import com.huanchengfly.tieba.post.ui.widgets.compose.defaultBottomIndicator
+import com.huanchengfly.tieba.post.ui.widgets.compose.rememberMenuState
 import com.huanchengfly.tieba.post.ui.widgets.compose.states.DefaultEmptyScreen
 import com.huanchengfly.tieba.post.ui.widgets.compose.states.StateScreenScope
 import com.huanchengfly.tieba.post.ui.widgets.compose.stickyHeaderBackground
@@ -96,6 +98,7 @@ import com.huanchengfly.tieba.post.utils.DateTimeUtils
 import com.huanchengfly.tieba.post.utils.TiebaUtil
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
+import kotlin.time.Instant
 
 sealed class Type(val key: String) {
     object FirstPost: Type("FirstPost")
@@ -115,7 +118,7 @@ private fun LazyListState.firstVisiblePostOffset(): Int {
 }
 
 @Composable
-private fun PollOptionItem(
+private fun PollOption(
     title: String,
     percentage: String,
     num: Long,
@@ -126,29 +129,32 @@ private fun PollOptionItem(
     val colorScheme = MaterialTheme.colorScheme
     val optionColor = colorScheme.background.copy(0.3f)
     val progressColor = if (polled) colorScheme.primaryContainer else colorScheme.background
-    val progress = remember(num, total) {
-        if (total > 0) (num / total.toFloat()).coerceIn(0f, 1f) else 0f
-    }
 
     Row(
         modifier = Modifier
-            .border(width = 1.dp, color = progressColor, shape = CircleShape)
+            .border(width = 1.5.dp, color = progressColor, shape = CircleShape)
             .clip(shape = CircleShape)
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .onNotNull(onClick) { clickable(onClick = it) }
             .drawBehind {
-                val cornerRadius = CornerRadius(size.height, size.height)
-                drawRoundRect(color = optionColor, cornerRadius = cornerRadius)
+                drawRect(color = optionColor)
                 if (num > 0) {
-                    drawRoundRect(
+                    drawRect(
                         color = progressColor,
-                        size = size.copy(width = size.width * progress),
-                        cornerRadius = cornerRadius
+                        size = size.copy(width = size.width * num / total.toFloat()),
                     )
                 }
             }
             .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        AnimatedVisibility(polled) {
+            Icon(
+                imageVector = Icons.Sharp.Check,
+                contentDescription = null,
+                modifier = Modifier.padding(end = ButtonDefaults.IconSpacing).size(14.dp),
+                tint = colorScheme.onPrimaryContainer
+            )
+        }
         Text(
             text = title,
             modifier = Modifier.weight(1.0f),
@@ -162,28 +168,23 @@ private fun PollOptionItem(
 }
 
 @Composable
-private fun ThreadPoll(
-    modifier: Modifier = Modifier,
-    info: PollInfo,
-    canVote: Boolean,
-    onSubmit: (Set<Int>) -> Unit,
-) {
+private fun ThreadPoll(modifier: Modifier = Modifier, info: ThreadPollInfo, onPull: ((List<Int>) -> Unit)? = null) {
     val context = LocalContext.current
     val colorScheme = MaterialTheme.colorScheme
-    val percentages = remember(info.options, info.total_poll) {
+    val percentages = remember(info.options) {
         val numberFormat = NumberFormat.getNumberInstance()
         numberFormat.maximumFractionDigits = 0
         info.options.fastMap {
-            val percentage = if (info.total_poll > 0) it.num / info.total_poll.toDouble() * 100 else 0.0
-            "${numberFormat.format(percentage)}%"
+            "${numberFormat.format(it.num / info.totalPoll.toDouble() * 100)}%"
         }
     }
-    val polledIds = remember(info.polled_value) { parsePollOptionIds(info.polled_value) }
-    var selectedIds by remember(info) { mutableStateOf(polledIds) }
-    val currentTime = remember { (System.currentTimeMillis() / 1000).toInt() }
-    val isTimeExpired = info.end_time in 1..currentTime
-    val showResult = info.is_polled == 1 || isTimeExpired || info.status != 0 || !canVote
-    val canSubmit = !showResult && selectedIds.isNotEmpty()
+    // ID of polled option
+    val polledIds = remember(info.polledValue) {
+        mutableStateSetOf<Int>().apply {
+            if (!info.polledValue.isNullOrEmpty()) addAll(info.polledValue)
+        }
+    }
+    val pollEnabled = !info.isPolled && onPull != null && !info.isTimeExpired
 
     Surface(
         modifier = modifier,
@@ -193,12 +194,22 @@ private fun ThreadPoll(
         Column(
             modifier = Modifier.padding(12.dp),
         ) {
-            Text(text = info.title, style = MaterialTheme.typography.titleMedium)
+            Text(
+                text = info.title ?: stringResource(R.string.text_poll_title),
+                style = MaterialTheme.typography.titleMedium
+            )
+            Row {
+                if (info.totalPoll > 0) {
+                    Text(
+                        text = stringResource(R.string.text_poll_votes, info.totalPoll),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
 
-            if (info.total_poll > 0) {
                 Text(
-                    text = stringResource(R.string.text_poll_votes, info.total_poll),
-                    style = MaterialTheme.typography.bodyMedium,
+                    text = stringResource(if (info.isMulti) R.string.text_poll_multi else R.string.text_poll_single),
+                    modifier = Modifier.padding(horizontal = 6.dp),
+                    style = MaterialTheme.typography.bodyMedium
                 )
             }
 
@@ -208,41 +219,28 @@ private fun ThreadPoll(
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 info.options.fastForEachIndexed { i, it ->
-                    PollOptionItem(
+                    PollOption(
                         title = it.text,
                         percentage = percentages[i],
                         num = it.num,
-                        total = info.total_poll,
-                        polled = it.id in polledIds || it.id in selectedIds,
-                        onClick = if (showResult) {
-                            null
-                        } else {
-                            {
-                                selectedIds = if (info.is_multi == 1) {
-                                    if (it.id in selectedIds) selectedIds - it.id else selectedIds + it.id
-                                } else {
-                                    setOf(it.id)
-                                }
+                        total = info.totalPoll,
+                        polled = polledIds.contains(it.id),
+                        onClick = {
+                            if (!pollEnabled || info.isLoading) return@PollOption
+                            if (polledIds.contains(it.id)) {
+                                polledIds -= it.id
+                            } else {
+                                if (!info.isMulti) polledIds.clear()
+                                polledIds += it.id
                             }
                         },
                     )
                 }
             }
 
-            if (!showResult) {
-                Spacer(modifier = Modifier.height(12.dp))
-                TextButton(
-                    modifier = Modifier.align(Alignment.End),
-                    enabled = canSubmit,
-                    onClick = { onSubmit(selectedIds) },
-                ) {
-                    Text(text = stringResource(R.string.button_poll_submit))
-                }
-            }
-
-            if (info.end_time > 0) {
-                val endTime = remember(context, info.end_time) {
-                    DateTimeUtils.getRelativeTimeString(context, info.end_time * 1000L)
+            if (info.endTime > 0) {
+                val endTime = remember {
+                    DateTimeUtils.getRelativeTimeString(context, info.endTime)
                 }
                 ProvideContentColor(color = colorScheme.onSurfaceVariant) {
                     Spacer(modifier = Modifier.height(12.dp))
@@ -257,6 +255,29 @@ private fun ThreadPoll(
                             text = stringResource(R.string.text_poll_end_time, endTime),
                             style = MaterialTheme.typography.labelMedium,
                         )
+                    }
+                }
+            }
+
+            if (pollEnabled) {
+                AnimatedVisibility(
+                    visible = remember { derivedStateOf { polledIds.isNotEmpty() } }.value,
+                    modifier = Modifier.align(Alignment.End),
+                ) {
+                    OutlinedIconTextButton(
+                        onClick = { onPull(polledIds.toList()) },
+                        modifier = Modifier.padding(top = 8.dp),
+                        enabled = !info.isLoading,
+                        border = ButtonDefaults.outlinedButtonBorder(enabled = true),
+                        icon = {
+                            if (info.isLoading) {
+                                CircularProgressIndicator()
+                            } else {
+                                Icon(Icons.Rounded.Poll, contentDescription = null)
+                            }
+                        },
+                    ) {
+                        Text(text = stringResource(id = R.string.text_poll_title))
                     }
                 }
             }
@@ -280,7 +301,6 @@ fun StateScreenScope.ThreadContent(
     val isLoadingMore = state.isLoadingMore
     val hasMore = state.pageData.hasMore
     val localUid = state.user?.id
-    val preloadNextPage = LocalHabitSettings.current.preloadNextPage
 
     val onSwipeUpRefresh: (() -> Unit)? = viewModel::requestLoadLatestPosts.takeIf {
         state.data.isNotEmpty() && state.sortType == ThreadSortType.BY_ASC
@@ -296,7 +316,6 @@ fun StateScreenScope.ThreadContent(
             isLoading = isLoadingMore,
             onLoad = onSwipeUpRefresh,
             onLazyLoad = viewModel::requestLoadMore.takeIf { hasMore && state.data.isNotEmpty() },
-            preloadNextPage = preloadNextPage,
             bottomIndicator = {
                 if (onSwipeUpRefresh == null) {
                     defaultBottomIndicator(this, it)
@@ -324,8 +343,7 @@ fun StateScreenScope.ThreadContent(
                         ThreadPoll(
                             modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
                             info = pollInfo,
-                            canVote = state.user != null,
-                            onSubmit = viewModel::onPollSubmit,
+                            onPull = viewModel::requestPollPost.takeIf { localUid != null },
                         )
                     }
 
@@ -458,8 +476,12 @@ private fun PostCardItem(viewModel: ThreadViewModel, post: PostData, localUid: L
             onUserClick = onUserClickedListener,
             onLikeClick = viewModel::onPostLikeClicked,
             onReplyClick = viewModel::onReplyClicked.takeUnless { viewModel.hideReply },
+            onSubPostReplyClick = viewModel::onReplySubPost.takeUnless { viewModel.hideReply },
             onOpenSubPosts = { subPostId ->
                 viewModel.onOpenSubPost(post, subPostId)
+            },
+            onMenuCopyClick = {
+                navigator.navigate(CopyText(it))
             },
             onMenuFavoriteClick = {
                 val isPostCollected = post.id == collectPid
@@ -478,6 +500,9 @@ private fun PostCardItem(viewModel: ThreadViewModel, post: PostData, localUid: L
             onUserClick = onUserClickedListener,
             onLikeClick = viewModel::onPostLikeClicked,
             onOpenSubPosts = { subPostId -> viewModel.onOpenSubPost(post, subPostId) },
+            onMenuCopyClick = {
+                navigator.navigate(CopyText(it))
+            }
         )
     }
 }
@@ -573,34 +598,6 @@ private fun SubPostBlockedTip(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun PostContentRenders(contentRenders: List<PbContentRender>) {
-    var imageGroup: MutableList<PicContentRender>? = null
-
-    @Composable
-    fun flushImages() {
-        imageGroup?.let {
-            if (it.size == 1) {
-                it.single().Render()
-            } else {
-                PicWaterfallContentRender(it)
-            }
-        }
-        imageGroup = null
-    }
-
-    contentRenders.forEach { render ->
-        if (render is PicContentRender) {
-            if (imageGroup == null) imageGroup = mutableListOf()
-            imageGroup?.add(render)
-        } else {
-            flushImages()
-            render.Render()
-        }
-    }
-    flushImages()
-}
-
-@Composable
 fun PostCard(
     post: PostData,
     immersiveMode: Boolean = false,
@@ -608,7 +605,9 @@ fun PostCard(
     onUserClick: () -> Unit = {},
     onLikeClick: ((PostData) -> Unit)? = null,
     onReplyClick: ((PostData) -> Unit)? = null,
+    onSubPostReplyClick: ((PostData, SubPostItemData) -> Unit)? = null,
     onOpenSubPosts: (subPostId: Long) -> Unit = {},
+    onMenuCopyClick: (String) -> Unit,
     onMenuFavoriteClick: (() -> Unit)? = null,
     onMenuDeleteClick: (() -> Unit)? = null
 ) {
@@ -631,33 +630,36 @@ fun PostCard(
         },
         hideBlockedContent = immersiveMode,
     ) {
-        Card(
-            header = {
-                if (immersiveMode) return@Card
-                LongClickMenu(
-                    shape = MaterialTheme.shapes.medium,
-                    menuContent = {
-                        if (onReplyClick != null) {
-                            TextMenuItem(text = R.string.btn_reply) {
-                                onReplyClick(post)
-                            }
-                        }
-                        TextMenuItem(text = R.string.title_report) {
-                            coroutineScope.launch {
-                                TiebaUtil.reportPost(context, navigator, post.id.toString())
-                            }
-                        }
-                        if (onMenuFavoriteClick != null) {
-                            TextMenuItem(
-                                text = if (isCollected) R.string.title_collect_on else R.string.title_collect_floor,
-                                onClick = onMenuFavoriteClick
-                            )
-                        }
-                        if (onMenuDeleteClick != null) {
-                            TextMenuItem(text = R.string.title_delete, onClick = onMenuDeleteClick)
-                        }
+        LongClickMenu(
+            shape = MaterialTheme.shapes.medium,
+            menuContent = {
+                if (onReplyClick != null) {
+                    TextMenuItem(text = R.string.btn_reply) {
+                        onReplyClick(post)
                     }
-                ) {
+                }
+                TextMenuItem(text = R.string.menu_copy) {
+                    onMenuCopyClick(if (post.floor == 1) post.title + "\n" + post.plainText else post.plainText)
+                }
+                TextMenuItem(text = R.string.title_report) {
+                    coroutineScope.launch {
+                        TiebaUtil.reportPost(context, navigator, post.id.toString())
+                    }
+                }
+                if (onMenuFavoriteClick != null) {
+                    TextMenuItem(
+                        text = if (isCollected) R.string.title_collect_on else R.string.title_collect_floor,
+                        onClick = onMenuFavoriteClick
+                    )
+                }
+                if (onMenuDeleteClick != null) {
+                    TextMenuItem(text = R.string.title_delete, onClick = onMenuDeleteClick)
+                }
+            }
+        ) {
+            Card(
+                header = {
+                    if (immersiveMode) return@Card
                     SharedTransitionUserHeader(
                         author = author,
                         desc = remember { post.getDescText(context) },
@@ -668,83 +670,85 @@ fun PostCard(
                             PostLikeButton(like = post.like, onClick = { onLikeClick(post) })
                         }
                     }
-                }
-            },
-            content = {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = paddingModifier.fillMaxWidth()
-                ) {
-                    if (showTitle) {
-                        SelectionContainer {
+                },
+                content = {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = paddingModifier.fillMaxWidth()
+                    ) {
+                        if (showTitle) {
                             Text(
                                 text = post.title,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontSize = 15.sp
                             )
                         }
-                    }
 
-                    if (isCollected) {
-                        Chip(
-                            text = stringResource(id = R.string.title_collected_floor),
-                            invertColor = true,
-                            prefixIcon = {
-                                Icon(
-                                    imageVector = Icons.Rounded.Star,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-                        )
-                    }
-
-                    PostContentRenders(post.contentRenders)
-                }
-
-                if (post.subPosts == null || post.subPostNumber <= 0 || immersiveMode) return@Card
-
-                Surface(
-                    modifier = paddingModifier,
-                    shape = MaterialTheme.shapes.small,
-                    tonalElevation = 4.dp
-                ) {
-                    Column(
-                        modifier = Modifier.padding(vertical = 10.dp),
-                        verticalArrangement = Arrangement.spacedBy(2.dp)
-                    ) {
-                        post.subPosts.fastForEach { item ->
-                            BlockableContent(
-                                blocked = item.blocked,
-                                blockedTip = {
-                                    SubPostBlockedTip(modifier = Modifier.padding(horizontal = 12.dp))
-                                },
-                                hideBlockedContent = false // filtered in repository
-                            ) {
-                                SubPostItem(
-                                    subPost = item,
-                                    modifier = Modifier
-                                        .padding(horizontal = 12.dp)
-                                        .fillMaxWidth(),
-                                    onOpenSubPosts = onOpenSubPosts,
-                                )
-                            }
+                        if (isCollected) {
+                            Chip(
+                                text = stringResource(id = R.string.title_collected_floor),
+                                invertColor = true,
+                                prefixIcon = {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Star,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            )
                         }
 
-                        if (post.subPostNumber <= post.subPosts.size) return@Column
-                        Text(
-                            text = stringResource(R.string.open_all_sub_posts, post.subPostNumber),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onOpenSubPosts(0) }
-                                .padding(vertical = 2.dp, horizontal = 12.dp),
-                            color = MaterialTheme.colorScheme.primary,
-                            style = MaterialTheme.typography.labelLarge,
-                        )
+                        post.contentRenders.fastForEach { it.Render() }
+                    }
+
+                    if (post.subPosts == null || post.subPostNumber <= 0 || immersiveMode) return@Card
+
+                    Surface(
+                        modifier = paddingModifier,
+                        shape = MaterialTheme.shapes.small,
+                        tonalElevation = 4.dp
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(vertical = 10.dp),
+                            verticalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
+                            post.subPosts.fastForEach { item ->
+                                BlockableContent(
+                                    blocked = item.blocked,
+                                    blockedTip = {
+                                        SubPostBlockedTip(modifier = Modifier.padding(horizontal = 12.dp))
+                                    },
+                                    hideBlockedContent = false // filtered in repository
+                                ) {
+                                    SubPostItem(
+                                        subPost = item,
+                                        modifier = Modifier
+                                            .padding(horizontal = 12.dp)
+                                            .fillMaxWidth(),
+                                        onReplyClick = onSubPostReplyClick?.let {
+                                            { onSubPostReplyClick(post, item) }
+                                        },
+                                        onOpenSubPosts = onOpenSubPosts,
+                                        onMenuCopyClick = onMenuCopyClick
+                                    )
+                                }
+                            }
+
+                            if (post.subPostNumber <= post.subPosts.size) return@Column
+                            Text(
+                                text = stringResource(R.string.open_all_sub_posts, post.subPostNumber),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { onOpenSubPosts(0) }
+                                    .padding(vertical = 2.dp, horizontal = 12.dp),
+                                color = MaterialTheme.colorScheme.primary,
+                                style = MaterialTheme.typography.labelLarge,
+                            )
+                        }
                     }
                 }
-            }
-        )
+            )
+        }
     }
 }
 
@@ -752,18 +756,43 @@ fun PostCard(
 private fun SubPostItem(
     subPost: SubPostItemData,
     modifier: Modifier = Modifier,
+    onReplyClick: (() -> Unit)?,
     onOpenSubPosts: (Long) -> Unit,
+    onMenuCopyClick: (String) -> Unit,
 ) {
-    PbContentText(
-        text = subPost.abstractContent!!,
-        modifier = modifier,
-        overflow = TextOverflow.Ellipsis,
-        maxLines = 4,
-        lineSpacing = 0.4.sp,
-        inlineContent = if (subPost.isLz) ThreadViewModel.cachedLzInlineContent else null,
-        style = MaterialTheme.typography.bodyMedium,
-        onClick = { onOpenSubPosts(subPost.id) },
-    )
+    val context = LocalContext.current
+    val navigator = LocalNavController.current
+    val coroutineScope = rememberCoroutineScope()
+    val menuState = rememberMenuState()
+
+    LongClickMenu(
+        menuState = menuState,
+        menuContent = {
+            if (onReplyClick != null) {
+                TextMenuItem(text = R.string.title_reply, onClick = onReplyClick)
+            }
+            TextMenuItem(text = R.string.menu_copy) {
+                onMenuCopyClick(subPost.plainText)
+            }
+            TextMenuItem(text = R.string.title_report) {
+                coroutineScope.launch {
+                    TiebaUtil.reportPost(context, navigator, subPost.id.toString())
+                }
+            }
+        },
+        indication = null,
+        onClick = { onOpenSubPosts(subPost.id) }
+    ) {
+        PbContentText(
+            text = subPost.abstractContent!!,
+            modifier = modifier,
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 4,
+            lineSpacing = 0.4.sp,
+            inlineContent = if (subPost.isLz) ThreadViewModel.cachedLzInlineContent else null,
+            style = MaterialTheme.typography.bodyMedium,
+        )
+    }
 }
 
 @Preview("LoadPreviousButton")
@@ -799,18 +828,16 @@ private fun ThreadHeaderPreview() {
 @Composable
 private fun ThreadPollPreview() = TiebaLiteTheme {
     ThreadPoll(
-        info = PollInfo(
-            options = listOf(
-                PollOption(id = 0, num = 143, text = "Test 1"),
-                PollOption(id = 1, num = 25, text = "Test 2"),
-                PollOption(id = 2, num = 5, text = "Test 3"),
-            ),
-            end_time = 1_598_812_800,
-            total_poll = 173,
-            polled_value = "2",
+        info = ThreadPollInfo(
             title = "来投票",
+            totalPoll = 173,
+            options = listOf(
+                PollOption(id = 0, num=143, text="Test 1"),
+                PollOption(id = 1, num=25, text="Test 2"),
+                PollOption(id = 2, num=5, text="Test 3"),
+            ),
+            endTime = Instant.parse("2020-08-30T18:00:00Z").toEpochMilliseconds(),
+            polledValue = listOf(0, 2),
         ),
-        canVote = true,
-        onSubmit = {},
     )
 }

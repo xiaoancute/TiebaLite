@@ -66,6 +66,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.Saver
@@ -88,7 +89,10 @@ import androidx.compose.ui.util.fastForEachIndexed
 import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.util.lerp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -134,8 +138,8 @@ import dev.chrisbanes.haze.hazeSource
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Stable
 val MainDestination.titleRes: Int
@@ -180,10 +184,15 @@ val bottomNavigationPlaceholder: @Composable () -> Unit = {
             modifier = Modifier
                 .windowInsetsPadding(WindowInsets.navigationBars)
                 .height(
-                    if (navigationSuiteType == MainNavigationSuiteType.ShortNavigationBarCompact) {
-                        NavigationBarHeight
-                    } else {
-                        TallNavigationBarHeight
+                    when(navigationSuiteType) {
+                        MainNavigationSuiteType.ShortNavigationBarCompact -> NavigationBarHeight
+                        MainNavigationSuiteType.FloatingNavigationBar -> {
+                            TallNavigationBarHeight + floatingNavigationBarCompactScreenOffset
+                        }
+                        MainNavigationSuiteType.FloatingNavigationBarCompact -> {
+                            NavigationBarHeight + floatingNavigationBarCompactScreenOffset
+                        }
+                        else -> TallNavigationBarHeight
                     }
                 )
         )
@@ -201,11 +210,16 @@ val bottomNavigationPlaceholder: @Composable () -> Unit = {
  */
 @Composable
 private fun NavController.currentMainDestinationAsState(destinations: List<MainDestination>): State<MainDestination?> {
-    return remember(currentBackStackEntryFlow, destinations) {
-        currentBackStackEntryFlow.map {
-            destinations.fastFirstOrNull { dest -> it.destination.hasRoute(dest::class) }
+    val lifecycle = LocalLifecycleOwner.current
+    return produceState(initialValue = null, destinations, currentBackStackEntryFlow, lifecycle) {
+        withContext(Dispatchers.Default) {
+            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                currentBackStackEntryFlow.collect {
+                    value = destinations.fastFirstOrNull { dest -> it.destination.hasRoute(dest::class) }
+                }
+            }
         }
-    }.collectAsStateWithLifecycle(null, context = Dispatchers.Default)
+    }
 }
 
 @Composable
@@ -413,7 +427,7 @@ private fun MainNavigationSuiteScaffold(
                             inputScale = hazeInputScale
                         }
                     }
-                    .onCase(colorsOnTransition != null) {
+                    .onNotNull(colorsOnTransition) {
                         animateEnterExit(
                             animatedVisibilityScope = animatedVisibilityScope,
                             sharedTransitionScope = LocalSharedTransitionScope.current,

@@ -13,7 +13,6 @@ import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.NavController
 import androidx.navigation.toRoute
 import com.huanchengfly.tieba.post.R
 import com.huanchengfly.tieba.post.api.Error
@@ -43,7 +42,7 @@ import com.huanchengfly.tieba.post.ui.page.Destination.Reply
 import com.huanchengfly.tieba.post.ui.page.Destination.SubPosts
 import com.huanchengfly.tieba.post.ui.page.threadstore.ThreadStoreUiEvent
 import com.huanchengfly.tieba.post.ui.widgets.compose.buildChipInlineContent
-import com.huanchengfly.tieba.post.ui.widgets.compose.video.util.set
+import com.huanchengfly.tieba.post.utils.extension.set
 import com.huanchengfly.tieba.post.utils.TiebaUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -596,6 +595,23 @@ class ThreadViewModel @Inject constructor(
         .onFailure { e -> sendUiEvent(ThreadUiEvent.DeletePostFailed(message = e.getErrorMessage())) }
         .onSuccess {
             sendUiEvent(CommonUiEvent.NavigateUp)
+        }
+    }
+
+    fun requestPollPost(options: List<Int>) = launchInVM {
+        val thread = currentState.thread!!
+        if (thread.pollInfo!!.isLoading) return@launchInVM
+
+        _uiState.update { it.copy(thread = thread.updatePollStatus(loading = true)) }
+        runCatching {
+            threadRepo.requestPollPost(forumId, threadId, options)
+        }
+        .onFailure { e ->
+            sendUiEvent(CommonUiEvent.ToastError(e))
+            _uiState.update { it.copy(thread = thread.updatePollStatus(loading = false)) }
+        }
+        .onSuccess { pollInfo ->
+            _uiState.update { it.copy(thread = thread.copy(pollInfo = pollInfo)) }
         }
     }
 

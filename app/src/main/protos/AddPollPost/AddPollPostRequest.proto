@@ -4,8 +4,8 @@ package tieba.addPollPost;
 
 option java_package = "com.huanchengfly.tieba.post.api.models.protos.addPollPost";
 
-import "AddPollPost/AddPollPostRequestData.proto";
+import "AddPollPost/AddPollPostRequestDate.proto";
 
 message AddPollPostRequest {
-  AddPollPostRequestData data = 1;
+    AddPollPostRequestDate data = 1;
 }

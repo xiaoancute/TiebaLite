@@ -54,19 +54,10 @@ object ThreadNetworkDataSource {
         requestLike(threadId, postId, like, objType = 3)
     }
 
-    suspend fun submitPoll(forumId: Long?, threadId: Long, options: String) {
-        require(threadId > 0) { "Illegal Thread ID $threadId" }
-        require(options.isNotBlank()) { "Illegal Poll Options" }
-
+    suspend fun requestPollPost(forumId: Long?, threadId: Long, options: String) {
         TiebaApi.getInstance()
-            .addPollPostProtobuf(forumId = forumId, threadId = threadId, options = options)
+            .addPollPostProtobuf(forumId, threadId, options)
             .firstOrThrow()
-            .data_
-            ?.let {
-                if (it.error_code != 0) {
-                    throw TiebaApiException(CommonResponse(errorCode = it.error_code, errorMsg = it.error_msg))
-                }
-            } ?: throw TiebaUnknownException
     }
 
     suspend fun pbPageRaw(

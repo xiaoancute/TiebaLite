@@ -11,13 +11,15 @@ import androidx.compose.material.icons.outlined.SpeakerNotesOff
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.outlined.Verified
+import androidx.compose.material.icons.rounded.LiveTv
 import androidx.compose.material.icons.rounded.UnfoldLess
 import androidx.compose.runtime.Composable
 import com.huanchengfly.tieba.post.R
 import com.huanchengfly.tieba.post.repository.user.Settings
+import com.huanchengfly.tieba.post.ui.icons.Autoplay
+import com.huanchengfly.tieba.post.ui.icons.PageHeader
 import com.huanchengfly.tieba.post.ui.models.search.ForumSearchPostSortType
 import com.huanchengfly.tieba.post.ui.models.search.SearchThreadSortType
-import com.huanchengfly.tieba.post.ui.icons.PageHeader
 import com.huanchengfly.tieba.post.ui.models.settings.ForumSortType
 import com.huanchengfly.tieba.post.ui.models.settings.HabitSettings
 import com.huanchengfly.tieba.post.ui.models.settings.WaterType
@@ -57,6 +59,13 @@ fun HabitSettingsPage(
                 property = HabitSettings::hideMedia,
                 title = R.string.title_hide_media,
                 leadingIcon = Icons.Rounded.UnfoldLess
+            )
+
+            toggleablePreference(
+                property = HabitSettings::videoAutoplay,
+                title = R.string.settings_video_autoplay,
+                leadingIcon = Icons.Rounded.Autoplay,
+                enabled = !currentPreference.hideMedia,
             )
         }
 

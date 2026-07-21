@@ -287,7 +287,7 @@ object FloatingNavigationBarOverride : ShortNavigationBarOverride {
                     .padding(horizontal = 16.dp)
                     .floatingNavBarContainer(
                         height = NavigationBarHeight,
-                        screenOffset = Dp.Hairline,
+                        screenOffset = floatingNavigationBarCompactScreenOffset,
                         isTransitionActive = { animatedVisibilityScope?.transition?.isRunning == true }
                     )
                     .padding(start = 24.dp, top = 6.dp, end = 24.dp, bottom = 4.dp),

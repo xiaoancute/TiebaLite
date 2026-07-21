@@ -66,6 +66,8 @@ import com.huanchengfly.tieba.post.ui.widgets.compose.StrongBox
 import com.huanchengfly.tieba.post.ui.widgets.compose.dialogs.AnyPopDialogProperties
 import com.huanchengfly.tieba.post.ui.widgets.compose.dialogs.DirectionState
 import com.huanchengfly.tieba.post.ui.widgets.compose.rememberDialogState
+import com.huanchengfly.tieba.post.ui.widgets.compose.video.LocalVideoPreviewState
+import com.huanchengfly.tieba.post.ui.widgets.compose.video.rememberVideoPreviewState
 import com.huanchengfly.tieba.post.utils.AccountUtil
 import com.huanchengfly.tieba.post.utils.ClientUtils
 import com.huanchengfly.tieba.post.utils.EmoticonManager
@@ -269,10 +271,17 @@ class MainActivityV2 : BaseComposeActivity() {
         content: @Composable () -> Unit
     ) {
         val currentAccount by viewModel.account.collectAsStateWithLifecycle(initialValue = null)
+        val videoPreviewState = if (!habit.hideMedia && habit.videoAutoplay) {
+            rememberVideoPreviewState(viewModel.playerPool)
+        } else {
+            null
+        }
+
         CompositionLocalProvider(
             LocalAccount provides currentAccount,
             LocalHabitSettings provides habit,
             LocalUISettings provides uiSettings,
+            LocalVideoPreviewState provides videoPreviewState,
             content = content
         )
     }

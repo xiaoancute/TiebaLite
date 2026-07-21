@@ -38,8 +38,8 @@ android {
         minSdk = libs.versions.minSdk.get().toInt()
         //noinspection OldTargetApi
         targetSdk = libs.versions.targetSdk.get().toInt()
-        versionCode = 391014
-        versionName = "4.0.0 Beta 4.19"
+        versionCode = 391015
+        versionName = "4.0.0 Beta 5.1"
         // Configure custom runner to set up the Hilt test application
         testInstrumentationRunner = "$applicationId.TbLiteTestRunner"
         vectorDrawables {
@@ -134,10 +134,11 @@ kotlin {
         freeCompilerArgs.addAll(
             "-Xcontext-parameters",
             "-opt-in=kotlin.RequiresOptIn",
+            "-opt-in=androidx.compose.ui.ExperimentalComposeUiApi",
+            "-opt-in=androidx.compose.ui.ExperimentalMediaQueryApi",
             "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
             "-opt-in=androidx.compose.material3.ExperimentalMaterial3ComponentOverrideApi",
             "-opt-in=androidx.compose.material3.ExperimentalMaterial3ExpressiveApi",
-            "-opt-in=com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi",
             "-opt-in=dev.chrisbanes.haze.ExperimentalHazeApi",
         )
     }
@@ -246,11 +247,8 @@ dependencies {
 
     implementation(libs.haze.blur)
 
-    //Glide
-    implementation(libs.glide)
-    ksp(libs.glide.ksp)
-    implementation(libs.glide.compose)
-    implementation(libs.glide.okhttp3.integration)
+    // Coil
+    implementation(libs.bundles.coil3)
 
     // Image Viewer
     implementation(libs.androidx.recyclerview)

@@ -1,44 +1,47 @@
 package com.huanchengfly.tieba.post.ui.page.forum
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import android.util.SparseIntArray
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.PagerState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ArrowDropDown
+import androidx.compose.material.icons.automirrored.sharp.Sort
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SecondaryScrollableTabRow
+import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
-import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.movableContentOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.fastForEachIndexed
+import androidx.core.util.getOrDefault
+import com.huanchengfly.tieba.post.LocalHabitSettings
 import com.huanchengfly.tieba.post.R
+import com.huanchengfly.tieba.post.api.models.protos.FrsTabInfo
 import com.huanchengfly.tieba.post.arch.unsafeLazy
-import com.huanchengfly.tieba.post.ui.models.forum.NavTab
 import com.huanchengfly.tieba.post.ui.models.settings.ForumSortType
-import com.huanchengfly.tieba.post.ui.widgets.compose.TabClickMenu
-import com.huanchengfly.tieba.post.ui.widgets.compose.rememberMenuState
+import com.huanchengfly.tieba.post.ui.widgets.compose.ClickMenu
+import com.huanchengfly.tieba.post.ui.widgets.compose.FancyAnimatedIndicatorWithModifier
 import com.huanchengfly.tieba.post.ui.widgets.compose.preference.Options
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.coroutines.launch
 
-private val ForumTabShape = RoundedCornerShape(8.dp)
+const val TAB_FORUM_LATEST = 0
+const val TAB_FORUM_GOOD = 1
 
 private val TabSortTypes: Options<Int> by unsafeLazy {
     persistentMapOf(
@@ -47,116 +50,110 @@ private val TabSortTypes: Options<Int> by unsafeLazy {
     )
 }
 
+private val FORUM_TAB_HEIGHT = 40.dp
+
+@Composable
+private fun ForumSortButton(
+    modifier: Modifier = Modifier,
+    currentSortType: () -> Int,
+    onSortTypeChanged: (sortType: Int) -> Unit,
+    enabled: Boolean = true,
+) {
+    ClickMenu(
+        modifier = modifier,
+        menuContent = {
+            ListPickerMenuItems(
+                items = TabSortTypes,
+                picked = currentSortType(),
+                onItemPicked = onSortTypeChanged
+            )
+        },
+        triggerShape = MaterialTheme.shapes.small,
+        enabled = enabled,
+    ) {
+        Icon(
+            imageVector = Icons.AutoMirrored.Sharp.Sort,
+            contentDescription = null,
+            modifier = Modifier.padding(ButtonDefaults.SmallContentPadding),
+            tint = LocalContentColor.current.let { if (enabled) it else it.copy(alpha = 0.38f) }
+        )
+    }
+}
+
 @Composable
 fun ForumTab(
     modifier: Modifier = Modifier,
-    navTabs: List<NavTab>,
     pagerState: PagerState,
-    sortType: Int,
+    tabs: List<FrsTabInfo>,
+    sortTypes: SparseIntArray,
     onSortTypeChanged: (sortType: Int) -> Unit,
 ) {
     val currentPage = pagerState.currentPage
     val coroutineScope = rememberCoroutineScope()
+    val defaultSortType = LocalHabitSettings.current.forumSortType
 
-    val unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant
-    val tabTextStyle = MaterialTheme.typography.labelLarge.copy(letterSpacing = 2.sp)
+    val tabsMovableContent = remember {
+        movableContentOf<List<FrsTabInfo>> { tabList ->
+            val tabTextStyle = MaterialTheme.typography.labelLarge.copy(letterSpacing = 2.sp)
 
-    SecondaryScrollableTabRow(
-        selectedTabIndex = currentPage,
-        indicator = {},
-        divider = {},
-        containerColor = Color.Transparent,
-        contentColor = MaterialTheme.colorScheme.primary,
-        edgePadding = 0.dp,
-        modifier = modifier,
-    ) {
-        navTabs.forEachIndexed { index, tab ->
-            val selected = index == currentPage
-            val onClick: () -> Unit = {
-                coroutineScope.launch { pagerState.animateScrollToPage(index) }
-            }
-
-            if (!tab.supportsSorting) {
+            tabList.fastForEachIndexed { index, tab ->
                 Tab(
-                    selected = selected,
-                    onClick = onClick,
-                    unselectedContentColor = unselectedContentColor,
-                ) {
-                    ForumTabPill(selected = selected) {
-                        Text(text = tab.tabName, style = tabTextStyle)
-                    }
-                }
-            } else {
-                val menuState = rememberMenuState()
-                TabClickMenu(
-                    selected = selected,
-                    onClick = onClick,
-                    menuContent = {
-                        ListPickerMenuItems(
-                            items = TabSortTypes,
-                            picked = sortType,
-                            onItemPicked = onSortTypeChanged
-                        )
+                    selected = pagerState.currentPage == index,
+                    onClick = {
+                        coroutineScope.launch {
+                            pagerState.animateScrollToPage(index)
+                        }
                     },
-                    menuState = menuState,
-                    unselectedContentColor = unselectedContentColor,
+                    unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant
                 ) {
-                    val rotate by animateFloatAsState(
-                        targetValue = if (menuState.expanded) 180f else 0f,
-                        label = "ForumTabArrowRotate"
-                    )
-                    val alpha by animateFloatAsState(
-                        targetValue = if (selected) 1f else 0f,
-                        label = "ForumTabArrowAlpha"
-                    )
-
-                    ForumTabPill(selected = selected) {
+                    Box(
+                        modifier = Modifier.height(FORUM_TAB_HEIGHT).padding(horizontal = 16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Text(text = tab.tabName, style = tabTextStyle)
-
-                        Icon(
-                            imageVector = Icons.Rounded.ArrowDropDown,
-                            contentDescription = null,
-                            modifier = Modifier.graphicsLayer {
-                                rotationZ = rotate
-                                this.alpha = alpha
-                            }
-                        )
                     }
                 }
             }
         }
     }
-}
 
-@Composable
-private fun ForumTabPill(
-    selected: Boolean,
-    modifier: Modifier = Modifier,
-    content: @Composable RowScope.() -> Unit,
-) {
-    val colorScheme = MaterialTheme.colorScheme
-    val containerColor = if (selected) {
-        colorScheme.primary.copy(alpha = 0.12f)
-    } else {
-        Color.Transparent
-    }
-    val borderColor = if (selected) colorScheme.primary else Color.Transparent
-
-    Box(
-        modifier = modifier
-            .minimumInteractiveComponentSize()
-            .padding(horizontal = 6.dp),
-        contentAlignment = Alignment.Center,
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(
-            modifier = Modifier
-                .height(36.dp)
-                .clip(ForumTabShape)
-                .background(containerColor)
-                .border(width = 1.dp, color = borderColor, shape = ForumTabShape)
-                .padding(horizontal = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            content = content,
+        ForumSortButton(
+            currentSortType = {
+                val currentTabId = tabs[pagerState.currentPage].tabId
+                sortTypes.getOrDefault(currentTabId, defaultSortType)
+            },
+            onSortTypeChanged = onSortTypeChanged,
+            enabled = remember { derivedStateOf { pagerState.currentPage != TAB_FORUM_GOOD } }.value
         )
+
+        if (tabs.size > 2) {
+            SecondaryScrollableTabRow(
+                selectedTabIndex = currentPage,
+                indicator = {
+                    FancyAnimatedIndicatorWithModifier(index = currentPage, scrollable = true)
+                },
+                divider = {},
+                containerColor = Color.Transparent,
+                contentColor = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.weight(1.0f),
+                tabs = { tabsMovableContent(tabs) },
+            )
+        } else {
+            SecondaryTabRow(
+                selectedTabIndex = currentPage,
+                indicator = {
+                    FancyAnimatedIndicatorWithModifier(index = currentPage)
+                },
+                divider = {},
+                containerColor = Color.Transparent,
+                contentColor = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.weight(1.0f),
+                tabs = { tabsMovableContent(tabs) },
+            )
+        }
     }
 }

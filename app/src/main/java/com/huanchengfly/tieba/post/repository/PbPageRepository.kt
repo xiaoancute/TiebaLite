@@ -33,6 +33,7 @@ import com.huanchengfly.tieba.post.ui.models.SimpleForum
 import com.huanchengfly.tieba.post.ui.models.SubPostItemData
 import com.huanchengfly.tieba.post.ui.models.ThreadInfoData
 import com.huanchengfly.tieba.post.ui.models.ThreadItem
+import com.huanchengfly.tieba.post.ui.models.ThreadPollInfo
 import com.huanchengfly.tieba.post.ui.models.UserData
 import com.huanchengfly.tieba.post.ui.page.thread.ThreadSortType
 import com.huanchengfly.tieba.post.utils.DateTimeUtils
@@ -110,13 +111,16 @@ class PbPageRepository @Inject constructor(
         networkDataSource.requestLikeThread(thread.id, thread.firstPostId, like)
     }
 
-    suspend fun submitPoll(forumId: Long?, threadId: Long, options: String) {
-        networkDataSource.submitPoll(forumId = forumId, threadId = threadId, options = options)
-    }
-
     suspend fun requestLikeSubPost(threadId: Long, subPost: SubPostItemData) {
         val like = !subPost.like.liked // reverse like status
         networkDataSource.requestLikeSubpost(threadId, subPost.id, like)
+    }
+
+    suspend fun requestPollPost(forumId: Long?, threadId: Long, options: List<Int>): ThreadPollInfo {
+        require(options.isNotEmpty())
+        networkDataSource.requestPollPost(forumId, threadId, options.joinToString(separator = ","))
+        // Load latest poll info
+        return pbPage(threadId, forumId = forumId).thread.pollInfo!!
     }
 
     suspend fun pbPage(
@@ -242,14 +246,13 @@ class PbPageRepository @Inject constructor(
     @WorkerThread
     private suspend fun SubPostList.mapToUiModel(lzId: Long, abstract: Boolean): SubPostItemData {
         val habit = habitSettings.first()
-        val block = blockSettings.first()
         val author = author!!.mapToUiModel(lzId = lzId, showBothName = habit.showBothName)
         val contentRenders = content.buildRenders(imageLoadType = habit.imageLoadType)
         val plainText = content.plainText.orEmpty()
         return SubPostItemData(
             author = author,
             id = id,
-            blocked = blockRepo.isBlocked(author.id, arrayOf(plainText), block.blockWaterPost),
+            blocked = blockRepo.isBlocked(author.id, plainText),
             time = time.toLong(),
             like = agree?.let { Like(agree = it) } ?: LikeZero,
             plainText = plainText,
@@ -282,7 +285,6 @@ class PbPageRepository @Inject constructor(
      * */
     private suspend fun Post.mapToUiModel(lzId: Long, blockable: Boolean): PostData {
         val habit = habitSettings.first()
-        val block = blockSettings.first()
         val plainText = content.plainText.orEmpty()
         val author = author!!.mapToUiModel(lzId, showBothName = habit.showBothName)
         return PostData(
@@ -294,7 +296,7 @@ class PbPageRepository @Inject constructor(
             },
             time = DateTimeUtils.fixTimestamp(time.toLong()),
             like = agree?.let { Like(agree = it) } ?: LikeZero,
-            blocked = blockable && blockRepo.isBlocked(author.id, arrayOf(plainText), block.blockWaterPost),
+            blocked = blockable && blockRepo.isBlocked(author.id, plainText),
             plainText = plainText,
             contentRenders = this.buildContentRenders(imageLoadType = habit.imageLoadType),
             subPosts = sub_post_list?.sub_post_list?.mapToUiModel(lzId, abstract = true),
@@ -324,7 +326,18 @@ class PbPageRepository @Inject constructor(
         originThreadInfo = origin_thread_info?.takeIf { is_share_thread == 1 }?.wrapImmutable(),
         replyNum = replyNum,
         simpleForum = forumInfo!!.let { SimpleForum(it.id, it.name, it.avatar) },
-        pollInfo = origin_thread_info?.poll_info?.takeIf { it.options.isNotEmpty() },
+        pollInfo = origin_thread_info?.poll_info?.takeIf { it.options.isNotEmpty() }?.let {
+            ThreadPollInfo(
+                title = it.title.takeUnless { title -> title.isEmpty() },
+                totalPoll = it.total_poll,
+                options = it.options,
+                endTime = it.end_time * 1000L,
+                isMulti = it.is_multi == 1,
+                polledValue = if (it.polled_value.isNotEmpty()) {
+                    it.polled_value.split(",").map { id -> id.toInt() }
+                } else null
+            )
+        },
     )
 }
 

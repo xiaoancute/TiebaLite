@@ -1,6 +1,7 @@
 package com.huanchengfly.tieba.post.api.retrofit.interfaces
 
 import com.huanchengfly.tieba.post.api.Param
+import com.huanchengfly.tieba.post.api.models.CommonResponse
 import com.huanchengfly.tieba.post.api.models.SearchForumBean
 import com.huanchengfly.tieba.post.api.models.SearchThreadBean
 import com.huanchengfly.tieba.post.api.models.SearchUserBean
@@ -64,4 +65,11 @@ interface AppHybridTiebaApi {
         @Query("last_id") lastId: String = "",
         @Query("derivative_to_pic_id") derivativeToPicId: String = "",
     ): Flow<TopicDetailBean>
+
+    @GET("/c/c/post/addPollPost")
+    fun addPollPost(
+        @Query("forum_id") forumId: Long?,
+        @Query("thread_id") threadId: Long,
+        @Query("options") options: String,
+    ): Flow<CommonResponse>
 }

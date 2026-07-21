@@ -1,6 +1,7 @@
 package com.huanchengfly.tieba.post.ui.page.forum
 
-import com.huanchengfly.tieba.post.ui.widgets.compose.SimplePredictiveBackHandler
+import android.content.Context
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -51,6 +52,7 @@ import androidx.compose.runtime.movableContentOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -65,20 +67,23 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastForEachIndexed
+import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.lerp
+import androidx.core.util.getOrDefault
+import androidx.core.util.set
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.huanchengfly.tieba.post.LocalHabitSettings
 import com.huanchengfly.tieba.post.R
+import com.huanchengfly.tieba.post.api.models.protos.FrsTabInfo
 import com.huanchengfly.tieba.post.arch.GlobalEvent
 import com.huanchengfly.tieba.post.arch.collectCommonUiEventWithLifecycle
 import com.huanchengfly.tieba.post.arch.collectUiEventWithLifecycle
-import com.huanchengfly.tieba.post.arch.emitGlobalEventSuspend
+import com.huanchengfly.tieba.post.arch.emitGlobalEvent
 import com.huanchengfly.tieba.post.arch.isOverlapping
 import com.huanchengfly.tieba.post.arch.isScrolling
 import com.huanchengfly.tieba.post.arch.onGlobalEvent
-import com.huanchengfly.tieba.post.components.glide.TbGlideUrl
 import com.huanchengfly.tieba.post.navigateDebounced
 import com.huanchengfly.tieba.post.theme.FloatProducer
 import com.huanchengfly.tieba.post.theme.TiebaLiteTheme
@@ -90,14 +95,16 @@ import com.huanchengfly.tieba.post.ui.common.theme.compose.clickableNoIndication
 import com.huanchengfly.tieba.post.ui.common.windowsizeclass.isWindowHeightCompact
 import com.huanchengfly.tieba.post.ui.models.forum.ForumData
 import com.huanchengfly.tieba.post.ui.models.forum.GoodClassify
-import com.huanchengfly.tieba.post.ui.models.forum.NavTab
 import com.huanchengfly.tieba.post.ui.models.settings.ForumFAB
 import com.huanchengfly.tieba.post.ui.page.Destination
 import com.huanchengfly.tieba.post.ui.page.Destination.ForumDetail
 import com.huanchengfly.tieba.post.ui.page.Destination.ForumSearchPost
 import com.huanchengfly.tieba.post.ui.page.ProvideNavigator
+import com.huanchengfly.tieba.post.ui.page.forum.generaltablist.GeneralTabListPage
+import com.huanchengfly.tieba.post.ui.page.forum.generaltablist.GeneralTabListUiEvent
 import com.huanchengfly.tieba.post.ui.page.forum.threadlist.ForumThreadList
 import com.huanchengfly.tieba.post.ui.page.forum.threadlist.ForumThreadListUiEvent
+import com.huanchengfly.tieba.post.ui.page.forum.threadlist.ForumType
 import com.huanchengfly.tieba.post.ui.page.main.explore.createThreadClickListeners
 import com.huanchengfly.tieba.post.ui.page.photoview.PhotoViewActivity
 import com.huanchengfly.tieba.post.ui.page.thread.ThreadLikeUiEvent
@@ -122,11 +129,13 @@ import com.huanchengfly.tieba.post.ui.widgets.compose.placeholder
 import com.huanchengfly.tieba.post.ui.widgets.compose.rememberDialogState
 import com.huanchengfly.tieba.post.ui.widgets.compose.rememberPagerListStates
 import com.huanchengfly.tieba.post.ui.widgets.compose.rememberSnackbarHostState
+import com.huanchengfly.tieba.post.ui.widgets.compose.scrollToTop
 import com.huanchengfly.tieba.post.ui.widgets.compose.states.StateScreen
 import com.huanchengfly.tieba.post.utils.LocalAccount
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 /** The default expanded height of a Forum TopAppBar */
 private val ForumAppbarExpandHeight: Dp = 144.dp
@@ -138,6 +147,15 @@ private val TopBarSubtitleEnterTransition: EnterTransition =
 /** The default subtitle exit transition of a Forum TopAppBar */
 private val TopBarSubtitleExitTransition: ExitTransition
     get() = ExitTransition.None
+
+/** DefaultTabs(Latest, Good) + NavTab */
+private fun Context.buildForumTabs(navTabInfo: List<FrsTabInfo>?): List<FrsTabInfo> {
+    val defaultTabs = listOf(
+        FrsTabInfo(tabId = TAB_FORUM_LATEST, tabName = getString(R.string.tab_forum_latest)),
+        FrsTabInfo(tabId = TAB_FORUM_GOOD, tabName = getString(R.string.tab_forum_good)),
+    )
+    return if (navTabInfo.isNullOrEmpty()) defaultTabs else defaultTabs + navTabInfo
+}
 
 @Composable
 private fun ForumAvatar(
@@ -151,7 +169,7 @@ private fun ForumAvatar(
     } else {
         val context = LocalContext.current
         Avatar(
-            data = TbGlideUrl(avatar),
+            data = avatar,
             modifier = modifier
                 .clickable {
                     PhotoViewActivity.launchSinglePhoto(context, url = avatar)
@@ -167,7 +185,7 @@ fun ForumPage(
     avatarUrl: String?,
     transitionKey: String?,
     navigator: NavController,
-    viewModel: ForumViewModel = hiltViewModel(key = forumName),
+    viewModel: ForumViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
     val loggedIn = LocalAccount.current != null
@@ -182,39 +200,16 @@ fun ForumPage(
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val forumData = uiState.forum
-    val forumDataNavTabs = forumData?.navTabs
-    val navTabs = remember(forumDataNavTabs) {
-        forumDataNavTabs.orEmpty().ifEmpty { listOf(NavTab.Fallback) }
+    val forumTabs: List<FrsTabInfo> by remember {
+        derivedStateOf { context.buildForumTabs(uiState.forum?.navTabInfo) }
     }
-    val tabBarNavTabs = remember(forumDataNavTabs) {
-        forumTabBarNavTabs(forumDataNavTabs)
-    }
-    val initialPage = remember(forumName, navTabs) {
-        navTabs.indexOfFirst { it.isDefault }.coerceAtLeast(0)
-    }
-    val pagerState = rememberPagerState(initialPage = initialPage) { navTabs.size }
-    val listStates = rememberPagerListStates(pagerState.pageCount)
+    val forumSortTypes = viewModel.forumSortTypes
+    val defaultSortType = LocalHabitSettings.current.forumSortType
+
+    val pagerState = rememberPagerState { forumTabs.size }
+    val listStates by rememberUpdatedState(rememberPagerListStates(pagerState.pageCount))
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val scrollOrientationConnection = rememberScrollOrientationConnection()
-    // NavHost may dispose ForumPage while a thread is on top. Keep this saveable so returning
-    // from a thread does not re-run the default-tab jump and lose the user's current place.
-    var initialTabPositioned by rememberSaveable(forumName) { mutableStateOf(false) }
-
-    LaunchedEffect(forumName, forumDataNavTabs, initialPage) {
-        if (
-            shouldApplyInitialForumTab(
-                initialTabPositioned = initialTabPositioned,
-                navTabsLoaded = forumDataNavTabs != null,
-                currentPage = pagerState.currentPage,
-                initialPage = initialPage
-            )
-        ) {
-            pagerState.scrollToPage(initialPage)
-        }
-        if (forumDataNavTabs != null) {
-            initialTabPositioned = true
-        }
-    }
 
     viewModel.uiEvent.collectUiEventWithLifecycle {
         val message = when (it) {
@@ -247,10 +242,8 @@ fun ForumPage(
             is ForumUiEvent.PinShortcut.Failure -> getString(R.string.toast_send_to_desktop_failed, it.errorMsg)
 
             is ForumUiEvent.ScrollToTop -> {
-                val idx = navTabs.indexOfFirst { tab -> tab.tabId == it.tabId }.coerceAtLeast(0)
-                listStates[idx].scrollToItem(0)
-                scrollBehavior.state.contentOffset = 0f
-                scrollBehavior.state.heightOffset = 0f
+                val index = forumTabs.indexOfFirst { tab -> tab.tabId == it.tabId}
+                listStates.getOrNull(index)?.scrollToTop(scrollBehavior)
             }
 
             else -> it.toString()
@@ -265,7 +258,7 @@ fun ForumPage(
         onNavigateUp = navigator::navigateUp
     )
 
-    onGlobalEvent<ThreadLikeUiEvent> {
+    onGlobalEvent<ThreadLikeUiEvent>(coroutineScope) {
         onShowSnackbarShort(it.toMessage(context))
     }
 
@@ -283,28 +276,31 @@ fun ForumPage(
     val threadClickListeners = remember(navigator) {
         createThreadClickListeners(onNavigate = navigator::navigateDebounced)
     }
-    val forumThreadPages = remember(threadClickListeners, navTabs, listStates) {
-        navTabs.mapIndexed { index, tab ->
-            movableContentOf<Modifier, PaddingValues, ForumData> { modifier, contentPadding, forum ->
+    val forumThreadPages = remember(threadClickListeners) {
+        ForumType.entries.map { forumType ->
+            movableContentOf<PaddingValues, ForumData, Int> { contentPadding, forum, initialSortType ->
                 ForumThreadList(
-                    modifier = modifier,
                     threadClickListeners = threadClickListeners,
                     forumId = forum.id,
                     forumName = forum.name,
-                    tab = tab,
-                    forumRuleTitle = forum.forumRuleTitle.takeUnless { tab.isEssence },
+                    forumRuleTitle = forum.forumRuleTitle.takeUnless { forumType == ForumType.Good },
+                    type = forumType,
                     contentPadding = contentPadding,
-                    listState = listStates[index]
+                    initialSortType = initialSortType,
+                    listState = listStates[forumType.ordinal]
                 )
             }
         }
     }
 
-    onGlobalEvent<GlobalEvent.AddThreadSuccess>() {
-        val currentTabId = navTabs.getOrNull(pagerState.currentPage)?.tabId ?: NavTab.FALLBACK_TAB_ID
-        coroutineScope.launch {
-            emitGlobalEventSuspend(ForumThreadListUiEvent.Refresh(tabId = currentTabId))
+    onGlobalEvent<GlobalEvent.AddThreadSuccess>(coroutineScope) {
+        val tabId = forumTabs[pagerState.currentPage].tabId
+        val event = if (tabId == TAB_FORUM_LATEST || tabId == TAB_FORUM_GOOD) {
+            ForumThreadListUiEvent.Refresh(isGood = tabId == TAB_FORUM_GOOD)
+        } else {
+            GeneralTabListUiEvent.Refresh(tabId = tabId)
         }
+        coroutineScope.emitGlobalEvent(event)
     }
 
     var fabMenuExpanded by rememberSaveable { mutableStateOf(false) }
@@ -324,7 +320,7 @@ fun ForumPage(
                 avatar = {
                     ForumAvatar(
                         modifier = Modifier.matchParentSize(),
-                        avatar = avatarUrl ?: forumData?.avatar,
+                        avatar = forumData?.avatar ?: avatarUrl,
                         forum = forumName,
                         transitionKey = transitionKey
                     )
@@ -397,35 +393,26 @@ fun ForumPage(
                 colors = TiebaLiteTheme.topAppBarColors,
                 scrollBehavior = scrollBehavior,
             )  {
-                val sortType by viewModel.sortType.collectAsStateWithLifecycle()
-                if (tabBarNavTabs.isNotEmpty()) {
-                    ForumTab(
-                        modifier = Modifier.fillMaxWidth(),
-                        navTabs = tabBarNavTabs,
-                        pagerState = pagerState,
-                        sortType = sortType,
-                        onSortTypeChanged = { sortType ->
-                            val currentTabId = navTabs.getOrNull(pagerState.currentPage)?.tabId ?: NavTab.FALLBACK_TAB_ID
-                            viewModel.onSortTypeChanged(currentTabId, sortType)
-                        }
-                    )
-                }
+                ForumTab(
+                    modifier = Modifier.fillMaxWidth(),
+                    pagerState = pagerState,
+                    tabs = forumTabs,
+                    sortTypes = forumSortTypes,
+                    onSortTypeChanged = { newSortType ->
+                        val currentTabId = forumTabs[pagerState.currentPage].tabId
+                        viewModel.onSortTypeChanged(currentTabId, newSortType)
+                        forumSortTypes[currentTabId] = newSortType
+                    },
+                )
 
-                val currentTab = navTabs.getOrNull(pagerState.currentPage)
-                val classifyVisible by remember(currentTab, uiState.forum?.goodClassifies) {
-                    derivedStateOf {
-                        currentTab?.isEssence == true && (uiState.forum?.goodClassifies?.size ?: 0) > 1
-                    }
-                }
+                val classifyVisible by remember { derivedStateOf { pagerState.currentPage == TAB_FORUM_GOOD } }
                 val goodClassifies = uiState.forum?.goodClassifies ?: return@CollapsingAvatarTopAppBar
                 // Compose classify inside TopBar for background blur
                 AnimatedVisibility(visible = classifyVisible) {
                     ClassifyTabs(
                         goodClassifies = goodClassifies,
-                        selectedItem = uiState.subClassifyId,
-                        onSelected = { subId ->
-                            currentTab?.let { viewModel.onSubClassifyChanged(it.tabId, subId) }
-                        }
+                        selectedItem = uiState.goodClassifyId,
+                        onSelected = viewModel::onGoodClassifyChanged
                     )
                 }
             }
@@ -442,8 +429,9 @@ fun ForumPage(
             }
 
             ForumFAB(expanded = fabMenuExpanded, onExpandChanged = onFabExpandChanged, visible = fabVisible) { fab ->
-                val currentTabId = navTabs.getOrNull(pagerState.currentPage)?.tabId ?: NavTab.FALLBACK_TAB_ID
-                viewModel.onFabClicked(fab, currentTabId = currentTabId)
+                val currentPage = pagerState.currentPage
+                val currentTabId = forumTabs.getOrNull(currentPage)?.tabId ?: return@ForumFAB
+                viewModel.onFabClicked(fab, currentTabId)
             }
         }
     ) { contentPadding ->
@@ -461,15 +449,32 @@ fun ForumPage(
         ) {
             if (forumData == null) return@StateScreen
 
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier.fillMaxSize(),
-                flingBehavior = PagerDefaults.flingBehavior(pagerState, snapPositionalThreshold = 0.75f),
-                key = { it },
-                verticalAlignment = Alignment.Top,
-            ) { page ->
-                ProvideNavigator(navigator = navigator) {
-                    forumThreadPages[page](Modifier, contentPadding, forumData)
+            ProvideNavigator(navigator = navigator) {
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.fillMaxSize(),
+                    flingBehavior = PagerDefaults.flingBehavior(pagerState, snapPositionalThreshold = 0.75f),
+                    key = { it },
+                    verticalAlignment = Alignment.Top,
+                ) { page ->
+                    val currentTab = forumTabs[page]
+                    val initialSortType = forumSortTypes.getOrDefault(key = currentTab.tabId, defaultSortType)
+                    when (currentTab.tabId) {
+                        TAB_FORUM_LATEST, TAB_FORUM_GOOD -> {
+                            forumThreadPages[page](contentPadding, forumData, initialSortType)
+                        }
+                        else -> {
+                            GeneralTabListPage(
+                                forumId = forumData.id,
+                                forumName = forumName,
+                                initialSortType = initialSortType,
+                                navTabInfo = currentTab,
+                                threadClickListeners = threadClickListeners,
+                                contentPadding = contentPadding,
+                                listState = listStates[page],
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -481,19 +486,6 @@ fun ForumPage(
 }
 
 private const val SignActionVisibilityThreshold = 0.1f // 10% Collapsing
-
-internal fun shouldApplyInitialForumTab(
-    initialTabPositioned: Boolean,
-    navTabsLoaded: Boolean,
-    currentPage: Int,
-    initialPage: Int,
-): Boolean {
-    return !initialTabPositioned && navTabsLoaded && currentPage != initialPage
-}
-
-internal fun forumTabBarNavTabs(forumDataNavTabs: List<NavTab>?): List<NavTab> {
-    return forumDataNavTabs?.ifEmpty { listOf(NavTab.Fallback) }.orEmpty()
-}
 
 @Composable
 private fun ForumSignFollowActionButton(
@@ -565,7 +557,7 @@ private fun ForumSubtitle(modifier: Modifier = Modifier, forum: ForumData) {
                 LaunchedEffect(Unit) {
                     if (forum.levelProgress != progressAnimatable.targetValue) { // Skip signed forum
                         progressAnimatable.snapTo(0f)
-                        delay(AnimationConstants.DefaultDurationMillis.toLong())
+                        delay(AnimationConstants.DefaultDurationMillis.milliseconds)
                         progressAnimatable.animateTo(forum.levelProgress, spring(stiffness = Spring.StiffnessLow))
                     }
                 }
@@ -596,7 +588,7 @@ private fun ForumFAB(
         )
     }
 
-    SimplePredictiveBackHandler(enabled = expanded) { onExpandChanged(false) }
+    BackHandler(enabled = expanded) { onExpandChanged(false) }
 
     AnimatedVisibility(
         visible = visible,
@@ -608,7 +600,7 @@ private fun ForumFAB(
             expanded = expanded,
             button = { DefaultToggleFloatingActionButton(expanded, onExpandChanged) },
         ) {
-            items.fastForEachIndexed { i, (forumFab, icon, menuText) ->
+            items.fastForEach { (forumFab, icon, menuText) ->
                 FloatingActionButtonMenuItem(
                     onClick = {
                         onExpandChanged(false)

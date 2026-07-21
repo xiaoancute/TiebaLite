@@ -88,6 +88,7 @@ annotation class AutoClearImageCacheInterval {
  * @param searchThreadSortType 搜贴默认排序方式
  * @param showBothName 同时显示用户名和昵称
  * @param stickyHeader 帖子页面是否使用StickyHeader
+ * @param videoAutoplay 视频自动播放
  * */
 @Immutable
 data class HabitSettings(
@@ -107,4 +108,5 @@ data class HabitSettings(
     @SearchThreadSortType val searchThreadSortType: Int = SearchThreadSortType.NEWEST,
     val showBothName: Boolean = false,
     val stickyHeader: Boolean = true,
+    val videoAutoplay: Boolean = true,
 )

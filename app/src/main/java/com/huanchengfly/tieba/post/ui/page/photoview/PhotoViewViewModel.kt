@@ -17,7 +17,7 @@ import com.huanchengfly.tieba.post.arch.firstOrThrow
 import com.huanchengfly.tieba.post.models.LoadPicPageData
 import com.huanchengfly.tieba.post.models.PhotoViewData
 import com.huanchengfly.tieba.post.models.PicItem
-import com.huanchengfly.tieba.post.ui.widgets.compose.video.util.set
+import com.huanchengfly.tieba.post.utils.extension.set
 import com.huanchengfly.tieba.post.utils.JobQueue
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -238,9 +238,6 @@ data class PhotoViewItem(
     val postId: Long? = null,
     val type: Int
 ): Photo {
-
-    // Updated by SimpleImageLoader
-    var progress: Int = 0
 
     constructor(item: PicItem, overallIndex: Int): this(
         picId = item.picId,

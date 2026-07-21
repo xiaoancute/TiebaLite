@@ -13,19 +13,26 @@ import androidx.annotation.Keep
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.runtime.Composer
 import androidx.compose.runtime.ExperimentalComposeRuntimeApi
+import androidx.compose.runtime.tooling.ComposeStackTraceMode
+import androidx.compose.ui.ComposeUiFlags
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import coil3.SingletonImageLoader
 import com.huanchengfly.tieba.post.activities.CrashActivity
 import com.huanchengfly.tieba.post.components.ConfigInitializer
+import com.huanchengfly.tieba.post.components.coil.TbImageLoaderFactory
 import com.huanchengfly.tieba.post.di.RepositoryEntryPoint
 import com.huanchengfly.tieba.post.repository.user.SettingsRepository
 import com.huanchengfly.tieba.post.utils.EmoticonManager
+import com.huanchengfly.tieba.post.utils.ImageCacheUtil
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltAndroidApp
@@ -83,9 +90,21 @@ class App : Application(), Configuration.Provider {
                 WebView.setDataDirectorySuffix(processName)
             }
         }
+        SingletonImageLoader.setSafe(TbImageLoaderFactory())
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
         EmoticonManager.init(this)
-        Composer.setDiagnosticStackTraceEnabled(BuildConfig.DEBUG)
+        if (BuildConfig.DEBUG) {
+            // Enable verbose Compose stack traces for local debugging
+            Composer.setDiagnosticStackTraceMode(ComposeStackTraceMode.SourceInformation)
+        } else {
+            Composer.setDiagnosticStackTraceMode(ComposeStackTraceMode.Auto)
+        }
+        ComposeUiFlags.isMediaQueryIntegrationEnabled = true
+
+        AppBackgroundScope.launch {
+            delay(3000)
+            ImageCacheUtil.clearGlideDiskCache(this@App)
+        }
     }
 
     //解决魅族 Flyme 系统夜间模式强制反色

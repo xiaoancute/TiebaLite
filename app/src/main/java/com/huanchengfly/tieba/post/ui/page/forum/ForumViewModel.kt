@@ -2,6 +2,7 @@ package com.huanchengfly.tieba.post.ui.page.forum
 
 import android.content.Context
 import android.content.Intent
+import android.util.SparseIntArray
 import androidx.compose.runtime.Stable
 import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
@@ -12,7 +13,6 @@ import com.huanchengfly.tieba.post.arch.BaseStateViewModel
 import com.huanchengfly.tieba.post.arch.TbLiteExceptionHandler
 import com.huanchengfly.tieba.post.arch.UiEvent
 import com.huanchengfly.tieba.post.arch.emitGlobalEventSuspend
-import com.huanchengfly.tieba.post.arch.stateInViewModel
 import com.huanchengfly.tieba.post.models.database.ForumHistory
 import com.huanchengfly.tieba.post.repository.ForumRepository
 import com.huanchengfly.tieba.post.repository.HistoryRepository
@@ -21,9 +21,10 @@ import com.huanchengfly.tieba.post.ui.models.settings.ForumFAB
 import com.huanchengfly.tieba.post.ui.models.settings.ForumSortType
 import com.huanchengfly.tieba.post.ui.page.Destination
 import com.huanchengfly.tieba.post.ui.page.TB_LITE_DOMAIN
+import com.huanchengfly.tieba.post.ui.page.forum.generaltablist.GeneralTabListUiEvent
 import com.huanchengfly.tieba.post.ui.page.forum.threadlist.ForumThreadListUiEvent
-import com.huanchengfly.tieba.post.ui.widgets.compose.video.util.set
 import com.huanchengfly.tieba.post.utils.TiebaUtil
+import com.huanchengfly.tieba.post.utils.extension.set
 import com.huanchengfly.tieba.post.utils.requestPinShortcut
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -31,7 +32,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
@@ -53,10 +53,9 @@ class ForumViewModel @Inject constructor(
         _uiState.update { it.copy(error = e) }
     }
 
-    val sortType: StateFlow<Int> = forumRepo.getSortType(forumName)
-        .stateInViewModel(initialValue = ForumSortType.BY_REPLY)
-
     override fun createInitialState(): ForumUiState = ForumUiState()
+
+    val forumSortTypes = SparseIntArray()
 
     private var forumSignInJob: Job? = null
     private var forumLikeJob: Job? = null
@@ -73,38 +72,45 @@ class ForumViewModel @Inject constructor(
         recordHistory(forumData)
     }
 
-    fun onSubClassifyChanged(tabId: Int, classifyId: Int) {
-        _uiState.set { copy(subClassifyId = classifyId) }
+    fun onGoodClassifyChanged(classifyId: Int) {
+        _uiState.set { copy(goodClassifyId = classifyId) }
         launchInVM {
-            sendUiEvent(ForumUiEvent.ScrollToTop(tabId = tabId))
-            emitGlobalEventSuspend(ForumThreadListUiEvent.ClassifyChanged(tabId, classifyId))
+            sendUiEvent(ForumUiEvent.ScrollToTop(isGood = true))
+            emitGlobalEventSuspend(ForumThreadListUiEvent.ClassifyChanged(classifyId))
         }
     }
 
-    fun onSortTypeChanged(tabId: Int, @ForumSortType sortType: Int) {
-        launchInVM {
-            forumRepo.saveSortType(forumName, sortType)
-            sendUiEvent(ForumUiEvent.ScrollToTop(tabId))
-            delay(200) // wait ScrollToTop animation
-            emitGlobalEventSuspend(ForumThreadListUiEvent.SortTypeChanged(sortType))
+    fun onSortTypeChanged(tabId: Int, @ForumSortType sortType: Int) = launchInVM {
+        sendUiEvent(ForumUiEvent.ScrollToTop(tabId))
+        delay(200) // wait ScrollToTop animation
+        val event = when(tabId) {
+            TAB_FORUM_LATEST -> ForumThreadListUiEvent.SortTypeChanged(sortType)
+
+            TAB_FORUM_GOOD -> throw IllegalStateException()
+
+            else -> GeneralTabListUiEvent.SortTypeChanged(tabId, sortType)
         }
+        emitGlobalEventSuspend(event)
     }
 
-    fun onRefreshClicked(tabId: Int) {
-        launchInVM {
-            sendUiEvent(ForumUiEvent.ScrollToTop(tabId))
-            delay(200) // wait ScrollToTop animation
-            emitGlobalEventSuspend(ForumThreadListUiEvent.Refresh(tabId))
+    fun onRefreshClicked(tabId: Int) = launchInVM {
+        sendUiEvent(ForumUiEvent.ScrollToTop(tabId))
+        delay(200) // wait ScrollToTop animation
+        val event = if (tabId == TAB_FORUM_LATEST || tabId == TAB_FORUM_GOOD) {
+            ForumThreadListUiEvent.Refresh(tabId == TAB_FORUM_GOOD) // DefaultTabs
+        } else {
+            GeneralTabListUiEvent.Refresh(tabId)                              // GeneralTabs
         }
+        emitGlobalEventSuspend(event)
     }
 
     fun onFabClicked(@ForumFAB fab: Int, currentTabId: Int) {
         when (fab) {
             ForumFAB.POST -> sendUiEvent(ForumUiEvent.AddThread(forumId = currentState.forum?.id))
 
-            ForumFAB.REFRESH -> onRefreshClicked(currentTabId)
+            ForumFAB.REFRESH -> onRefreshClicked(tabId = currentTabId)
 
-            ForumFAB.BACK_TO_TOP -> sendUiEvent(ForumUiEvent.ScrollToTop(currentTabId))
+            ForumFAB.BACK_TO_TOP -> sendUiEvent(ForumUiEvent.ScrollToTop(tabId = currentTabId))
 
             ForumFAB.HIDE -> throw IllegalStateException("Incorrect Compose state")
         }
@@ -209,7 +215,7 @@ class ForumViewModel @Inject constructor(
 
 data class ForumUiState(
     val forum: ForumData? = null,
-    val subClassifyId: Int? = null,
+    val goodClassifyId: Int? = null,
     val error: Throwable? = null
 )
 
@@ -217,7 +223,9 @@ sealed interface ForumUiEvent : UiEvent {
 
     data class AddThread(val forumId: Long?) : ForumUiEvent
 
-    data class ScrollToTop(val tabId: Int) : ForumUiEvent
+    data class ScrollToTop(val tabId: Int) : ForumUiEvent {
+        constructor(isGood: Boolean) : this(if (isGood) TAB_FORUM_GOOD else TAB_FORUM_LATEST)
+    }
 
     sealed interface SignIn : ForumUiEvent {
         data class Success(val signBonusPoint: Int, val userSignRank: Int) : SignIn

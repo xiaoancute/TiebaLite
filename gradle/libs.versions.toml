@@ -1,10 +1,12 @@
 [versions]
 accompanist = "0.37.3"
+# Local toolchain: AGP 9.2.1 / compileSdk 37 not available here yet.
+# Keep feature code from upstream; pin build to resolvable SDK/AGP.
 agp = "9.1.1"
-hilt = "2.59.2"
-kotlin = "2.3.20"
+hilt = "2.60.1"
+kotlin = "2.3.21"
 coroutines = "1.10.2"
-ksp = "2.3.6"
+ksp = "2.3.10"
 wire = "6.0.0"
 
 #noinspection UnusedVersionCatalogEntry
@@ -15,20 +17,19 @@ minSdk = "24"
 androidx-appcompat = "1.7.1"
 androidx-activity-compose = "1.13.0"
 androidx-benchmark = "1.5.0-alpha04"
-androidx-compose-bom = "2026.04.01"
+androidx-compose-bom = "2026.06.01"
 androidx-core-ktx = "1.18.0"
 androidx-material3 = "1.5.0-alpha14"
-androidx-hilt = "1.3.0"
-androidx-lifecycle = "2.10.0"
-androidx-paging = "3.4.2"
-androidx-perfetto = "1.0.0"
+androidx-hilt = "1.4.0"
+androidx-lifecycle = "2.11.0"
+androidx-paging = "3.5.0"
+androidx-perfetto = "1.0.1"
 androidx-room = "2.8.4"
 androidx-work = "2.11.2"
-androidx-media3 = "1.10.0"
-glide = "5.0.7"
-glide-compose = "1.0.0-beta09"
+androidx-media3 = "1.10.1"
+coil = "3.4.0"
 junit = "4.13.2"
-mockk = "1.14.9"
+mockk = "1.14.11"
 lottie = "6.7.1"
 retrofit2 = "3.0.0"
 
@@ -58,7 +59,7 @@ androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling
 androidx-compose-ui-util = { module = "androidx.compose.ui:ui-util" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidx-core-ktx" }
 androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version = "1.2.0" }
-androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version = "1.2.0" }
+androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version = "1.2.1" }
 
 androidx-benchmark-junit = { module = "androidx.benchmark:benchmark-macro-junit4", version.ref = "androidx-benchmark" }
 androidx-junit = { module = "androidx.test.ext:junit", version = "1.3.0" }
@@ -70,14 +71,14 @@ hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt"
 hilt-android-testing = { module = "com.google.dagger:hilt-android-testing", version.ref = "hilt" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
 
-androidx-annotation = { module = "androidx.annotation:annotation", version = "1.9.1" }
+androidx-annotation = { module = "androidx.annotation:annotation", version = "1.10.0" }
 androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-service = { module = "androidx.lifecycle:lifecycle-service", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-viewModel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-viewmodel-savedstate = { module = "androidx.lifecycle:lifecycle-viewmodel-savedstate", version.ref = "androidx-lifecycle" }
-androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version = "2.9.7" }
+androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version = "2.9.8" }
 androidx-media3-exoplayer = { module = "androidx.media3:media3-exoplayer", version.ref = "androidx-media3" }
-androidx-media3-ui-compose = { module = "androidx.media3:media3-ui-compose", version.ref = "androidx-media3" }
+androidx-media3-ui-compose = { module = "androidx.media3:media3-ui-compose-material3", version.ref = "androidx-media3" }
 androidx-palette = { module = "androidx.palette:palette-ktx", version = "1.0.0" }
 androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstaller", version = "1.4.1" }
 androidx-recyclerview = { module = "androidx.recyclerview:recyclerview", version = "1.4.0" }
@@ -120,13 +121,13 @@ lottie = { module = "com.airbnb.android:lottie", version.ref = "lottie" }
 lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottie" }
 haze-blur = { module = "dev.chrisbanes.haze:haze-android", version = "1.7.1" }
 
-glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
-glide-compose = { module = "com.github.bumptech.glide:compose", version.ref = "glide-compose" }
-glide-okhttp3-integration = { module = "com.github.bumptech.glide:okhttp3-integration", version.ref = "glide" }
-glide-ksp = { module = "com.github.bumptech.glide:ksp", version.ref = "glide" }
+coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+coil-gif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coil" }
+coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
+
 google-gson = { module = "com.google.code.gson:gson", version = "2.13.2" }
 godaddy-colorpicker = { module = "com.godaddy.android.colorpicker:compose-color-picker", version = "0.7.0" }
-squareup-okhttp3 = { module = "com.squareup.okhttp3:okhttp", version = "5.3.2" }
+squareup-okhttp3 = { module = "com.squareup.okhttp3:okhttp", version = "5.4.0" }
 squareup-retrofit2 = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit2" }
 squareup-retrofit2-wire = { module = "com.squareup.retrofit2:converter-wire", version.ref = "retrofit2" }
 subsampling-image = { module = "com.davemorrissey.labs:subsampling-scale-image-view-androidx", version = "3.10.0" }
@@ -141,6 +142,7 @@ mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 
 [bundles]
 compose-md3 = ["androidx-compose-material3", "androidx-compose-material3-navsuite"]
+coil3 = ["coil-compose", "coil-gif", "coil-network-okhttp"]
 paging3 = ["androidx-paging-runtime", "androidx-paging-common", "androidx-paging-compose"]
 
 [plugins]

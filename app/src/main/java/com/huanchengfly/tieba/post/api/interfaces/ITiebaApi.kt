@@ -1,14 +1,14 @@
 package com.huanchengfly.tieba.post.api.interfaces
 
 import com.huanchengfly.tieba.post.api.models.*
+import com.huanchengfly.tieba.post.api.models.protos.GeneralTabList.GeneralTabListResponse
 import com.huanchengfly.tieba.post.api.models.protos.addPost.AddPostResponse
-import com.huanchengfly.tieba.post.api.models.protos.addPollPost.AddPollPostResponse
+import com.huanchengfly.tieba.post.api.models.protos.addPollPost.AddPollPostReponse
 import com.huanchengfly.tieba.post.api.models.protos.forumGuide.ForumGuideResponse
 import com.huanchengfly.tieba.post.api.models.protos.forumRecommend.ForumRecommendResponse
 import com.huanchengfly.tieba.post.api.models.protos.forumRuleDetail.ForumRuleDetailResponse
 import com.huanchengfly.tieba.post.api.models.protos.frsPage.FrsPageResponse
 import com.huanchengfly.tieba.post.api.models.protos.getBawuInfo.GetBawuInfoResponse
-import com.huanchengfly.tieba.post.api.models.protos.getDislikeList.GetDislikeListResponse
 import com.huanchengfly.tieba.post.api.models.protos.getForumDetail.GetForumDetailResponse
 import com.huanchengfly.tieba.post.api.models.protos.getHistoryForum.GetHistoryForumResponse
 import com.huanchengfly.tieba.post.api.models.protos.getLevelInfo.GetLevelInfoResponse
@@ -797,13 +797,6 @@ interface ITiebaApi {
     ): Flow<CommonResponse>
 
     /**
-     * 取消首页推荐屏蔽贴吧
-     */
-    fun submitCancelDislikeForumFlow(
-        forumId: Long
-    ): Flow<CommonResponse>
-
-    /**
      * 关注用户（web 接口）
      *
      * **需登录**
@@ -1258,14 +1251,6 @@ interface ITiebaApi {
     ): Flow<HotThreadListResponse>
 
     /**
-     * 首页推荐屏蔽的贴吧列表
-     */
-    fun getDislikeListFlow(
-        page: Int,
-        pageSize: Int
-    ): Flow<GetDislikeListResponse>
-
-    /**
      * 话题榜
      */
     fun topicListFlow(): Flow<TopicListResponse>
@@ -1303,18 +1288,14 @@ interface ITiebaApi {
      * @param page 页码（从 1 开始）
      * @param loadType 加载类型（1 - 下拉刷新 2 - 加载更多）
      * @param sortType 排序
-     * @param tabId 网页 URL 里 `?tab=` 对应的分区 ID；`0` 表示默认/无分区
-     * @param isEssence 当前 tab 是否为“精华类”；是则置 `is_good=1`
-     * @param subClassifyId 精华子分类 `class_id`；仅 [isEssence]=true 时有效
+     * @param goodClassifyId 精品贴分类
      */
     fun frsPage(
         forumName: String,
         page: Int,
         loadType: Int,
         sortType: Int,
-        tabId: Int = 0,
-        isEssence: Boolean = false,
-        subClassifyId: Int? = null,
+        goodClassifyId: Int? = null
     ): Flow<FrsPageResponse>
 
     /**
@@ -1332,6 +1313,22 @@ interface ITiebaApi {
         sortType: Int,
         threadIds: String = "",
     ): Flow<ThreadListResponse>
+
+    /**
+     * 吧页面 - 通用标签列表
+     */
+    fun generalTabList(
+        forumId: Long,
+        forumName: String,
+        tabId: Int,
+        tabType: Int,
+        tabName: String,
+        isGeneralTab: Int,
+        pn: Int = 1,
+        sortType: Int = -1,
+        lastThreadId: Long = 0,
+        isDefaultNavTab: Int = 0,
+    ): Flow<GeneralTabListResponse>
 
     fun syncFlow(clientId: String? = null): Flow<Sync>
 
@@ -1510,19 +1507,6 @@ interface ITiebaApi {
     ): Flow<GetHistoryForumResponse>
 
     /**
-     * 投票
-     *
-     * @param forumId 吧 ID
-     * @param threadId 贴 ID
-     * @param options 选项 ID，多个选项用英文逗号分隔
-     */
-    fun addPollPostProtobuf(
-        forumId: Long?,
-        threadId: Long,
-        options: String,
-    ): Flow<AddPollPostResponse>
-
-    /**
      * 发帖
      * @param threadContent 帖子内容
      * @param kw 吧名
@@ -1586,4 +1570,28 @@ interface ITiebaApi {
         sortType: Int? = 3,
         callFrom: Int? = 3,
     ): Flow<ForumGuideBean>
+
+    /**
+     * 投票
+     * @param forumId 吧ID
+     * @param threadId 贴ID
+     * @param option 选项
+     */
+    fun addPollPost(
+        forumId: Long?,
+        threadId: Long,
+        option: String,
+    ): Flow<CommonResponse>
+
+    /**
+     * 投票
+     * @param forumId 吧ID
+     * @param threadId 贴ID
+     * @param option 选项
+     */
+    fun addPollPostProtobuf(
+        forumId: Long?,
+        threadId: Long,
+        option: String,
+    ): Flow<AddPollPostReponse>
 }

@@ -37,7 +37,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Verified
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.CircularProgressIndicator
@@ -94,15 +93,17 @@ import androidx.compose.ui.util.lerp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.transformations
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
-import com.bumptech.glide.integration.compose.GlideImage
 import com.huanchengfly.tieba.post.R
 import com.huanchengfly.tieba.post.arch.CommonUiEvent
 import com.huanchengfly.tieba.post.arch.collectUiEventWithLifecycle
-import com.huanchengfly.tieba.post.components.glide.BlurTransformation
+import com.huanchengfly.tieba.post.components.coil.BlurTransformation
 import com.huanchengfly.tieba.post.components.imageProcessor.ImageProcessor
 import com.huanchengfly.tieba.post.goToActivity
 import com.huanchengfly.tieba.post.models.database.UserProfile
@@ -134,6 +135,7 @@ import com.huanchengfly.tieba.post.ui.widgets.compose.CollapsingAvatarTopAppBar
 import com.huanchengfly.tieba.post.ui.widgets.compose.DialogNegativeButton
 import com.huanchengfly.tieba.post.ui.widgets.compose.DialogState
 import com.huanchengfly.tieba.post.ui.widgets.compose.FancyAnimatedIndicatorWithModifier
+import com.huanchengfly.tieba.post.ui.widgets.compose.MoreMenuItem
 import com.huanchengfly.tieba.post.ui.widgets.compose.MyScaffold
 import com.huanchengfly.tieba.post.ui.widgets.compose.PositiveButton
 import com.huanchengfly.tieba.post.ui.widgets.compose.Switch
@@ -196,11 +198,14 @@ private fun AvatarBackground(
 ) {
     val color = MaterialTheme.colorScheme.background
     val collapsedAlpha = remember(color) {
-        if (ColorUtils.isColorLight(color.toArgb())) 0.9f else 0.8f
+        if (ColorUtils.isColorLight(color.toArgb())) 0.76f else 0.92f
     }
 
-    GlideImage(
-        model = avatar,
+    AsyncImage(
+        model = ImageRequest.Builder(LocalContext.current)
+            .data(avatar)
+            .transformations(BlurTransformation(imgProcessor, 32f))
+            .build(),
         contentDescription = null,
         modifier = Modifier
             .fillMaxSize()
@@ -214,9 +219,7 @@ private fun AvatarBackground(
                 }
             },
         contentScale = ContentScale.Crop,
-    ) {
-        it.transform(BlurTransformation(imgProcessor, 120f))
-    }
+    )
 }
 
 /**
@@ -492,14 +495,9 @@ private fun UserProfileTopAppBar(
                     }
                 }
             },
-            triggerShape = CircleShape
-        ) {
-            Icon(
-                imageVector = Icons.Rounded.MoreVert,
-                contentDescription = stringResource(id = R.string.btn_more),
-                modifier = Modifier.minimumInteractiveComponentSize()
-            )
-        }
+            triggerShape = CircleShape,
+            content = MoreMenuItem,
+        )
     }
 
     val navIcon = remember {
@@ -595,11 +593,7 @@ private fun UserAvatar(modifier: Modifier = Modifier, avatar: String?, uid: Long
         Avatar(
             modifier = modifier
                 .clickableNoIndication {
-                    PhotoViewActivity.launchSinglePhoto(
-                        context,
-                        url = avatar,
-                        useTbGlideUrl = false
-                    )
+                    PhotoViewActivity.launchSinglePhoto(context, url = avatar)
                 }
                 .onNotNull(avatar) { sharedUserAvatar(uid = uid, extraKey = transitionKey) },
             data = avatar,

@@ -52,9 +52,9 @@ import com.huanchengfly.tieba.post.api.models.WebUploadPicBean
 import com.huanchengfly.tieba.post.api.models.protos.addPost.AddPostRequest
 import com.huanchengfly.tieba.post.api.models.protos.addPost.AddPostRequestData
 import com.huanchengfly.tieba.post.api.models.protos.addPost.AddPostResponse
+import com.huanchengfly.tieba.post.api.models.protos.addPollPost.AddPollPostReponse
 import com.huanchengfly.tieba.post.api.models.protos.addPollPost.AddPollPostRequest
-import com.huanchengfly.tieba.post.api.models.protos.addPollPost.AddPollPostRequestData
-import com.huanchengfly.tieba.post.api.models.protos.addPollPost.AddPollPostResponse
+import com.huanchengfly.tieba.post.api.models.protos.addPollPost.AddPollPostRequestDate
 import com.huanchengfly.tieba.post.api.models.protos.forumGuide.ForumGuideRequest
 import com.huanchengfly.tieba.post.api.models.protos.forumGuide.ForumGuideRequestData
 import com.huanchengfly.tieba.post.api.models.protos.forumGuide.ForumGuideResponse
@@ -66,13 +66,13 @@ import com.huanchengfly.tieba.post.api.models.protos.forumRuleDetail.ForumRuleDe
 import com.huanchengfly.tieba.post.api.models.protos.forumRuleDetail.ForumRuleDetailResponse
 import com.huanchengfly.tieba.post.api.models.protos.frsPage.FrsPageRequest
 import com.huanchengfly.tieba.post.api.models.protos.frsPage.FrsPageRequestData
+import com.huanchengfly.tieba.post.api.models.protos.GeneralTabList.GeneralTabListRequest
+import com.huanchengfly.tieba.post.api.models.protos.GeneralTabList.GeneralTabListRequestData
+import com.huanchengfly.tieba.post.api.models.protos.GeneralTabList.GeneralTabListResponse
 import com.huanchengfly.tieba.post.api.models.protos.frsPage.FrsPageResponse
 import com.huanchengfly.tieba.post.api.models.protos.getBawuInfo.GetBawuInfoRequest
 import com.huanchengfly.tieba.post.api.models.protos.getBawuInfo.GetBawuInfoRequestData
 import com.huanchengfly.tieba.post.api.models.protos.getBawuInfo.GetBawuInfoResponse
-import com.huanchengfly.tieba.post.api.models.protos.getDislikeList.GetDislikeListRequest
-import com.huanchengfly.tieba.post.api.models.protos.getDislikeList.GetDislikeListRequestData
-import com.huanchengfly.tieba.post.api.models.protos.getDislikeList.GetDislikeListResponse
 import com.huanchengfly.tieba.post.api.models.protos.getForumDetail.GetForumDetailRequest
 import com.huanchengfly.tieba.post.api.models.protos.getForumDetail.GetForumDetailRequestData
 import com.huanchengfly.tieba.post.api.models.protos.getForumDetail.GetForumDetailResponse
@@ -606,9 +606,6 @@ object MixedTiebaApiImpl : ITiebaApi {
     override fun submitDislikeFlow(dislikeBean: DislikeBean): Flow<CommonResponse> =
         RetrofitTiebaApi.OFFICIAL_TIEBA_API.submitDislikeFlow(listOf(dislikeBean).toJson())
 
-    override fun submitCancelDislikeForumFlow(forumId: Long): Flow<CommonResponse> =
-        RetrofitTiebaApi.OFFICIAL_TIEBA_API.submitCancelDislikeFlow(forumId)
-
     override fun follow(
         portrait: String, tbs: String
     ): Call<CommonResponse> = RetrofitTiebaApi.WEB_TIEBA_API.follow(
@@ -987,20 +984,6 @@ object MixedTiebaApiImpl : ITiebaApi {
         )
     }
 
-    override fun getDislikeListFlow(page: Int, pageSize: Int): Flow<GetDislikeListResponse> {
-        return RetrofitTiebaApi.OFFICIAL_PROTOBUF_TIEBA_API.getDislikeListFlow(
-            buildProtobufRequestBody(
-                GetDislikeListRequest(
-                    GetDislikeListRequestData(
-                        common = buildCommonRequest(),
-                        pn = page,
-                        rn = pageSize,
-                    )
-                )
-            )
-        )
-    }
-
     override fun topicListFlow(): Flow<TopicListResponse> {
         return RetrofitTiebaApi.OFFICIAL_PROTOBUF_TIEBA_API.topicListFlow(
             buildProtobufRequestBody(
@@ -1056,14 +1039,8 @@ object MixedTiebaApiImpl : ITiebaApi {
         page: Int,
         loadType: Int,
         sortType: Int,
-        tabId: Int,
-        isEssence: Boolean,
-        subClassifyId: Int?
+        goodClassifyId: Int?
     ): Flow<FrsPageResponse> {
-        // TODO: tabId 进哪个 protobuf 字段需抓包确认。先按 cid 试；
-        // 精华 tab 沿用旧路径(is_good=1 + cid=class_id)。
-        val cidValue = if (isEssence) (subClassifyId ?: 0) else tabId
-
         return RetrofitTiebaApi.OFFICIAL_PROTOBUF_TIEBA_V12_API.frsPageFlow(
             buildProtobufRequestBody(
                 FrsPageRequest(
@@ -1072,13 +1049,13 @@ object MixedTiebaApiImpl : ITiebaApi {
                         app_pos = buildAppPosInfo(),
                         call_from = 0,
                         category_id = 0,
-                        cid = cidValue,
+                        cid = goodClassifyId ?: 0,
                         common = buildCommonRequest(clientVersion = ClientVersion.TIEBA_V12),
                         ctime = 0,
                         data_size = 0,
                         hot_thread_id = 0,
-                        is_default_navtab = if (tabId == 0 && !isEssence) 1 else 0,
-                        is_good = if (isEssence) 1 else 0,
+                        is_default_navtab = 0,
+                        is_good = if (goodClassifyId != null) 1 else 0,
                         is_selection = 0,
                         kw = forumName.urlEncode(),
                         last_click_tid = 0,
@@ -1132,6 +1109,52 @@ object MixedTiebaApiImpl : ITiebaApi {
                         need_abstract = 0,
                         st_type = 0,
                         last_click_tid = 0
+                    )
+                ),
+                clientVersion = ClientVersion.TIEBA_V12
+            )
+        )
+    }
+
+    override fun generalTabList(
+        forumId: Long,
+        forumName: String,
+        tabId: Int,
+        tabType: Int,
+        tabName: String,
+        isGeneralTab: Int,
+        pn: Int,
+        sortType: Int,
+        lastThreadId: Long,
+        isDefaultNavTab: Int,
+    ): Flow<GeneralTabListResponse> {
+        return RetrofitTiebaApi.OFFICIAL_PROTOBUF_TIEBA_POST_API.generalTabListFlow(
+            buildProtobufRequestBody(
+                GeneralTabListRequest(
+                    GeneralTabListRequestData(
+                        common = buildCommonRequest(clientVersion = ClientVersion.TIEBA_V12),
+                        tab_id = tabId,
+                        forum_id = forumId,
+                        pn = pn,
+                        rn = 30,
+                        scr_w = getScreenWidth(),
+                        scr_h = getScreenHeight(),
+                        scr_dip = App.ScreenInfo.DENSITY.toInt(),
+                        last_thread_id = lastThreadId,
+                        is_default_navtab = isDefaultNavTab,
+                        tab_name = tabName,
+                        is_general_tab = isGeneralTab,
+                        sort_type = sortType,
+                        tab_type = tabType,
+                        ad_ext_params = "",
+                        ad_bear_context = "",
+                        has_ad_bear = 0,
+                        ad_bear_sid = "",
+                        ad_bear_sid_price = 0.0,
+                        request_times = 0,
+                        frs_common_info = "",
+                        is_newfrs = 1,
+                        is_video_doublerow = 0,
                     )
                 ),
                 clientVersion = ClientVersion.TIEBA_V12
@@ -1496,26 +1519,6 @@ object MixedTiebaApiImpl : ITiebaApi {
         )
     }
 
-    override fun addPollPostProtobuf(
-        forumId: Long?,
-        threadId: Long,
-        options: String,
-    ): Flow<AddPollPostResponse> {
-        return RetrofitTiebaApi.OFFICIAL_PROTOBUF_TIEBA_POST_API.addPollPostProtobuf(
-            buildProtobufRequestBody(
-                AddPollPostRequest(
-                    AddPollPostRequestData(
-                        forum_id = forumId ?: 0L,
-                        thread_id = threadId,
-                        options = options,
-                    )
-                ),
-                clientVersion = ClientVersion.TIEBA_V12_POST,
-                needSToken = true
-            )
-        )
-    }
-
     override fun addThreadFlow(
         threadContent: String,
         kw: String,
@@ -1593,4 +1596,27 @@ object MixedTiebaApiImpl : ITiebaApi {
         emit(finalBean)
     }.flowOn(Dispatchers.IO)
 
+    override fun addPollPost(forumId: Long?, threadId: Long, option: String): Flow<CommonResponse> =
+        RetrofitTiebaApi.HYBRID_TIEBA_API.addPollPost(
+            forumId,
+            threadId,
+            option
+        )
+
+    override fun addPollPostProtobuf(
+        forumId: Long?,
+        threadId: Long,
+        option: String
+    ): Flow<AddPollPostReponse> =
+        RetrofitTiebaApi.OFFICIAL_PROTOBUF_TIEBA_POST_API.addPollPostProtobuf(
+            buildProtobufRequestBody(
+                AddPollPostRequest(
+                    AddPollPostRequestDate(
+                        forum_id = forumId ?: 0L,
+                        thread_id = threadId,
+                        options = option,
+                    )
+                )
+            )
+        )
 }

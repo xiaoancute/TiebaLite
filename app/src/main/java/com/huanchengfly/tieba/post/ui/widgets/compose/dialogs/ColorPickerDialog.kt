@@ -208,7 +208,7 @@ private fun ColorHexTextField(
             singleLine = true,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 12.dp),
+                .padding(start = 6.dp),
             textStyle = MaterialTheme.typography.bodyMedium.copy(fontSize = 18.sp),
             colors = OutlinedTextFieldDefaults.colors(
                 errorCursorColor = Color.Red,
