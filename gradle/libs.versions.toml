@@ -1,8 +1,6 @@
 [versions]
 accompanist = "0.37.3"
-# Local toolchain: AGP 9.2.1 / compileSdk 37 not available here yet.
-# Keep feature code from upstream; pin build to resolvable SDK/AGP.
-agp = "9.1.1"
+agp = "9.2.1"
 hilt = "2.60.1"
 kotlin = "2.3.21"
 coroutines = "1.10.2"
@@ -10,7 +8,7 @@ ksp = "2.3.10"
 wire = "6.0.0"
 
 #noinspection UnusedVersionCatalogEntry
-compileSdk = "36"
+compileSdk = "37"
 targetSdk = "35"
 minSdk = "24"
 
