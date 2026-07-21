@@ -65,6 +65,7 @@ import com.huanchengfly.tieba.post.ui.models.Like
 import com.huanchengfly.tieba.post.ui.models.PostData
 import com.huanchengfly.tieba.post.ui.models.SubPostItemData
 import com.huanchengfly.tieba.post.ui.models.UserData
+import com.huanchengfly.tieba.post.ui.page.Destination.CopyText
 import com.huanchengfly.tieba.post.ui.page.Destination.Reply
 import com.huanchengfly.tieba.post.ui.page.Destination.SubPosts
 import com.huanchengfly.tieba.post.ui.page.Destination.Thread
@@ -326,6 +327,7 @@ private fun SubPostsContent(
                                     navigator.navigateDebounced(UserProfile(postItem.author))
                                 },
                                 onReplyClick = onReplyPostClickedListener,
+                                onMenuCopyClick = { navigator.navigate(CopyText(it)) },
                                 onMenuDeleteClick = viewModel::onDeletePost.takeIf { postItem.author.id == myUid } // Check is my Post
                             )
                             HorizontalDivider(thickness = 2.dp)

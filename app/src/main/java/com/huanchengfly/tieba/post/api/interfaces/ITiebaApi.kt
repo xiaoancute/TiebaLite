@@ -9,6 +9,7 @@ import com.huanchengfly.tieba.post.api.models.protos.forumRecommend.ForumRecomme
 import com.huanchengfly.tieba.post.api.models.protos.forumRuleDetail.ForumRuleDetailResponse
 import com.huanchengfly.tieba.post.api.models.protos.frsPage.FrsPageResponse
 import com.huanchengfly.tieba.post.api.models.protos.getBawuInfo.GetBawuInfoResponse
+import com.huanchengfly.tieba.post.api.models.protos.getDislikeList.GetDislikeListResponse
 import com.huanchengfly.tieba.post.api.models.protos.getForumDetail.GetForumDetailResponse
 import com.huanchengfly.tieba.post.api.models.protos.getHistoryForum.GetHistoryForumResponse
 import com.huanchengfly.tieba.post.api.models.protos.getLevelInfo.GetLevelInfoResponse
@@ -797,6 +798,13 @@ interface ITiebaApi {
     ): Flow<CommonResponse>
 
     /**
+     * 取消首页推荐屏蔽贴吧
+     */
+    fun submitCancelDislikeForumFlow(
+        forumId: Long
+    ): Flow<CommonResponse>
+
+    /**
      * 关注用户（web 接口）
      *
      * **需登录**
@@ -1249,6 +1257,14 @@ interface ITiebaApi {
     fun hotThreadListFlow(
         tabCode: String
     ): Flow<HotThreadListResponse>
+
+    /**
+     * 首页推荐屏蔽的贴吧列表
+     */
+    fun getDislikeListFlow(
+        page: Int,
+        pageSize: Int
+    ): Flow<GetDislikeListResponse>
 
     /**
      * 话题榜

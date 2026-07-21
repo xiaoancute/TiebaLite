@@ -82,6 +82,9 @@ sealed interface Destination {
     ): Destination
 
     @Serializable
+    data class CopyText(val text: String): Destination
+
+    @Serializable
     data class Reply(
         val forumId: Long,
         val forumName: String,
