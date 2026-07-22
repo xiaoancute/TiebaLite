@@ -45,6 +45,7 @@ import androidx.compose.material.icons.rounded.RocketLaunch
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.StarBorder
+import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.VerticalAlignTop
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.BottomSheetDefaults
@@ -177,6 +178,11 @@ private val ThreadToolbarContainerHeight = 48.dp
  * */
 private val ThreadToolbarScreenOffset = FloatingToolbarDefaults.ScreenOffset / 2
 
+private enum class ThreadBottomSheetContent {
+    Menu,
+    Enhancement,
+}
+
 const val ThreadResultKey = "THREAD_PAGE"
 
 private fun createResult(threadId: Long, like: Like?, markedPostId: Long?): ThreadResult? {
@@ -257,9 +263,11 @@ fun ThreadPage(
     val toolbarScrollBehavior = FloatingToolbarDefaults.exitAlwaysScrollBehavior(exitDirection = Bottom)
 
     var showBottomSheet by rememberSaveable { mutableStateOf(false) }
+    var bottomSheetContent by rememberSaveable { mutableStateOf(ThreadBottomSheetContent.Menu) }
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val openBottomSheet: () -> Unit = {
         coroutineScope.launch {
+            bottomSheetContent = ThreadBottomSheetContent.Menu
             showBottomSheet = true
             bottomSheetState.show()
         }
@@ -267,7 +275,10 @@ fun ThreadPage(
     val closeBottomSheet: () -> Unit = {
         coroutineScope
             .launch { bottomSheetState.hide() }
-            .invokeOnCompletion { showBottomSheet = false }
+            .invokeOnCompletion {
+                showBottomSheet = false
+                bottomSheetContent = ThreadBottomSheetContent.Menu
+            }
     }
 
     viewModel.uiEvent.collectUiEventWithLifecycle {
@@ -381,7 +392,11 @@ fun ThreadPage(
 
     val onBackPressedCallback: () -> Unit = {
         if (bottomSheetState.isVisible) {
-            closeBottomSheet()
+            if (bottomSheetContent == ThreadBottomSheetContent.Enhancement) {
+                bottomSheetContent = ThreadBottomSheetContent.Menu
+            } else {
+                closeBottomSheet()
+            }
         } else {
             val lastVisiblePost = lazyListState.middleVisiblePost(state)
             // 更新收藏楼层
@@ -518,7 +533,10 @@ fun ThreadPage(
 
             if (showBottomSheet) {
                 ModalBottomSheet(
-                    onDismissRequest = { showBottomSheet = false },
+                    onDismissRequest = {
+                        showBottomSheet = false
+                        bottomSheetContent = ThreadBottomSheetContent.Menu
+                    },
                     sheetState = bottomSheetState,
                     containerColor = Color.Transparent, // Set background for blurring
                     contentColor = MaterialTheme.colorScheme.onSurface,
@@ -531,58 +549,97 @@ fun ThreadPage(
                     }
                     val isDesc by remember { derivedStateOf { state.sortType == ThreadSortType.BY_DESC } }
 
-                    ThreadMenu(
-                        isSeeLz = state.seeLz,
-                        isCollected = state.thread?.collected == true,
-                        isImmersiveMode = viewModel.isImmersiveMode,
-                        isDesc = isDesc,
-                        replyNotificationMuted = viewModel.replyNotificationMuted,
-                        onSeeLzClick = viewModel::onSeeLzChanged,
-                        onCollectClick = {
-                            if (state.user == null) {
-                                context.toastShort(R.string.title_not_logged_in)
-                            } else if (state.thread!!.collected) {
-                                viewModel.removeFromCollections()
-                            } else {
-                                lazyListState.middleVisiblePost(state)?.let { post ->
-                                    viewModel.updateCollections(markedPost = post)
+                    val sheetModifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            start = padding.calculateStartPadding(LocalLayoutDirection.current),
+                            end = padding.calculateEndPadding(LocalLayoutDirection.current),
+                        )
+                        .onNotNull(hazeState) {
+                            hazeEffect(state = it, style = defaultHazeStyle())
+                        }
+                        .background(TiebaLiteTheme.extendedColorScheme.sheetContainerColor)
+                        .padding(top = 16.dp)
+                        .windowInsetsPadding(BottomSheetDefaults.windowInsets)
+
+                    when (bottomSheetContent) {
+                        ThreadBottomSheetContent.Menu -> ThreadMenu(
+                            isSeeLz = state.seeLz,
+                            isCollected = state.thread?.collected == true,
+                            isImmersiveMode = viewModel.isImmersiveMode,
+                            isDesc = isDesc,
+                            replyNotificationMuted = viewModel.replyNotificationMuted,
+                            onSeeLzClick = viewModel::onSeeLzChanged,
+                            onCollectClick = {
+                                if (state.user == null) {
+                                    context.toastShort(R.string.title_not_logged_in)
+                                } else if (state.thread!!.collected) {
+                                    viewModel.removeFromCollections()
+                                } else {
+                                    lazyListState.middleVisiblePost(state)?.let { post ->
+                                        viewModel.updateCollections(markedPost = post)
+                                    }
                                 }
-                            }
-                        },
-                        onImmersiveModeClick = {
-                            if (!viewModel.isImmersiveMode && !state.seeLz) {
-                                viewModel.onSeeLzChanged()
-                            }
-                            viewModel.onImmersiveModeChanged()
-                        },
-                        onDescClick = {
-                            val notDesc = state.sortType != ThreadSortType.BY_DESC
-                            val sortType = if (notDesc) ThreadSortType.BY_DESC else ThreadSortType.DEFAULT
-                            viewModel.onSortChanged(sortType)
-                        },
-                        onReplyNotificationMuteClick = viewModel::toggleReplyNotificationMuted,
-                        onShareClick = viewModel::onShareThread,
-                        onCopyLinkClick = viewModel::onCopyThreadLink,
-                        onReportClick = {
-                            coroutineScope.launch {
-                                TiebaUtil.reportPost(context, navigator, state.firstPost!!.id.toString())
-                            }
-                        },
-                        onDeleteClick = viewModel::onDeleteThread.takeIf { isMyThread },
-                        requestCloseMenu = closeBottomSheet,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(
-                                start = padding.calculateStartPadding(LocalLayoutDirection.current),
-                                end = padding.calculateEndPadding(LocalLayoutDirection.current),
-                            )
-                            .onNotNull(hazeState) {
-                                hazeEffect(state = it, style = defaultHazeStyle())
-                            }
-                            .background(TiebaLiteTheme.extendedColorScheme.sheetContainerColor)
-                            .padding(top = 16.dp)
-                            .windowInsetsPadding(BottomSheetDefaults.windowInsets)
-                    )
+                            },
+                            onImmersiveModeClick = {
+                                if (!viewModel.isImmersiveMode && !state.seeLz) {
+                                    viewModel.onSeeLzChanged()
+                                }
+                                viewModel.onImmersiveModeChanged()
+                            },
+                            onDescClick = {
+                                val notDesc = state.sortType != ThreadSortType.BY_DESC
+                                val sortType = if (notDesc) ThreadSortType.BY_DESC else ThreadSortType.DEFAULT
+                                viewModel.onSortChanged(sortType)
+                            },
+                            onReplyNotificationMuteClick = viewModel::toggleReplyNotificationMuted,
+                            onEnhancementClick = {
+                                bottomSheetContent = ThreadBottomSheetContent.Enhancement
+                            },
+                            onShareClick = viewModel::onShareThread,
+                            onCopyLinkClick = viewModel::onCopyThreadLink,
+                            onReportClick = {
+                                coroutineScope.launch {
+                                    TiebaUtil.reportPost(context, navigator, state.firstPost!!.id.toString())
+                                }
+                            },
+                            onDeleteClick = viewModel::onDeleteThread.takeIf { isMyThread },
+                            requestCloseMenu = closeBottomSheet,
+                            modifier = sheetModifier,
+                        )
+
+                        ThreadBottomSheetContent.Enhancement -> ThreadEnhancementPanel(
+                            state = remember(
+                                state.firstPost,
+                                state.data,
+                                state.latestPosts,
+                                state.sortType,
+                            ) {
+                                state.toThreadEnhancementState()
+                            },
+                            onPostClick = { post ->
+                                val targetIndex = state.threadListIndexOf(post.listKey)
+                                closeBottomSheet()
+                                if (targetIndex == null) {
+                                    context.toastShort(R.string.toast_thread_enhancement_post_missing)
+                                } else {
+                                    coroutineScope.launch {
+                                        try {
+                                            lazyListState.animateScrollToItem(targetIndex)
+                                        } catch (_: IllegalArgumentException) {
+                                            context.toastShort(R.string.toast_thread_enhancement_post_missing)
+                                        } catch (_: IndexOutOfBoundsException) {
+                                            context.toastShort(R.string.toast_thread_enhancement_post_missing)
+                                        }
+                                    }
+                                }
+                            },
+                            onBack = {
+                                bottomSheetContent = ThreadBottomSheetContent.Menu
+                            },
+                            modifier = sheetModifier,
+                        )
+                    }
                 }
             }
         }
@@ -639,6 +696,7 @@ private fun ThreadMenu(
     onImmersiveModeClick: () -> Unit,
     onDescClick: () -> Unit,
     onReplyNotificationMuteClick: () -> Unit,
+    onEnhancementClick: () -> Unit,
     onShareClick: () -> Unit,
     onCopyLinkClick: () -> Unit,
     onReportClick: () -> Unit,
@@ -714,6 +772,12 @@ private fun ThreadMenu(
             }
         }
         Column {
+            ListMenuItem(
+                icon = Icons.Rounded.Tune,
+                text = stringResource(id = R.string.title_thread_enhancement),
+                onClick = onEnhancementClick,
+                modifier = Modifier.fillMaxWidth(),
+            )
             ListMenuItem(
                 icon = Icons.Rounded.Share,
                 text = stringResource(id = R.string.title_share),

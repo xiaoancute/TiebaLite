@@ -101,7 +101,7 @@ import java.text.NumberFormat
 import kotlin.time.Instant
 
 sealed class Type(val key: String) {
-    object FirstPost: Type("FirstPost")
+    object FirstPost: Type(THREAD_FIRST_POST_LIST_KEY)
     object Header: Type("ThreadHeader")
     object LoadPrevious: Type("LoadPreviousBtn")
     object Post: Type("") // Use PostData.id as item key
@@ -371,7 +371,7 @@ fun StateScreenScope.ThreadContent(
             }
 
             if (state.sortType == ThreadSortType.BY_DESC && !latestPosts.isNullOrEmpty()) {
-                items(items = latestPosts, key = { post -> "LatestPost_${post.id}" }) { post ->
+                items(items = latestPosts, key = { post -> latestPostListKey(post.id) }) { post ->
                     PostCardItem(viewModel, post, localUid, collectPid)
                 }
                 postTipItem(isDesc = true)    // DESC tip on bottom
@@ -401,7 +401,7 @@ fun StateScreenScope.ThreadContent(
 
             if (state.sortType != ThreadSortType.BY_DESC && !latestPosts.isNullOrEmpty()) {
                 postTipItem(isDesc = false)  // ASC Tip on top
-                items(items = latestPosts, key = { post -> "LatestPost_${post.id}" }) { post ->
+                items(items = latestPosts, key = { post -> latestPostListKey(post.id) }) { post ->
                     PostCardItem(viewModel, post, localUid, collectPid)
                 }
             }
