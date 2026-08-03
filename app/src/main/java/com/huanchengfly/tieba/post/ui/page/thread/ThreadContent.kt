@@ -62,6 +62,7 @@ import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.huanchengfly.tieba.post.MacrobenchmarkConstant.testColumn
 import com.huanchengfly.tieba.post.PaddingNone
+import com.huanchengfly.tieba.post.LocalHabitSettings
 import com.huanchengfly.tieba.post.R
 import com.huanchengfly.tieba.post.api.models.protos.PollOption
 import com.huanchengfly.tieba.post.navigateDebounced
@@ -316,6 +317,7 @@ fun StateScreenScope.ThreadContent(
             isLoading = isLoadingMore,
             onLoad = onSwipeUpRefresh,
             onLazyLoad = viewModel::requestLoadMore.takeIf { hasMore && state.data.isNotEmpty() },
+            preloadNextPage = LocalHabitSettings.current.preloadNextPage,
             bottomIndicator = {
                 if (onSwipeUpRefresh == null) {
                     defaultBottomIndicator(this, it)

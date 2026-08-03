@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.huanchengfly.tieba.post.LocalHabitSettings
 import com.huanchengfly.tieba.post.api.models.SearchThreadBean.ForumInfo
 import com.huanchengfly.tieba.post.arch.collectCommonUiEventWithLifecycle
 import com.huanchengfly.tieba.post.navigateDebounced
@@ -86,6 +87,7 @@ fun SearchThreadPage(
                 isLoading = isLoadingMore,
                 onLoad = onLazyLoad,
                 onLazyLoad = onLazyLoad.takeIf { uiState.hasMore },
+                preloadNextPage = LocalHabitSettings.current.preloadNextPage,
                 bottomIndicator = {
                     LoadMoreIndicator(noMore = !uiState.hasMore, onThreshold = it)
                 }
