@@ -23,6 +23,7 @@ import androidx.compose.ui.util.fastForEach
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.huanchengfly.tieba.post.PaddingNone
+import com.huanchengfly.tieba.post.LocalHabitSettings
 import com.huanchengfly.tieba.post.arch.collectPartialAsState
 import com.huanchengfly.tieba.post.navigateDebounced
 import com.huanchengfly.tieba.post.ui.models.user.PostContent
@@ -97,6 +98,7 @@ fun UserPostPage(
                 state = lazyListState,
                 isLoading = isLoadingMore,
                 onLazyLoad = viewModel::onLoadMore.takeIf { hasMore },
+                preloadNextPage = LocalHabitSettings.current.preloadNextPage,
                 bottomIndicator = defaultBottomIndicator,
             ) {
                 itemsIndexed(data, key = { _, it -> it.lazyListKey }) { i, post ->

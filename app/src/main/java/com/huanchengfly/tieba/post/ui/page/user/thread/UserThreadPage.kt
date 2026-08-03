@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.huanchengfly.tieba.post.PaddingNone
+import com.huanchengfly.tieba.post.LocalHabitSettings
 import com.huanchengfly.tieba.post.R
 import com.huanchengfly.tieba.post.arch.collectPartialAsState
 import com.huanchengfly.tieba.post.arch.onGlobalEvent
@@ -99,6 +100,7 @@ fun UserThreadPage(
                 state = lazyListState,
                 isLoading = isLoadingMore,
                 onLazyLoad = viewModel::onLoadMore.takeIf { hasMore },
+                preloadNextPage = LocalHabitSettings.current.preloadNextPage,
                 bottomIndicator = defaultBottomIndicator,
             ) {
                 itemsIndexed(data, key = { _, it -> it.id }, ThreadContentType) { i, thread ->

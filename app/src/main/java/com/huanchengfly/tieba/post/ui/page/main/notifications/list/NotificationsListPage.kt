@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.huanchengfly.tieba.post.PaddingNone
+import com.huanchengfly.tieba.post.LocalHabitSettings
 import com.huanchengfly.tieba.post.R
 import com.huanchengfly.tieba.post.api.Error
 import com.huanchengfly.tieba.post.api.retrofit.exception.getErrorCode
@@ -127,6 +128,7 @@ private fun NotificationsListContent(
             contentPadding = contentPadding,
             isLoading = isLoadingMore,
             onLazyLoad = onLoadMore.takeIf { uiState.hasMore },
+            preloadNextPage = LocalHabitSettings.current.preloadNextPage,
             bottomIndicator = defaultBottomIndicator,
         ) {
             items(items = uiState.data, key = { it.lazyListItemKey }) { info ->

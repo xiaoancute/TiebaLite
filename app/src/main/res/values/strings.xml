@@ -200,7 +200,7 @@
     <string name="title_settings_search_thread_sort_type">搜贴默认排序方式</string>
     <string name="title_settings_forum_search_post_sort_type">吧内搜贴默认排序方式</string>
     <string name="title_preload_next_page">预加载下一页</string>
-    <string name="summary_preload_next_page">接近列表底部时提前加载，减少继续下滑时的等待</string>
+    <string name="summary_preload_next_page">在帖子、搜索、个人信息流和消息等列表接近底部时提前加载下一页，减少继续下滑时的等待</string>
     <string name="toast_load_failed">加载失败</string>
     <string name="button_undo">撤销</string>
     <string name="title_reduce_effect">降低模糊效果</string>

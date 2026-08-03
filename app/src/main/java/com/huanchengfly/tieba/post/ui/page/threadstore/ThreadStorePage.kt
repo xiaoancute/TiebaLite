@@ -145,6 +145,7 @@ fun ThreadStorePage(
                     isLoading = isLoadingMore,
                     onLoad = viewModel::onLoadMore,
                     onLazyLoad = viewModel::onLoadMore.takeIf { hasMore },
+                    preloadNextPage = habit.preloadNextPage,
                     bottomIndicator = {
                         LoadMoreIndicator(noMore = !hasMore, onThreshold = it)
                     }

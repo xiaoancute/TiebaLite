@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.huanchengfly.tieba.post.PaddingNone
+import com.huanchengfly.tieba.post.LocalHabitSettings
 import com.huanchengfly.tieba.post.api.models.UserLikeForumBean
 import com.huanchengfly.tieba.post.api.retrofit.exception.TiebaNotLoggedInException
 import com.huanchengfly.tieba.post.arch.collectPartialAsState
@@ -101,6 +102,7 @@ fun UserLikeForumPage(
                 onLazyLoad = {
                     viewModel.send(UserLikeForumUiIntent.LoadMore(uid, currentPage))
                 }.takeIf { hasMore },
+                preloadNextPage = LocalHabitSettings.current.preloadNextPage,
                 bottomIndicator = defaultBottomIndicator,
             ) {
                 items(items = forums, key = { it.id }) { forumBean ->
