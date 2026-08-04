@@ -244,6 +244,7 @@ fun SettingsSegmentedPrefsScope<UISettings>.reduceEffectPreference() {
     toggleablePreference(
         property = UISettings::reduceEffect,
         title = R.string.title_reduce_effect,
+        summary = R.string.summary_reduce_effect,
         leadingIcon = Icons.Outlined.BlurOn,
     )
 }
