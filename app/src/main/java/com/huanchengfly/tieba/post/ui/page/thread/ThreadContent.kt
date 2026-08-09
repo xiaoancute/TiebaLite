@@ -473,7 +473,6 @@ private fun PostCardItem(viewModel: ThreadViewModel, post: PostData, localUid: L
     if (loggedIn) {
         PostCard(
             post = post,
-            immersiveMode = viewModel.isImmersiveMode,
             isCollected = post.id == collectPid,
             onUserClick = onUserClickedListener,
             onLikeClick = viewModel::onPostLikeClicked,
@@ -498,7 +497,6 @@ private fun PostCardItem(viewModel: ThreadViewModel, post: PostData, localUid: L
     } else {
         PostCard(
             post = post,
-            immersiveMode = viewModel.isImmersiveMode,
             onUserClick = onUserClickedListener,
             onLikeClick = viewModel::onPostLikeClicked,
             onOpenSubPosts = { subPostId -> viewModel.onOpenSubPost(post, subPostId) },
@@ -602,7 +600,6 @@ private fun SubPostBlockedTip(modifier: Modifier = Modifier) {
 @Composable
 fun PostCard(
     post: PostData,
-    immersiveMode: Boolean = false,
     isCollected: Boolean = false,
     onUserClick: () -> Unit = {},
     onLikeClick: ((PostData) -> Unit)? = null,
@@ -617,7 +614,7 @@ fun PostCard(
     val navigator = LocalNavController.current
     val coroutineScope = rememberCoroutineScope()
 
-    val hasPadding = post.floor > 1 && !immersiveMode
+    val hasPadding = post.floor > 1
     val paddingModifier = if (hasPadding) Modifier.padding(start = Sizes.Small + 8.dp) else Modifier
     val author = post.author
     val showTitle = post.title != null && post.floor <= 1
@@ -630,7 +627,7 @@ fun PostCard(
                 Text(stringResource(id = R.string.tip_blocked_post, post.floor))
             }
         },
-        hideBlockedContent = immersiveMode,
+        hideBlockedContent = false,
     ) {
         LongClickMenu(
             shape = MaterialTheme.shapes.medium,
@@ -661,7 +658,6 @@ fun PostCard(
         ) {
             Card(
                 header = {
-                    if (immersiveMode) return@Card
                     SharedTransitionUserHeader(
                         author = author,
                         desc = remember { post.getDescText(context) },
@@ -703,7 +699,7 @@ fun PostCard(
                         post.contentRenders.fastForEach { it.Render() }
                     }
 
-                    if (post.subPosts == null || post.subPostNumber <= 0 || immersiveMode) return@Card
+                    if (post.subPosts == null || post.subPostNumber <= 0) return@Card
 
                     Surface(
                         modifier = paddingModifier,

@@ -28,20 +28,14 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ChromeReaderMode
-import androidx.compose.material.icons.automirrored.rounded.ChromeReaderMode
-import androidx.compose.material.icons.automirrored.rounded.Sort
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Delete
-import androidx.compose.material.icons.rounded.Face6
-import androidx.compose.material.icons.rounded.FaceRetouchingOff
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.NotificationsOff
 import androidx.compose.material.icons.rounded.Report
-import androidx.compose.material.icons.rounded.RocketLaunch
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.StarBorder
@@ -82,7 +76,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -92,7 +85,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -147,12 +139,10 @@ import com.huanchengfly.tieba.post.ui.widgets.compose.DialogNegativeButton
 import com.huanchengfly.tieba.post.ui.widgets.compose.ListMenuItem
 import com.huanchengfly.tieba.post.ui.widgets.compose.LocalHazeState
 import com.huanchengfly.tieba.post.ui.widgets.compose.PlainTooltipBox
-import com.huanchengfly.tieba.post.ui.widgets.compose.PromptDialog
 import com.huanchengfly.tieba.post.ui.widgets.compose.ProvideContentColor
 import com.huanchengfly.tieba.post.ui.widgets.compose.StickyHeaderOverlay
 import com.huanchengfly.tieba.post.ui.widgets.compose.StrongBox
 import com.huanchengfly.tieba.post.ui.widgets.compose.SwipeToDismissSnackbarHost
-import com.huanchengfly.tieba.post.ui.widgets.compose.VerticalGrid
 import com.huanchengfly.tieba.post.ui.widgets.compose.collapsedFraction
 import com.huanchengfly.tieba.post.ui.widgets.compose.defaultHazeStyle
 import com.huanchengfly.tieba.post.ui.widgets.compose.defaultInputScale
@@ -190,37 +180,6 @@ private fun createResult(threadId: Long, like: Like?, markedPostId: Long?): Thre
         ThreadResult(threadId, liked = like.liked, likes = like.count, markedPostId = markedPostId)
     } else {
         null
-    }
-}
-
-@Composable
-private fun ToggleButton(
-    text: String,
-    checked: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    icon: ImageVector,
-) {
-    val colorScheme = MaterialTheme.colorScheme
-
-    Surface(
-        onClick = onClick,
-        modifier = modifier,
-        shape = MaterialTheme.shapes.small,
-        color = if (checked) colorScheme.secondaryContainer else colorScheme.surfaceContainerHigh,
-        contentColor = if (checked) colorScheme.onSecondaryContainer else colorScheme.onSurface,
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.CenterHorizontally)
-        ) {
-            Icon(imageVector = icon, contentDescription = text)
-            Text(
-                text = text,
-                fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.labelLarge
-            )
-        }
     }
 }
 
@@ -361,26 +320,16 @@ fun ThreadPage(
         onCancel = viewModel::onDeleteCancelled
     )
 
-    val jumpToPageDialogState = rememberDialogState()
-    PromptDialog(
-        onConfirm = {
-            viewModel.requestLoad(it.toInt())
-        },
-        dialogState = jumpToPageDialogState,
-        keyboardType = KeyboardType.Number,
-        isError = {
-            it.isEmpty() || (it.toIntOrNull() ?: -1) !in 1..state.pageData.total
-        },
-        title = { Text(text = stringResource(id = R.string.title_jump_page)) },
-        content = {
-            with(state.pageData) {
-                Text(text = stringResource(R.string.tip_jump_page, current, total))
-            }
-        }
-    )
-
     val onRefreshClicked: () -> Unit = {
         viewModel.requestLoad(0, postId)
+    }
+
+    val onCollectClicked: () -> Unit = {
+        when {
+            state.user == null -> context.toastShort(R.string.title_not_logged_in)
+            state.thread?.collected == true -> viewModel.removeFromCollections()
+            else -> lazyListState.middleVisiblePost(state)?.let(viewModel::updateCollections)
+        }
     }
 
     state.thread?.let { thread ->
@@ -500,7 +449,8 @@ fun ThreadPage(
                         user = state.user,
                         onClickReply = viewModel::onReplyThread.takeUnless { viewModel.hideReply },
                         onClickMore =  openBottomSheet,
-                        onJumpPage = jumpToPageDialogState::show,
+                        isCollected = state.thread?.collected == true,
+                        onCollect = onCollectClicked,
                         like = state.thread?.like ?: LikeZero,
                         onLiked = viewModel::onThreadLikeClicked,
                         scrollBehavior = toolbarScrollBehavior
@@ -547,8 +497,6 @@ fun ThreadPage(
                     val isMyThread by remember(state.lz) {
                         derivedStateOf { state.user != null && state.lz?.id == state.user?.id }
                     }
-                    val isDesc by remember { derivedStateOf { state.sortType == ThreadSortType.BY_DESC } }
-
                     val sheetModifier = Modifier
                         .fillMaxWidth()
                         .padding(
@@ -564,34 +512,7 @@ fun ThreadPage(
 
                     when (bottomSheetContent) {
                         ThreadBottomSheetContent.Menu -> ThreadMenu(
-                            isSeeLz = state.seeLz,
-                            isCollected = state.thread?.collected == true,
-                            isImmersiveMode = viewModel.isImmersiveMode,
-                            isDesc = isDesc,
                             replyNotificationMuted = viewModel.replyNotificationMuted,
-                            onSeeLzClick = viewModel::onSeeLzChanged,
-                            onCollectClick = {
-                                if (state.user == null) {
-                                    context.toastShort(R.string.title_not_logged_in)
-                                } else if (state.thread!!.collected) {
-                                    viewModel.removeFromCollections()
-                                } else {
-                                    lazyListState.middleVisiblePost(state)?.let { post ->
-                                        viewModel.updateCollections(markedPost = post)
-                                    }
-                                }
-                            },
-                            onImmersiveModeClick = {
-                                if (!viewModel.isImmersiveMode && !state.seeLz) {
-                                    viewModel.onSeeLzChanged()
-                                }
-                                viewModel.onImmersiveModeChanged()
-                            },
-                            onDescClick = {
-                                val notDesc = state.sortType != ThreadSortType.BY_DESC
-                                val sortType = if (notDesc) ThreadSortType.BY_DESC else ThreadSortType.DEFAULT
-                                viewModel.onSortChanged(sortType)
-                            },
                             onReplyNotificationMuteClick = viewModel::toggleReplyNotificationMuted,
                             onEnhancementClick = {
                                 bottomSheetContent = ThreadBottomSheetContent.Enhancement
@@ -686,15 +607,7 @@ private fun ForumTitleChip(forum: SimpleForum, onForumClick: () -> Unit) {
 
 @Composable
 private fun ThreadMenu(
-    isSeeLz: Boolean,
-    isCollected: Boolean,
-    isImmersiveMode: Boolean,
-    isDesc: Boolean,
     replyNotificationMuted: Boolean,
-    onSeeLzClick: () -> Unit,
-    onCollectClick: () -> Unit,
-    onImmersiveModeClick: () -> Unit,
-    onDescClick: () -> Unit,
     onReplyNotificationMuteClick: () -> Unit,
     onEnhancementClick: () -> Unit,
     onShareClick: () -> Unit,
@@ -715,62 +628,6 @@ private fun ThreadMenu(
                 .fillMaxWidth(0.2f)
                 .background(color = MaterialTheme.colorScheme.onSurfaceVariant, shape = CircleShape)
         )
-        VerticalGrid(
-            column = 2,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            rowModifier = Modifier.height(IntrinsicSize.Min),
-            modifier = Modifier.padding(horizontal = 16.dp),
-        ) {
-            item {
-                ToggleButton(
-                    text = stringResource(id = R.string.title_see_lz),
-                    checked = isSeeLz,
-                    onClick = {
-                        requestCloseMenu()
-                        onSeeLzClick()
-                    },
-                    icon = if (isSeeLz) Icons.Rounded.Face6 else Icons.Rounded.FaceRetouchingOff,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-            item {
-                ToggleButton(
-                    text = stringResource(id = if (isCollected) R.string.title_collected else R.string.title_uncollected),
-                    checked = isCollected,
-                    onClick = {
-                        requestCloseMenu()
-                        onCollectClick()
-                    },
-                    icon = if (isCollected) Icons.Rounded.Star else Icons.Rounded.StarBorder,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-            item {
-                ToggleButton(
-                    text = stringResource(id = R.string.title_pure_read),
-                    checked = isImmersiveMode,
-                    onClick = {
-                        requestCloseMenu()
-                        onImmersiveModeClick()
-                    },
-                    icon = if (isImmersiveMode) Icons.AutoMirrored.Rounded.ChromeReaderMode else Icons.AutoMirrored.Outlined.ChromeReaderMode,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-            item {
-                ToggleButton(
-                    text = stringResource(id = R.string.title_sort),
-                    checked = isDesc,
-                    onClick = {
-                        requestCloseMenu()
-                        onDescClick()
-                    },
-                    icon = Icons.AutoMirrored.Rounded.Sort,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-        }
         Column {
             ListMenuItem(
                 icon = Icons.Rounded.Tune,
@@ -949,7 +806,8 @@ private fun ThreadFloatingToolbar(
     user: UserData? = null,
     onClickReply: (() -> Unit)? = null,
     onClickMore: () -> Unit = {},
-    onJumpPage: () -> Unit = {},
+    isCollected: Boolean = false,
+    onCollect: () -> Unit = {},
     like: Like = LikeZero,
     onLiked: () -> Unit = {},
     scrollBehavior: FloatingToolbarScrollBehavior? = null,
@@ -1008,10 +866,12 @@ private fun ThreadFloatingToolbar(
             }
 
             ActionItem(
-                icon = Icons.Rounded.RocketLaunch,
-                contentDescription = stringResource(R.string.title_jump_page),
+                icon = if (isCollected) Icons.Rounded.Star else Icons.Rounded.StarBorder,
+                contentDescription = stringResource(
+                    if (isCollected) R.string.title_collected else R.string.title_uncollected
+                ),
                 positionProvider = rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
-                onClick = onJumpPage,
+                onClick = onCollect,
             )
 
             LikeAction(like = like, onClick = onLiked)
