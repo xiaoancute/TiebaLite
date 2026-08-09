@@ -870,7 +870,6 @@ private fun ThreadFloatingToolbar(
                 contentDescription = stringResource(
                     if (isCollected) R.string.title_collected else R.string.title_uncollected
                 ),
-                activated = isCollected,
                 positionProvider = rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
                 onClick = onCollect,
             )
