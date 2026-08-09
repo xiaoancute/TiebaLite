@@ -381,6 +381,14 @@ fun ThreadPage(
         viewModel.requestLoad(0, postId)
     }
 
+    val onCollectClicked: () -> Unit = {
+        when {
+            state.user == null -> context.toastShort(R.string.title_not_logged_in)
+            state.thread?.collected == true -> viewModel.removeFromCollections()
+            else -> lazyListState.middleVisiblePost(state)?.let(viewModel::updateCollections)
+        }
+    }
+
     state.thread?.let { thread ->
         LaunchedEffect(thread.like, thread.collectMarkPid, newMarkedCollectionPost?.id) {
             val markedPostId = newMarkedCollectionPost?.id ?: thread.collectMarkPid
@@ -498,7 +506,8 @@ fun ThreadPage(
                         user = state.user,
                         onClickReply = viewModel::onReplyThread.takeUnless { viewModel.hideReply },
                         onClickMore =  openBottomSheet,
-                        onJumpPage = jumpToPageDialogState::show,
+                        isCollected = state.thread?.collected == true,
+                        onCollect = onCollectClicked,
                         like = state.thread?.like ?: LikeZero,
                         onLiked = viewModel::onThreadLikeClicked,
                         scrollBehavior = toolbarScrollBehavior
@@ -563,26 +572,15 @@ fun ThreadPage(
                     when (bottomSheetContent) {
                         ThreadBottomSheetContent.Menu -> ThreadMenu(
                             isSeeLz = state.seeLz,
-                            isCollected = state.thread?.collected == true,
                             isDesc = isDesc,
                             replyNotificationMuted = viewModel.replyNotificationMuted,
                             onSeeLzClick = viewModel::onSeeLzChanged,
-                            onCollectClick = {
-                                if (state.user == null) {
-                                    context.toastShort(R.string.title_not_logged_in)
-                                } else if (state.thread!!.collected) {
-                                    viewModel.removeFromCollections()
-                                } else {
-                                    lazyListState.middleVisiblePost(state)?.let { post ->
-                                        viewModel.updateCollections(markedPost = post)
-                                    }
-                                }
-                            },
                             onDescClick = {
                                 val notDesc = state.sortType != ThreadSortType.BY_DESC
                                 val sortType = if (notDesc) ThreadSortType.BY_DESC else ThreadSortType.DEFAULT
                                 viewModel.onSortChanged(sortType)
                             },
+                            onJumpPageClick = jumpToPageDialogState::show,
                             onReplyNotificationMuteClick = viewModel::toggleReplyNotificationMuted,
                             onEnhancementClick = {
                                 bottomSheetContent = ThreadBottomSheetContent.Enhancement
@@ -678,12 +676,11 @@ private fun ForumTitleChip(forum: SimpleForum, onForumClick: () -> Unit) {
 @Composable
 private fun ThreadMenu(
     isSeeLz: Boolean,
-    isCollected: Boolean,
     isDesc: Boolean,
     replyNotificationMuted: Boolean,
     onSeeLzClick: () -> Unit,
-    onCollectClick: () -> Unit,
     onDescClick: () -> Unit,
+    onJumpPageClick: () -> Unit,
     onReplyNotificationMuteClick: () -> Unit,
     onEnhancementClick: () -> Unit,
     onShareClick: () -> Unit,
@@ -725,18 +722,6 @@ private fun ThreadMenu(
             }
             item {
                 ToggleButton(
-                    text = stringResource(id = if (isCollected) R.string.title_collected else R.string.title_uncollected),
-                    checked = isCollected,
-                    onClick = {
-                        requestCloseMenu()
-                        onCollectClick()
-                    },
-                    icon = if (isCollected) Icons.Rounded.Star else Icons.Rounded.StarBorder,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-            item {
-                ToggleButton(
                     text = stringResource(id = R.string.title_sort),
                     checked = isDesc,
                     onClick = {
@@ -749,6 +734,15 @@ private fun ThreadMenu(
             }
         }
         Column {
+            ListMenuItem(
+                icon = Icons.Rounded.RocketLaunch,
+                text = stringResource(id = R.string.title_jump_page),
+                onClick = {
+                    requestCloseMenu()
+                    onJumpPageClick()
+                },
+                modifier = Modifier.fillMaxWidth(),
+            )
             ListMenuItem(
                 icon = Icons.Rounded.Tune,
                 text = stringResource(id = R.string.title_thread_enhancement),
@@ -926,7 +920,8 @@ private fun ThreadFloatingToolbar(
     user: UserData? = null,
     onClickReply: (() -> Unit)? = null,
     onClickMore: () -> Unit = {},
-    onJumpPage: () -> Unit = {},
+    isCollected: Boolean = false,
+    onCollect: () -> Unit = {},
     like: Like = LikeZero,
     onLiked: () -> Unit = {},
     scrollBehavior: FloatingToolbarScrollBehavior? = null,
@@ -985,10 +980,13 @@ private fun ThreadFloatingToolbar(
             }
 
             ActionItem(
-                icon = Icons.Rounded.RocketLaunch,
-                contentDescription = stringResource(R.string.title_jump_page),
+                icon = if (isCollected) Icons.Rounded.Star else Icons.Rounded.StarBorder,
+                contentDescription = stringResource(
+                    if (isCollected) R.string.title_collected else R.string.title_uncollected
+                ),
+                activated = isCollected,
                 positionProvider = rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
-                onClick = onJumpPage,
+                onClick = onCollect,
             )
 
             LikeAction(like = like, onClick = onLiked)
