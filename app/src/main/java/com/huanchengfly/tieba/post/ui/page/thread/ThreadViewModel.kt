@@ -98,9 +98,6 @@ class ThreadViewModel @Inject constructor(
     private val _deletePost: MutableStateFlow<PostData?> = MutableStateFlow(null)
     val deletePost: StateFlow<PostData?> = _deletePost.asStateFlow()
 
-    var isImmersiveMode by mutableStateOf(false)
-        private set
-
     var hideReply by mutableStateOf(false)
         private set
 
@@ -627,13 +624,6 @@ class ThreadViewModel @Inject constructor(
         val link = "https://tieba.baidu.com/p/$threadId?see_lz=${seeLz.booleanToString()}"
         TiebaUtil.copyText(context = context, text = link)
         ClipBoardLinkDetector.onCopyTiebaLink(link)
-    }
-
-    fun onImmersiveModeChanged() {
-        if (!isImmersiveMode && !currentState.seeLz) {
-            onSeeLzChanged()
-        }
-        isImmersiveMode = !isImmersiveMode
     }
 
     fun onReplyThread() = sendUiEvent(

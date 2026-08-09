@@ -28,8 +28,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ChromeReaderMode
-import androidx.compose.material.icons.automirrored.rounded.ChromeReaderMode
 import androidx.compose.material.icons.automirrored.rounded.Sort
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Delete
@@ -566,7 +564,6 @@ fun ThreadPage(
                         ThreadBottomSheetContent.Menu -> ThreadMenu(
                             isSeeLz = state.seeLz,
                             isCollected = state.thread?.collected == true,
-                            isImmersiveMode = viewModel.isImmersiveMode,
                             isDesc = isDesc,
                             replyNotificationMuted = viewModel.replyNotificationMuted,
                             onSeeLzClick = viewModel::onSeeLzChanged,
@@ -580,12 +577,6 @@ fun ThreadPage(
                                         viewModel.updateCollections(markedPost = post)
                                     }
                                 }
-                            },
-                            onImmersiveModeClick = {
-                                if (!viewModel.isImmersiveMode && !state.seeLz) {
-                                    viewModel.onSeeLzChanged()
-                                }
-                                viewModel.onImmersiveModeChanged()
                             },
                             onDescClick = {
                                 val notDesc = state.sortType != ThreadSortType.BY_DESC
@@ -688,12 +679,10 @@ private fun ForumTitleChip(forum: SimpleForum, onForumClick: () -> Unit) {
 private fun ThreadMenu(
     isSeeLz: Boolean,
     isCollected: Boolean,
-    isImmersiveMode: Boolean,
     isDesc: Boolean,
     replyNotificationMuted: Boolean,
     onSeeLzClick: () -> Unit,
     onCollectClick: () -> Unit,
-    onImmersiveModeClick: () -> Unit,
     onDescClick: () -> Unit,
     onReplyNotificationMuteClick: () -> Unit,
     onEnhancementClick: () -> Unit,
@@ -743,18 +732,6 @@ private fun ThreadMenu(
                         onCollectClick()
                     },
                     icon = if (isCollected) Icons.Rounded.Star else Icons.Rounded.StarBorder,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-            item {
-                ToggleButton(
-                    text = stringResource(id = R.string.title_pure_read),
-                    checked = isImmersiveMode,
-                    onClick = {
-                        requestCloseMenu()
-                        onImmersiveModeClick()
-                    },
-                    icon = if (isImmersiveMode) Icons.AutoMirrored.Rounded.ChromeReaderMode else Icons.AutoMirrored.Outlined.ChromeReaderMode,
                     modifier = Modifier.fillMaxSize()
                 )
             }
