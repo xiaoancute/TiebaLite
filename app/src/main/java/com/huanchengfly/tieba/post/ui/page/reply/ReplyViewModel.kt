@@ -38,6 +38,7 @@ import com.huanchengfly.tieba.post.ui.models.settings.HabitSettings
 import com.huanchengfly.tieba.post.ui.page.Destination
 import com.huanchengfly.tieba.post.utils.Emoticon
 import com.huanchengfly.tieba.post.utils.EmoticonManager
+import com.huanchengfly.tieba.post.utils.GsonUtil
 import com.huanchengfly.tieba.post.utils.StringUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -335,9 +336,10 @@ class ReplyViewModel @Inject constructor(
 
     suspend fun getDraft(): ReplyDraft? {
         if (!draftLoaded) {
-            draftDao.getByIds(threadId, postId ?: 0, subPostId ?: 0)?.let { draft ->
-                userDraft = draft.content.orEmpty()
-                userDraftTitle = draft.title.orEmpty()
+            draftDao.getByIds(threadId, postId ?: 0, subPostId ?: 0).firstOrNull()?.let { stored ->
+                val draft = stored.decodeReplyDraft()
+                userDraft = draft.content
+                userDraftTitle = draft.title
             }
             draftLoaded = true
         }
@@ -376,8 +378,7 @@ class ReplyViewModel @Inject constructor(
                     threadId,
                     postId ?: 0,
                     subPostId ?: 0,
-                    content,
-                    title.takeIf { it.isNotBlank() },
+                    ReplyDraft(title, content).encodeForStorage(),
                 )
             )
         }
@@ -438,6 +439,23 @@ data class ReplyDraft(
     val title: String,
     val content: String,
 )
+
+private fun ReplyDraft.encodeForStorage(): String {
+    if (title.isBlank()) return content
+    return DRAFT_PAYLOAD_PREFIX + GsonUtil.getGson().toJson(this)
+}
+
+private fun String.decodeReplyDraft(): ReplyDraft {
+    if (!startsWith(DRAFT_PAYLOAD_PREFIX)) return ReplyDraft(title = "", content = this)
+    return runCatching {
+        GsonUtil.getGson().fromJson(
+            removePrefix(DRAFT_PAYLOAD_PREFIX),
+            ReplyDraft::class.java,
+        )
+    }.getOrNull() ?: ReplyDraft(title = "", content = this)
+}
+
+private const val DRAFT_PAYLOAD_PREFIX = "TiebaLiteDraftV2:"
 
 sealed interface ReplyPartialChange : PartialChange<ReplyUiState> {
     sealed class UploadImages : ReplyPartialChange {

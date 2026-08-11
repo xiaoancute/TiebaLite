@@ -89,7 +89,7 @@ class MigrationTest {
 
     // Array of all migrations.
     private val ALL_MIGRATIONS: Array<Migration> = arrayOf(
-        TbLiteDatabase.Migrations.Migration_5_6,
+        // No manual migration for now
     )
 
     @get:Rule

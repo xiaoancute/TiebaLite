@@ -40,6 +40,6 @@ interface DraftDao {
     @Query("DELETE FROM draft WHERE threadId = :threadId AND postId = :postId AND subpostId = :subpostId")
     suspend fun deleteByIds(threadId: Long, postId: Long, subpostId: Long): Int
 
-    @Query("SELECT * FROM draft WHERE threadId = :threadId AND postId = :postId AND subpostId = :subpostId LIMIT 1")
-    suspend fun getByIds(threadId: Long, postId: Long, subpostId: Long): Draft?
+    @Query("SELECT content FROM draft WHERE threadId = :threadId AND postId = :postId AND subpostId = :subpostId")
+    suspend fun getByIds(threadId: Long, postId: Long, subpostId: Long): List<String>
 }
