@@ -115,6 +115,7 @@ import com.huanchengfly.tieba.post.ui.common.LocalSharedTransitionScope
 import com.huanchengfly.tieba.post.ui.common.animateEnterExit
 import com.huanchengfly.tieba.post.ui.common.theme.compose.block
 import com.huanchengfly.tieba.post.ui.common.theme.compose.clickableNoIndication
+import com.huanchengfly.tieba.post.ui.common.theme.compose.onCase
 import com.huanchengfly.tieba.post.ui.common.theme.compose.onNotNull
 import com.huanchengfly.tieba.post.ui.common.windowsizeclass.isLooseWindowWidth
 import com.huanchengfly.tieba.post.ui.common.windowsizeclass.isWindowHeightCompact

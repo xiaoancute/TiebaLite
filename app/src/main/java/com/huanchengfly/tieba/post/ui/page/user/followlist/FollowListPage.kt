@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.FilterChip
@@ -119,7 +118,7 @@ fun FollowListPage(
         initial = emptySet(),
     )
 
-    viewModel.uiEvent.collectUiEventWithLifecycle { event ->
+    viewModel.uiEventFlow.collectUiEventWithLifecycle { event ->
         if (event is CommonUiEvent.Toast) {
             snackbarHostState.currentSnackbarData?.dismiss()
             snackbarHostState.showSnackbar(event.message.toString())
