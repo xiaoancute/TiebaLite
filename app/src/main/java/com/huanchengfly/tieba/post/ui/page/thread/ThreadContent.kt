@@ -73,7 +73,6 @@ import com.huanchengfly.tieba.post.ui.common.theme.compose.onNotNull
 import com.huanchengfly.tieba.post.ui.models.PostData
 import com.huanchengfly.tieba.post.ui.models.SubPostItemData
 import com.huanchengfly.tieba.post.ui.models.ThreadPollInfo
-import com.huanchengfly.tieba.post.ui.page.Destination.CopyText
 import com.huanchengfly.tieba.post.ui.page.Destination.Thread
 import com.huanchengfly.tieba.post.ui.page.Destination.UserProfile
 import com.huanchengfly.tieba.post.ui.page.LocalNavController
@@ -462,6 +461,7 @@ private fun LazyListScope.postTipItem(isDesc: Boolean) = this.item("LatestPostsT
 
 @Composable
 private fun PostCardItem(viewModel: ThreadViewModel, post: PostData, localUid: Long?, collectPid: Long) {
+    val context = LocalContext.current
     val navigator = LocalNavController.current
     val loggedIn = localUid != null
     val onUserClickedListener: () -> Unit = {
@@ -482,7 +482,7 @@ private fun PostCardItem(viewModel: ThreadViewModel, post: PostData, localUid: L
                 viewModel.onOpenSubPost(post, subPostId)
             },
             onMenuCopyClick = {
-                navigator.navigate(CopyText(it))
+                TiebaUtil.copyText(context, it)
             },
             onMenuFavoriteClick = {
                 val isPostCollected = post.id == collectPid
@@ -501,7 +501,7 @@ private fun PostCardItem(viewModel: ThreadViewModel, post: PostData, localUid: L
             onLikeClick = viewModel::onPostLikeClicked,
             onOpenSubPosts = { subPostId -> viewModel.onOpenSubPost(post, subPostId) },
             onMenuCopyClick = {
-                navigator.navigate(CopyText(it))
+                TiebaUtil.copyText(context, it)
             }
         )
     }
