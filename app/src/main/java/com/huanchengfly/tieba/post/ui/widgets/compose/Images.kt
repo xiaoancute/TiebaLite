@@ -258,7 +258,10 @@ fun NetworkImage(
                 )
 
                 if (dimensions != null) {
-                    val previewAlpha by animateFloatAsState(targetValue = if (isLongPressing) 1.0f else 0f)
+                    val previewAlpha by animateFloatAsState(
+                        targetValue = if (isLongPressing) 1.0f else 0f,
+                        animationSpec = MaterialTheme.motionScheme.slowEffectsSpec(),
+                    )
                     val previewVisible by remember { derivedStateOf { previewAlpha > 0.01f } }
 
                     if (previewVisible) {

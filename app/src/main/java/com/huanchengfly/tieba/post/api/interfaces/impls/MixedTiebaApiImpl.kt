@@ -19,6 +19,7 @@ import com.huanchengfly.tieba.post.api.models.CheckReportBean
 import com.huanchengfly.tieba.post.api.models.CollectDataBean
 import com.huanchengfly.tieba.post.api.models.CommonResponse
 import com.huanchengfly.tieba.post.api.models.FollowBean
+import com.huanchengfly.tieba.post.api.models.FollowListBean
 import com.huanchengfly.tieba.post.api.models.ForumGuideBean
 import com.huanchengfly.tieba.post.api.models.ForumRecommend
 import com.huanchengfly.tieba.post.api.models.GetForumListBean
@@ -644,6 +645,9 @@ object MixedTiebaApiImpl : ITiebaApi {
         portrait: String,
         tbs: String
     ): Flow<CommonResponse> = RetrofitTiebaApi.OFFICIAL_TIEBA_API.unfollowFlow(portrait, tbs)
+
+    override fun followListFlow(page: Int, uid: Long?): Flow<FollowListBean> =
+        RetrofitTiebaApi.OFFICIAL_TIEBA_API.followListFlow(page, uid)
 
     override fun hotMessageList(): Call<HotMessageListBean> =
         RetrofitTiebaApi.WEB_TIEBA_API.hotMessageList()

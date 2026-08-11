@@ -71,6 +71,7 @@ import com.huanchengfly.tieba.post.ui.page.thread.ThreadPage
 import com.huanchengfly.tieba.post.ui.page.thread.ThreadViewModel
 import com.huanchengfly.tieba.post.ui.page.threadstore.ThreadStorePage
 import com.huanchengfly.tieba.post.ui.page.user.UserProfilePage
+import com.huanchengfly.tieba.post.ui.page.user.followlist.FollowListPage
 import com.huanchengfly.tieba.post.ui.page.webview.WebViewPage
 import com.huanchengfly.tieba.post.ui.page.welcome.WelcomeScreen
 import com.huanchengfly.tieba.post.ui.widgets.compose.video.LocalVideoPreviewState
@@ -237,6 +238,11 @@ private fun buildRootNavGraph(
                     UserProfilePage(uid, avatar, nickname, username, transitionKey, navController)
                 }
             }
+        }
+
+        animatedComposable<Destination.FollowList> { backStackEntry ->
+            val params = backStackEntry.toRoute<Destination.FollowList>()
+            FollowListPage(params.uid, navController)
         }
 
         composable<Destination.WebView> { backStackEntry ->

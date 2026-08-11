@@ -88,7 +88,13 @@ private fun StatCardPlaceholder(modifier: Modifier = Modifier) {
  * User status card
  * */
 @Composable
-fun StatCard(posts: String?, fans: String?, concerned: String?, modifier: Modifier = Modifier) {
+fun StatCard(
+    posts: String?,
+    fans: String?,
+    concerned: String?,
+    modifier: Modifier = Modifier,
+    onConcernedClick: (() -> Unit)? = null,
+) {
     Row(
         modifier = modifier
             .padding(vertical = 16.dp)
@@ -101,7 +107,11 @@ fun StatCard(posts: String?, fans: String?, concerned: String?, modifier: Modifi
         StatCardItem(title = stringResource(R.string.text_stat_fans), stat = fans)
         VerticalDivider(color = MaterialTheme.colorScheme.outline)
 
-        StatCardItem(title = stringResource(R.string.text_stat_follow), stat = concerned)
+        StatCardItem(
+            title = stringResource(R.string.text_stat_follow),
+            stat = concerned,
+            onClick = onConcernedClick,
+        )
     }
 }
 
@@ -175,9 +185,15 @@ private fun InfoCard(
 }
 
 @Composable
-private fun RowScope.StatCardItem(title: String, stat: String?) {
+private fun RowScope.StatCardItem(
+    title: String,
+    stat: String?,
+    onClick: (() -> Unit)? = null,
+) {
     Column(
-        modifier = Modifier.weight(1f),
+        modifier = Modifier
+            .weight(1f)
+            .onCase(onClick != null) { clickable(onClick = onClick!!) },
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(text = stat ?: 0.toString(), fontSize = 20.sp, fontFamily = BebasFamily)
@@ -262,7 +278,14 @@ fun UserPage(viewModel: UserViewModel = viewModel()) {
                         shape = MaterialTheme.shapes.small,
                         color = colorScheme.secondaryContainer,
                     ) {
-                        StatCard(account.posts, account.fans, account.concerned)
+                        StatCard(
+                            posts = account.posts,
+                            fans = account.fans,
+                            concerned = account.concerned,
+                            onConcernedClick = {
+                                navigator.navigateDebounced(Destination.FollowList(account.uid))
+                            },
+                        )
                     }
                 } else if (isLoading) {
                     InfoCardPlaceHolder(modifier = Modifier.padding(16.dp))

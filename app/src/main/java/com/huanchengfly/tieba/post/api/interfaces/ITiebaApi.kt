@@ -856,6 +856,19 @@ interface ITiebaApi {
         tbs: String
     ): Flow<CommonResponse>
 
+    /**
+     * 获取用户关注列表（客户端接口）
+     *
+     * **需登录**
+     *
+     * @param page 分页页码
+     * @param uid 用户 uid
+     */
+    fun followListFlow(
+        page: Int = 1,
+        uid: Long? = null,
+    ): Flow<FollowListBean>
+
     fun hotMessageList(): Call<HotMessageListBean>
 
     /**

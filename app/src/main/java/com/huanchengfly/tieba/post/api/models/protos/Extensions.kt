@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.util.fastFirstOrNull
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastMap
+import androidx.core.net.toUri
 import com.huanchengfly.tieba.post.components.ClipBoardLinkDetector.isTieba
 import com.huanchengfly.tieba.post.theme.RedA700
 import com.huanchengfly.tieba.post.ui.common.PbContentRender
@@ -99,7 +100,18 @@ private fun PbContent.getPicUrl(loadType: Int): String {
         // originUrl = originSrc,   // Best quality in [PbContent]
         originUrl = bigCdnSrc,      // Medium
         smallPicUrl = cdnSrc        // Worst quality in [PbContent]
-    )
+    ).tb2ImageWorkaround()
+}
+
+// 兼容早期帖子通过 c.tieba.baidu.com 中转的图片链接。
+private fun String.tb2ImageWorkaround(): String {
+    if (!startsWith("http://c.tieba.baidu.com")) return this
+
+    return runCatching {
+        val src = toUri().getQueryParameter("src")
+            ?: error("Missing src parameter in $this")
+        if (src.startsWith("//")) "https:$src" else src
+    }.getOrDefault(this)
 }
 
 val List<PbContent>.plainText: String?

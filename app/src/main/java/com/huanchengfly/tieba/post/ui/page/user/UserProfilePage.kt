@@ -106,6 +106,7 @@ import com.huanchengfly.tieba.post.arch.collectUiEventWithLifecycle
 import com.huanchengfly.tieba.post.components.coil.BlurTransformation
 import com.huanchengfly.tieba.post.components.imageProcessor.ImageProcessor
 import com.huanchengfly.tieba.post.goToActivity
+import com.huanchengfly.tieba.post.navigateDebounced
 import com.huanchengfly.tieba.post.models.database.UserProfile
 import com.huanchengfly.tieba.post.theme.FloatProducer
 import com.huanchengfly.tieba.post.theme.TiebaLiteTheme
@@ -384,6 +385,9 @@ fun UserProfilePage(
                     onBlackListClicked = viewModel::onUserBlacklisted,
                     onWhiteListClicked = viewModel::onUserWhitelisted,
                     onSetUserBlack = if (permList != null) permissionDialogState::show else null,
+                    onFollowListClicked = {
+                        navigator.navigateDebounced(Destination.FollowList(userProfile.uid))
+                    },
                     onBack = onBack,
                     scrollBehavior = scrollBehavior,
                 ) {
@@ -416,6 +420,9 @@ fun UserProfilePage(
                                 profile = userProfile,
                                 block = blockState,
                                 transitionKey = transitionKey,
+                                onFollowListClicked = {
+                                    navigator.navigateDebounced(Destination.FollowList(userProfile.uid))
+                                },
                                 landscape = true
                             )
 
@@ -451,6 +458,7 @@ private fun UserProfileTopAppBar(
     onBlackListClicked: () -> Unit = {},
     onWhiteListClicked: () -> Unit = {},
     onSetUserBlack: (() -> Unit)? = null,
+    onFollowListClicked: (() -> Unit)? = null,
     onBack: () -> Unit = {},
     scrollBehavior: TopAppBarScrollBehavior,
     content: @Composable ColumnScope.() -> Unit,
@@ -521,7 +529,14 @@ private fun UserProfileTopAppBar(
                 Nickname(modifier = titleModifier, nickname, transitionKey, block)
             },
             subtitle = {
-                UserProfileDetail(titleModifier, profile, block, transitionKey, landscape = false)
+                UserProfileDetail(
+                    modifier = titleModifier,
+                    profile = profile,
+                    block = block,
+                    transitionKey = transitionKey,
+                    onFollowListClicked = onFollowListClicked,
+                    landscape = false,
+                )
             },
             navigationIcon = navIcon,
             actions = actionsMenu,
@@ -717,6 +732,7 @@ private fun UserProfileDetail(
     profile: UserProfile,
     block: UserBlockState = UserBlockState.None,
     transitionKey: String? = null,
+    onFollowListClicked: (() -> Unit)? = null,
     landscape: Boolean
 ) {
     val isWindowHeightCompact = isWindowHeightCompact()
@@ -775,7 +791,13 @@ private fun UserProfileDetail(
                         .horizontalScroll(rememberScrollState())
                 ) {
                     userStats.fastForEachIndexed { i, (title, number) ->
-                        StatText(title = title, num = number)
+                        StatText(
+                            modifier = Modifier.onCase(i == 0 && onFollowListClicked != null) {
+                                clickableNoIndication(onClick = onFollowListClicked!!)
+                            },
+                            title = title,
+                            num = number,
+                        )
                         if (i != userStats.lastIndex) {
                             VerticalDivider()
                         }

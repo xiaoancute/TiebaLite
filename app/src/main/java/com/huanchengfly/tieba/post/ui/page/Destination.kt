@@ -131,6 +131,9 @@ sealed interface Destination {
     }
 
     @Serializable
+    data class FollowList(val uid: Long): Destination
+
+    @Serializable
     data class WebView(val initialUrl: String, val customClient: Boolean = true): Destination
 
     @Serializable
