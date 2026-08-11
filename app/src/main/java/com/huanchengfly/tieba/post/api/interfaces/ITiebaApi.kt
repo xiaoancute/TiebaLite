@@ -869,6 +869,19 @@ interface ITiebaApi {
         uid: Long? = null,
     ): Flow<FollowListBean>
 
+    /**
+     * 获取用户粉丝列表（客户端 Hybrid 接口）
+     *
+     * **需登录**
+     *
+     * @param page 分页页码
+     * @param uid 用户 uid
+     */
+    fun fansListFlow(
+        page: Int = 1,
+        uid: Long,
+    ): Flow<FansListBean>
+
     fun hotMessageList(): Call<HotMessageListBean>
 
     /**

@@ -169,6 +169,14 @@ interface OfficialTiebaApi {
         @Field("uid") uid: Long? = null,
     ): Flow<FollowListBean>
 
+    @Headers("${Header.FORCE_LOGIN}: ${Header.FORCE_LOGIN_TRUE}")
+    @POST("https://c.tieba.baidu.com/c/u/fans/page")
+    @FormUrlEncoded
+    fun fansListFlow(
+        @Field("pn") page: Int = 1,
+        @Field("uid") uid: Long,
+    ): Flow<FansListBean>
+
     @Headers(
         "${Header.FORCE_LOGIN}: ${Header.FORCE_LOGIN_TRUE}",
         "${Header.NO_COMMON_PARAMS}: BDUSS"

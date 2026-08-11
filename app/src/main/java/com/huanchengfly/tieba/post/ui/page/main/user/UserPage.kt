@@ -93,6 +93,7 @@ fun StatCard(
     fans: String?,
     concerned: String?,
     modifier: Modifier = Modifier,
+    onFansClick: (() -> Unit)? = null,
     onConcernedClick: (() -> Unit)? = null,
 ) {
     Row(
@@ -104,7 +105,11 @@ fun StatCard(
         StatCardItem(title = stringResource(R.string.title_stat_posts_num), stat = posts)
         VerticalDivider(color = MaterialTheme.colorScheme.outline)
 
-        StatCardItem(title = stringResource(R.string.text_stat_fans), stat = fans)
+        StatCardItem(
+            title = stringResource(R.string.text_stat_fans),
+            stat = fans,
+            onClick = onFansClick,
+        )
         VerticalDivider(color = MaterialTheme.colorScheme.outline)
 
         StatCardItem(
@@ -282,6 +287,9 @@ fun UserPage(viewModel: UserViewModel = viewModel()) {
                             posts = account.posts,
                             fans = account.fans,
                             concerned = account.concerned,
+                            onFansClick = {
+                                navigator.navigateDebounced(Destination.FansList(account.uid))
+                            },
                             onConcernedClick = {
                                 navigator.navigateDebounced(Destination.FollowList(account.uid))
                             },

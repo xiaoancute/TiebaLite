@@ -7,7 +7,9 @@ import androidx.room.ExperimentalRoomApi
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.AutoMigrationSpec
+import androidx.room.migration.Migration
 import androidx.sqlite.SQLiteConnection
+import androidx.sqlite.execSQL
 import com.huanchengfly.tieba.post.models.database.dao.AccountDao
 import com.huanchengfly.tieba.post.models.database.dao.BlockDao
 import com.huanchengfly.tieba.post.models.database.dao.DraftDao
@@ -38,7 +40,7 @@ import java.util.concurrent.TimeUnit
         Timestamp::class,
         UserProfile::class,
     ],
-    version = 5,
+    version = 6,
     autoMigrations = [
         AutoMigration(from = 1, to = 2, spec = Migrations.Migration_1_2::class),
         AutoMigration(from = 2, to = 3, spec = Migrations.Migration_2_3::class),
@@ -81,6 +83,7 @@ abstract class TbLiteDatabase : RoomDatabase() {
             return INSTANCE ?: synchronized(this) {
                 INSTANCE ?: Room
                     .databaseBuilder(context, TbLiteDatabase::class.java, "tb_lite.db")
+                    .addMigrations(Migrations.Migration_5_6)
                     .setAutoCloseTimeout(15, TimeUnit.MINUTES)
                     .build()
                     .also { INSTANCE = it }
@@ -128,6 +131,15 @@ abstract class TbLiteDatabase : RoomDatabase() {
              */
             class Migration_4_5 : AutoMigrationSpec {
                 override fun onPostMigrate(connection: SQLiteConnection) {
+                }
+            }
+
+            /**
+             * [Draft] add title column
+             */
+            object Migration_5_6 : Migration(5, 6) {
+                override fun migrate(connection: SQLiteConnection) {
+                    connection.execSQL("ALTER TABLE `draft` ADD COLUMN `title` TEXT")
                 }
             }
         }

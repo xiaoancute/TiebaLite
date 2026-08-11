@@ -46,6 +46,8 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -94,6 +96,12 @@ class ReplyViewModel @Inject constructor(
      * @see deleteDraft
      * */
     private var userDraft: CharSequence? = null
+
+    private var userDraftTitle: String = ""
+
+    private var draftLoaded: Boolean = false
+
+    private var draftSaveJob: Job? = null
 
     private val emoticonContentRunner = ControlledRunner<Unit>()
 
@@ -157,14 +165,15 @@ class ReplyViewModel @Inject constructor(
 
         private fun ReplyUiIntent.Send.producePartialChange(): Flow<ReplyPartialChange.Send> {
             if (forumId != 0L && threadId == 0L ) {
+                val threadTitle = title.orEmpty()
                 return AddPostRepository
                     .addThread(
                         content,
                         forumId,
                         forumName,
-                        title = "",//这三个后面再做
+                        title = threadTitle,
                         isHide = 1,
-                        isTitle = 1,
+                        isTitle = if (threadTitle.isBlank()) 1 else 0,
                     )
                     .map<AddThreadBean, ReplyPartialChange.Send> {
                         if (it.tid == null) throw TiebaUnknownException
@@ -257,6 +266,7 @@ class ReplyViewModel @Inject constructor(
                 forumName = forumName,
                 threadId = threadId,
                 tbs = curTbs,
+                title = userDraftTitle.takeIf { replyType == ReplyType.TOPIC_THREAD },
                 postId = postId,
                 subPostId = subPostId,
                 replyUserId = replyUserId
@@ -268,14 +278,19 @@ class ReplyViewModel @Inject constructor(
         val imageContent = resultList.joinToString("\n") { image ->
             "#(pic,${image.picId ?: 0},${image.picInfo?.originPic?.width ?: 0},${image.picInfo?.originPic?.height ?: 0})"
         }
+        val replyContent = listOfNotNull(
+            userDraft?.toString()?.takeIf { it.isNotBlank() },
+            imageContent,
+        ).joinToString("\n")
 
         send(
             ReplyUiIntent.Send(
-                content = "${userDraft}\n$imageContent",
+                content = replyContent,
                 forumId = forumId,
                 forumName = forumName,
                 threadId = threadId,
                 tbs = curTbs,
+                title = userDraftTitle.takeIf { replyType == ReplyType.TOPIC_THREAD },
                 postId = postId,
                 subPostId = subPostId,
                 replyUserId = replyUserId,
@@ -286,6 +301,8 @@ class ReplyViewModel @Inject constructor(
     fun setEmoticonSpans(s: Editable?) {
         val input = s?.toString() ?: ""
         userDraft = input
+        draftLoaded = true
+        scheduleDraftSave()
 
         if (s.isNullOrEmpty()) {
             emoticonContentRunner.cancelCurrent()
@@ -310,35 +327,82 @@ class ReplyViewModel @Inject constructor(
         emoticonSize = size
     }
 
-    suspend fun getDraft(): CharSequence? {
-        return userDraft ?: draftDao.getByIds(threadId, postId ?: 0, subPostId ?: 0).firstOrNull()
+    fun setDraftTitle(title: String) {
+        userDraftTitle = title
+        draftLoaded = true
+        scheduleDraftSave()
+    }
+
+    suspend fun getDraft(): ReplyDraft? {
+        if (!draftLoaded) {
+            draftDao.getByIds(threadId, postId ?: 0, subPostId ?: 0)?.let { draft ->
+                userDraft = draft.content.orEmpty()
+                userDraftTitle = draft.title.orEmpty()
+            }
+            draftLoaded = true
+        }
+        return ReplyDraft(
+            title = userDraftTitle,
+            content = userDraft?.toString().orEmpty(),
+        ).takeIf { it.title.isNotBlank() || it.content.isNotBlank() }
     }
 
     fun deleteDraft() {
+        draftSaveJob?.cancel()
         userDraft = null
+        userDraftTitle = ""
+        draftLoaded = true
         AppBackgroundScope.launch {
             draftDao.deleteByIds(threadId, postId ?: 0, subPostId ?: 0)
+        }
+    }
+
+    private fun scheduleDraftSave() {
+        draftSaveJob?.cancel()
+        val title = userDraftTitle
+        val content = userDraft?.toString().orEmpty()
+        draftSaveJob = viewModelScope.launch {
+            delay(DRAFT_SAVE_DELAY_MILLIS)
+            persistDraft(title, content)
+        }
+    }
+
+    private suspend fun persistDraft(title: String, content: String) {
+        if (title.isBlank() && content.isBlank()) {
+            draftDao.deleteByIds(threadId, postId ?: 0, subPostId ?: 0)
+        } else {
+            draftDao.upsert(
+                Draft(
+                    threadId,
+                    postId ?: 0,
+                    subPostId ?: 0,
+                    content,
+                    title.takeIf { it.isNotBlank() },
+                )
+            )
         }
     }
 
     override fun onCleared() {
         super.onCleared()
         emoticonContentRunner.cancelCurrent()
-        val draft = userDraft?.toString()?.trim()
-        if (!draft.isNullOrEmpty() && draft.isNotBlank()) {
-            AppBackgroundScope.launch {
-                runCatching {
-                    draftDao.upsert(Draft(threadId, postId ?: 0, subPostId ?: 0, draft))
-                }
+        draftSaveJob?.cancel()
+        if (!draftLoaded) return
+
+        val title = userDraftTitle
+        val content = userDraft?.toString().orEmpty()
+        AppBackgroundScope.launch {
+            runCatching { persistDraft(title, content) }
                 .onFailure { e ->
-                    Log.e(TAG, "onCleared: Save draft failed: ${e.message}, content: $draft")
+                    Log.e(TAG, "onCleared: Save draft failed: ${e.message}")
                 }
-            }
         }
     }
 
     companion object {
         private const val TAG = "ReplyViewModel"
+
+        private const val DRAFT_SAVE_DELAY_MILLIS = 1_000L
 
         const val MAX_SELECTABLE_IMAGE = 9
     }
@@ -357,6 +421,7 @@ sealed interface ReplyUiIntent : UiIntent {
         val forumName: String,
         val threadId: Long,
         val tbs: String,
+        val title: String? = null,
         val postId: Long? = null,
         val subPostId: Long? = null,
         val replyUserId: Long? = null,
@@ -368,6 +433,11 @@ sealed interface ReplyUiIntent : UiIntent {
 
     data class ToggleIsOriginImage(val isOriginImage: Boolean) : ReplyUiIntent
 }
+
+data class ReplyDraft(
+    val title: String,
+    val content: String,
+)
 
 sealed interface ReplyPartialChange : PartialChange<ReplyUiState> {
     sealed class UploadImages : ReplyPartialChange {

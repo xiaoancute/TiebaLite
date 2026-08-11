@@ -388,7 +388,10 @@ fun UserProfilePage(
                     onSetUserBlack = if (permList != null) permissionDialogState::show else null,
                     onFollowListClicked = {
                         navigator.navigateDebounced(Destination.FollowList(userProfile.uid))
-                    },
+                    }.takeIf { account != null },
+                    onFansListClicked = {
+                        navigator.navigateDebounced(Destination.FansList(userProfile.uid))
+                    }.takeIf { account != null },
                     onBack = onBack,
                     scrollBehavior = scrollBehavior,
                 ) {
@@ -423,7 +426,10 @@ fun UserProfilePage(
                                 transitionKey = transitionKey,
                                 onFollowListClicked = {
                                     navigator.navigateDebounced(Destination.FollowList(userProfile.uid))
-                                },
+                                }.takeIf { account != null },
+                                onFansListClicked = {
+                                    navigator.navigateDebounced(Destination.FansList(userProfile.uid))
+                                }.takeIf { account != null },
                                 landscape = true
                             )
 
@@ -460,6 +466,7 @@ private fun UserProfileTopAppBar(
     onWhiteListClicked: () -> Unit = {},
     onSetUserBlack: (() -> Unit)? = null,
     onFollowListClicked: (() -> Unit)? = null,
+    onFansListClicked: (() -> Unit)? = null,
     onBack: () -> Unit = {},
     scrollBehavior: TopAppBarScrollBehavior,
     content: @Composable ColumnScope.() -> Unit,
@@ -536,6 +543,7 @@ private fun UserProfileTopAppBar(
                     block = block,
                     transitionKey = transitionKey,
                     onFollowListClicked = onFollowListClicked,
+                    onFansListClicked = onFansListClicked,
                     landscape = false,
                 )
             },
@@ -734,6 +742,7 @@ private fun UserProfileDetail(
     block: UserBlockState = UserBlockState.None,
     transitionKey: String? = null,
     onFollowListClicked: (() -> Unit)? = null,
+    onFansListClicked: (() -> Unit)? = null,
     landscape: Boolean
 ) {
     val isWindowHeightCompact = isWindowHeightCompact()
@@ -793,9 +802,13 @@ private fun UserProfileDetail(
                 ) {
                     userStats.fastForEachIndexed { i, (title, number) ->
                         StatText(
-                            modifier = Modifier.onCase(i == 0 && onFollowListClicked != null) {
-                                clickableNoIndication(onClick = onFollowListClicked!!)
-                            },
+                            modifier = Modifier
+                                .onCase(i == 0 && onFollowListClicked != null) {
+                                    clickableNoIndication(onClick = onFollowListClicked!!)
+                                }
+                                .onCase(i == 1 && onFansListClicked != null) {
+                                    clickableNoIndication(onClick = onFansListClicked!!)
+                                },
                             title = title,
                             num = number,
                         )

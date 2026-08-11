@@ -649,6 +649,9 @@ object MixedTiebaApiImpl : ITiebaApi {
     override fun followListFlow(page: Int, uid: Long?): Flow<FollowListBean> =
         RetrofitTiebaApi.OFFICIAL_TIEBA_API.followListFlow(page, uid)
 
+    override fun fansListFlow(page: Int, uid: Long): Flow<FansListBean> =
+        RetrofitTiebaApi.OFFICIAL_TIEBA_API.fansListFlow(page, uid)
+
     override fun hotMessageList(): Call<HotMessageListBean> =
         RetrofitTiebaApi.WEB_TIEBA_API.hotMessageList()
 

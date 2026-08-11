@@ -19,10 +19,13 @@ public final class Draft {
 
     public String content;
 
-    public Draft(long threadId, long postId, long subpostId, String content) {
+    public String title;
+
+    public Draft(long threadId, long postId, long subpostId, String content, String title) {
         this.threadId = threadId;
         this.postId = postId;
         this.subpostId = subpostId;
         this.content = content;
+        this.title = title;
     }
 }

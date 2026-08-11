@@ -40,6 +40,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Send
@@ -79,6 +80,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -104,6 +106,7 @@ import com.huanchengfly.tieba.post.ui.page.reply.ReplyPanelType.NONE
 import com.huanchengfly.tieba.post.ui.page.reply.ReplyViewModel.Companion.MAX_SELECTABLE_IMAGE
 import com.huanchengfly.tieba.post.ui.utils.imeNestedScroll
 import com.huanchengfly.tieba.post.ui.widgets.compose.Avatar
+import com.huanchengfly.tieba.post.ui.widgets.compose.BaseTextField
 import com.huanchengfly.tieba.post.ui.widgets.compose.DefaultDialogContentPadding
 import com.huanchengfly.tieba.post.ui.widgets.compose.Dialog
 import com.huanchengfly.tieba.post.ui.widgets.compose.DialogNegativeButton
@@ -211,6 +214,7 @@ private fun ReplyPageContent(
         prop1 = ReplyUiState::isOriginImage,
         initial = false
     )
+    val isTopicThread = viewModel.replyType == ReplyType.TOPIC_THREAD
 
     val topTitle = when (viewModel.replyType) {
         ReplyType.TOPIC_THREAD -> context.getString(R.string.title_thread)
@@ -218,6 +222,7 @@ private fun ReplyPageContent(
     }
 
     var inputLength by remember { mutableIntStateOf(0) }
+    var threadTitle by rememberSaveable { mutableStateOf("") }
     var editTextView by remember { mutableStateOf<UndoableEditText?>(null) }
 
     viewModel.onEvent<CommonUiEvent.Toast> {
@@ -328,6 +333,26 @@ private fun ReplyPageContent(
             )
         }
         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+        if (isTopicThread) {
+            BaseTextField(
+                value = threadTitle,
+                onValueChange = { value ->
+                    val newTitle = value.take(MAX_THREAD_TITLE_LENGTH)
+                    threadTitle = newTitle
+                    viewModel.setDraftTitle(newTitle)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                textStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                placeholder = { Text(stringResource(R.string.hint_thread_title)) },
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Sentences,
+                ),
+                singleLine = true,
+            )
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+        }
         Box(
             modifier = Modifier
                 .wrapContentHeight()
@@ -348,8 +373,11 @@ private fun ReplyPageContent(
                             null
                         ) as UndoableEditText).apply {
                             editTextView = this
-                            if (subPostId != null && subPostId != 0L && replyUserName != null) {
-                                hint = ctx.getString(R.string.hint_reply, replyUserName)
+                            hint = when {
+                                isTopicThread -> ctx.getString(R.string.tip_thread_content)
+                                subPostId != null && subPostId != 0L && replyUserName != null ->
+                                    ctx.getString(R.string.hint_reply, replyUserName)
+                                else -> ctx.getString(R.string.tip_reply)
                             }
 
                             setOnFocusChangeListener { _, hasFocus ->
@@ -366,7 +394,10 @@ private fun ReplyPageContent(
 
                             // Restore draft if exists
                             coroutineScope.launch {
-                                viewModel.getDraft()?.let { setText(it) }
+                                viewModel.getDraft()?.let { draft ->
+                                    threadTitle = draft.title
+                                    setText(draft.content)
+                                }
                             }
 
                         }
@@ -486,6 +517,8 @@ private fun ReplyPageContent(
         )
     }
 }
+
+private const val MAX_THREAD_TITLE_LENGTH = 31
 
 @Composable
 private fun ImeActionRow(
