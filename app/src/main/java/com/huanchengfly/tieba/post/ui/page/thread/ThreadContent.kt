@@ -699,7 +699,10 @@ fun PostCard(
                         post.contentRenders.fastForEach { it.Render() }
                     }
 
-                    if (post.subPosts == null || post.subPostNumber <= 0) return@Card
+                    // Render the sub posts area as long as the floor has replies.
+                    // The preview list may be null or incomplete when the floor has few replies,
+                    // in which case the "open all" entry below is the only way to expand it.
+                    if (post.subPostNumber <= 0) return@Card
 
                     Surface(
                         modifier = paddingModifier,
@@ -710,7 +713,7 @@ fun PostCard(
                             modifier = Modifier.padding(vertical = 10.dp),
                             verticalArrangement = Arrangement.spacedBy(2.dp)
                         ) {
-                            post.subPosts.fastForEach { item ->
+                            post.subPosts.orEmpty().fastForEach { item ->
                                 BlockableContent(
                                     blocked = item.blocked,
                                     blockedTip = {
@@ -732,7 +735,10 @@ fun PostCard(
                                 }
                             }
 
-                            if (post.subPostNumber <= post.subPosts.size) return@Column
+                            // Always show the entry to the full sub posts page, even when all
+                            // replies are already previewed inline (few-replies case), so the
+                            // user can still expand the sub posts to view full content, images
+                            // and interact with them.
                             Text(
                                 text = stringResource(R.string.open_all_sub_posts, post.subPostNumber),
                                 modifier = Modifier

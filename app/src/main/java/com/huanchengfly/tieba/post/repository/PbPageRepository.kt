@@ -173,7 +173,9 @@ class PbPageRepository @Inject constructor(
         val lzId = data.thread?.author?.id ?: -1L
         val anti = data.anti ?: throw TiebaException("Null anti data")
         return PbFloorUiResponse(
-            post = post.mapToUiModel(lzId, blockable = false),
+            // The floor's own sub posts are listed on this page already, clear
+            // subPostNumber so PostCard won't render an "open all" entry for it.
+            post = post.mapToUiModel(lzId, blockable = false).copy(subPostNumber = 0),
             subPosts = data.subpost_list.mapToUiModel(lzId = lzId, abstract = false),
             tbs = anti.tbs,
             thread = data.thread!!.mapToUiModel(),
