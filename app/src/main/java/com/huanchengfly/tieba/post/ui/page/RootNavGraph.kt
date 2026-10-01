@@ -164,10 +164,7 @@ private fun buildRootNavGraph(
         }
 
         composable<Destination.ForumDetail> { backStackEntry ->
-            ForumDetailPage(
-                onBack = navController::navigateUp,
-                onManagerClicked = { navController.navigate(Destination.UserProfile(uid = it)) }
-            )
+            ForumDetailPage(navigator = navController)
         }
 
         animatedComposable<Destination.ForumRuleDetail> { backStackEntry ->

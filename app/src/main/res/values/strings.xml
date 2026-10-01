@@ -510,6 +510,14 @@
     <string name="title_forum_manager">本吧吧主</string>
     <string name="title_forum_manager_none">本吧没有吧主</string>
     <string name="title_forum_intro">本吧简介</string>
+    <string name="title_forum_friends">友情吧</string>
+    <string name="title_forum_team">管理团队</string>
+    <string name="message_forum_friends_empty">本吧暂未设置友情吧</string>
+    <string name="message_forum_team_empty">暂无管理团队</string>
+    <string name="message_forum_intro_empty">本吧暂未设置简介</string>
+    <string name="message_forum_section_loading">正在加载…</string>
+    <string name="message_forum_intro_failed">完整简介加载失败</string>
+    <string name="message_forum_team_failed">管理团队加载失败</string>
     <string name="title_forum_rule">本吧吧规</string>
     <string name="title_media_info">视频信息</string>
     <string name="title_content_scale">缩放</string>

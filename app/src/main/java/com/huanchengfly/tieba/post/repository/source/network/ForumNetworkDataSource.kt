@@ -1,9 +1,12 @@
 package com.huanchengfly.tieba.post.repository.source.network
 
 import com.huanchengfly.tieba.post.api.TiebaApi
+import com.huanchengfly.tieba.post.api.models.CommonResponse
+import com.huanchengfly.tieba.post.api.models.ForumOverviewResponse
 import com.huanchengfly.tieba.post.api.models.LikeForumResultBean
 import com.huanchengfly.tieba.post.api.models.SignResultBean
 import com.huanchengfly.tieba.post.api.models.protos.GeneralTabList.GeneralTabListResponseData
+import com.huanchengfly.tieba.post.api.models.protos.BawuTeam
 import com.huanchengfly.tieba.post.api.models.protos.RecommendForumInfo
 import com.huanchengfly.tieba.post.api.models.protos.ThreadInfo
 import com.huanchengfly.tieba.post.api.models.protos.User
@@ -11,6 +14,7 @@ import com.huanchengfly.tieba.post.api.models.protos.forumRuleDetail.ForumRuleDe
 import com.huanchengfly.tieba.post.api.models.protos.frsPage.FrsPageResponseData
 import com.huanchengfly.tieba.post.api.models.protos.threadList.ThreadListResponseData
 import com.huanchengfly.tieba.post.api.retrofit.exception.NoConnectivityException
+import com.huanchengfly.tieba.post.api.retrofit.RetrofitTiebaApi
 import com.huanchengfly.tieba.post.api.retrofit.exception.TiebaApiException
 import com.huanchengfly.tieba.post.api.retrofit.exception.TiebaException
 import com.huanchengfly.tieba.post.api.retrofit.interceptors.ConnectivityInterceptor
@@ -21,6 +25,31 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.withContext
 
 object ForumNetworkDataSource {
+
+    suspend fun loadForumOverview(forumName: String): ForumOverviewResponse {
+        val response = RetrofitTiebaApi.OFFICIAL_TIEBA_API
+            .forumOverviewFlow(forumName)
+            .catch { throw ConnectivityInterceptor.wrapException(it) }
+            .firstOrThrow()
+        if (response.errorCode != 0) {
+            throw TiebaApiException(CommonResponse(response.errorCode, response.errorMsg.orEmpty()))
+        }
+        if (response.forum == null || response.forum.id <= 0) {
+            throw TiebaException("Missing forum information")
+        }
+        return response
+    }
+
+    suspend fun loadForumTeam(forumId: Long): BawuTeam {
+        val response = TiebaApi.getInstance().getBawuInfoFlow(forumId)
+            .catch { throw ConnectivityInterceptor.wrapException(it) }
+            .firstOrThrow()
+        if (response.error != null && response.error.error_code != 0) {
+            throw TiebaApiException(response.error.commonResponse)
+        }
+        val data = response.data_ ?: throw TiebaException("Missing forum team information")
+        return data.bawu_team_info ?: BawuTeam()
+    }
 
     private val threadFilter: (ThreadInfo) -> Boolean = {
         it.ala_info == null &&  // 去他妈的直播

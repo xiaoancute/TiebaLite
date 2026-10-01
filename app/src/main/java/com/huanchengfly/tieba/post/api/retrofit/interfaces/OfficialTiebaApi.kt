@@ -25,6 +25,10 @@ import retrofit2.http.*
 
 
 interface OfficialTiebaApi {
+    @POST("https://c.tieba.baidu.com/c/f/frs/frsBottom")
+    @FormUrlEncoded
+    fun forumOverviewFlow(@Field("kw") forumName: String): Flow<ForumOverviewResponse>
+
     @POST("/c/f/pb/page")
     @FormUrlEncoded
     fun threadContent(

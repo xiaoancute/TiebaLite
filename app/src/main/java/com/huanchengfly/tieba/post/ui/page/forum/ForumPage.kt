@@ -371,6 +371,8 @@ fun ForumPage(
 
                     ClickMenu(
                         menuContent = {
+                            TextMenuItem(text = R.string.title_forum_info, onClick = onTitleClicked)
+
                             TextMenuItem(text = R.string.title_share, onClick = viewModel::shareForum)
 
                             TextMenuItem(text = R.string.title_send_to_desktop) {

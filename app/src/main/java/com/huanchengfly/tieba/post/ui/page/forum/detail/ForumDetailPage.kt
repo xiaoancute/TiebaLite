@@ -5,106 +5,156 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.isTraversalGroup
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
 import com.huanchengfly.tieba.post.R
-import com.huanchengfly.tieba.post.theme.TiebaLiteTheme
-import com.huanchengfly.tieba.post.ui.common.theme.compose.BebasFamily
-import com.huanchengfly.tieba.post.ui.common.theme.compose.clickableNoIndication
-import com.huanchengfly.tieba.post.ui.models.forum.ForumManager
+import com.huanchengfly.tieba.post.navigateDebounced
+import com.huanchengfly.tieba.post.ui.models.forum.ForumDetail
+import com.huanchengfly.tieba.post.ui.page.Destination
+import com.huanchengfly.tieba.post.ui.page.ProvideNavigator
 import com.huanchengfly.tieba.post.ui.page.photoview.PhotoViewActivity
 import com.huanchengfly.tieba.post.ui.widgets.compose.Avatar
 import com.huanchengfly.tieba.post.ui.widgets.compose.BackNavigationIcon
-import com.huanchengfly.tieba.post.ui.widgets.compose.Chip
 import com.huanchengfly.tieba.post.ui.widgets.compose.Sizes
 import com.huanchengfly.tieba.post.ui.widgets.compose.states.StateScreen
 import com.huanchengfly.tieba.post.utils.StringUtil.getShortNumString
 
 @Composable
 fun ForumDetailPage(
+    navigator: NavController,
     viewModel: ForumDetailViewModel = hiltViewModel(),
-    onManagerClicked: (uid: Long) -> Unit,
-    onBack: () -> Unit,
 ) {
-    val uiState by viewModel.state.collectAsStateWithLifecycle()
-
-    StateScreen(
-        error = uiState.error,
-        isLoading = uiState.isLoading,
-        onReload = viewModel::reload,
-    ) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    ProvideNavigator(navigator) {
         Scaffold(
             topBar = {
                 CenterAlignedTopAppBar(
-                    title = { Text(stringResource(id = R.string.title_forum_info)) },
-                    navigationIcon = { BackNavigationIcon(onBackPressed = onBack) }
+                    title = { Text(stringResource(R.string.title_forum_info)) },
+                    navigationIcon = { BackNavigationIcon(onBackPressed = navigator::navigateUp) },
+                    actions = {
+                        IconButton(onClick = viewModel::reload, enabled = !state.isLoading) {
+                            Icon(Icons.Rounded.Refresh, stringResource(R.string.title_refresh))
+                        }
+                    },
                 )
-            }
-        ) { paddingValues ->
-            val forumDetail = uiState.detail ?: return@Scaffold
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(horizontal = 16.dp)
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+            },
+        ) { padding ->
+            StateScreen(
+                modifier = Modifier.padding(padding),
+                screenPadding = PaddingValues(0.dp),
+                error = state.error,
+                isLoading = state.isLoading,
+                onReload = viewModel::reload,
             ) {
-                ForumDetailContent(
-                    avatar = forumDetail.avatar,
-                    name = forumDetail.name,
-                    memberCount = forumDetail.memberCount,
-                    threadCount = forumDetail.threadCount,
-                    postCount = forumDetail.postCount
-                )
-
-                IntroItem(slogan = forumDetail.slogan, intro = forumDetail.intro)
-
-                if (forumDetail.managers != null) {
-                    Chip(text = stringResource(id = R.string.title_forum_manager))
-
-                    LazyRow {
-                        items(forumDetail.managers, key = { it.id }) {
-                            ManagerItem(manager = it) {
-                                onManagerClicked(it.id)
-                            }
+                val detail = state.detail ?: return@StateScreen
+                LazyColumn(
+                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    item(key = "overview") { ForumDetailHeader(detail) }
+                    item(key = "intro") {
+                        IntroItem(
+                            detail = detail,
+                            loading = state.introductionLoading,
+                            error = state.introductionError,
+                            onRetry = viewModel::reloadIntroduction,
+                        )
+                    }
+                    item(key = "rules") {
+                        ListItem(
+                            headlineContent = { Text(stringResource(R.string.title_forum_rule)) },
+                            trailingContent = { Icon(Icons.Rounded.ChevronRight, null) },
+                            modifier = Modifier.clickable {
+                                navigator.navigateDebounced(Destination.ForumRuleDetail(detail.id))
+                            },
+                        )
+                    }
+                    item(key = "friends-title") {
+                        SectionTitle(R.string.title_forum_friends)
+                        if (detail.friendForums.isEmpty()) {
+                            EmptySection(R.string.message_forum_friends_empty)
                         }
                     }
-                } else {
-                    Chip(text = stringResource(id = R.string.title_forum_manager_none))
+                    items(detail.friendForums, key = { "friend:" + it.name }) { friend ->
+                        ListItem(
+                            headlineContent = { Text(stringResource(R.string.title_forum, friend.name)) },
+                            leadingContent = { Avatar(data = friend.avatar, size = Sizes.Small) },
+                            trailingContent = { Icon(Icons.Rounded.ChevronRight, null) },
+                            modifier = Modifier.clickable {
+                                navigator.navigateDebounced(
+                                    Destination.Forum(forumName = friend.name, avatar = friend.avatar)
+                                )
+                            },
+                        )
+                    }
+                    item(key = "managers-title") {
+                        SectionTitle(R.string.title_forum_team)
+                        SectionLoadState(
+                            loading = state.managersLoading,
+                            error = state.managersError,
+                            errorText = R.string.message_forum_team_failed,
+                            onRetry = viewModel::reloadManagers,
+                        )
+                        if (!state.managersLoading && state.managersError == null &&
+                            detail.managerGroups.isEmpty()
+                        ) {
+                            EmptySection(R.string.message_forum_team_empty)
+                        }
+                    }
+                    detail.managerGroups.forEachIndexed { groupIndex, group ->
+                        item(key = "team-title:" + groupIndex) {
+                            Text(
+                                text = group.name.ifBlank { stringResource(R.string.title_forum_team) },
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                            )
+                        }
+                        items(group.members) { member ->
+                            ListItem(
+                                headlineContent = { Text(member.name) },
+                                leadingContent = { Avatar(data = member.avatarUrl, size = Sizes.Small) },
+                                trailingContent = {
+                                    if (member.id > 0) Icon(Icons.Rounded.ChevronRight, null)
+                                },
+                                modifier = Modifier.clickable(enabled = member.id > 0) {
+                                    navigator.navigateDebounced(Destination.UserProfile(member))
+                                },
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -112,148 +162,118 @@ fun ForumDetailPage(
 }
 
 @Composable
-private fun ForumDetailContent(
-    avatar: String,
-    name: String,
-    memberCount: Int,
-    threadCount: Int,
-    postCount: Int
-) {
+private fun ForumDetailHeader(detail: ForumDetail) {
     val context = LocalContext.current
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Avatar(
-            data = avatar,
-            size = Sizes.Medium,
-            modifier = Modifier.clickableNoIndication {
-                PhotoViewActivity.launchSinglePhoto(context, url = avatar)
-            },
-        )
-        Text(
-            text = stringResource(id = R.string.title_forum, name),
-            style = MaterialTheme.typography.titleLarge
-        )
-    }
-
-    Surface(
-        shape = MaterialTheme.shapes.small,
-        color = MaterialTheme.colorScheme.secondaryContainer
-    ) {
-        ProvideTextStyle(
-            value = MaterialTheme.typography.titleLarge.copy(
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Medium,
-                letterSpacing = 0.5.sp,
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Avatar(
+                data = detail.avatar,
+                size = Sizes.Medium,
+                modifier = Modifier.clickable(enabled = detail.avatar.isNotBlank()) {
+                    PhotoViewActivity.launchSinglePhoto(context, url = detail.avatar)
+                },
             )
+            Text(
+                text = stringResource(R.string.title_forum, detail.name),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.weight(1f),
+            )
+        }
+        Surface(
+            shape = MaterialTheme.shapes.medium,
+            color = MaterialTheme.colorScheme.secondaryContainer,
         ) {
             Row(
-                modifier = Modifier
-                    .height(IntrinsicSize.Min)
-                    .padding(top = 20.dp, bottom = 16.dp), // Visual aligned
+                modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(vertical = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                StatCardItem(
-                    statNum = memberCount,
-                    statTitle = R.string.text_stat_follow
-                )
-                VerticalDivider(color = MaterialTheme.colorScheme.outline)
-                StatCardItem(
-                    statNum = threadCount,
-                    statTitle = R.string.text_stat_threads
-                )
-                VerticalDivider(color = MaterialTheme.colorScheme.outline)
-                StatCardItem(
-                    statNum = postCount,
-                    statTitle = R.string.title_stat_posts_num
-                )
+                StatItem(detail.memberCount, R.string.text_stat_follow)
+                VerticalDivider()
+                StatItem(detail.threadCount, R.string.text_stat_threads)
+                VerticalDivider()
+                StatItem(detail.postCount, R.string.title_stat_posts_num)
             }
         }
     }
 }
 
 @Composable
-private fun IntroItem(modifier: Modifier = Modifier, slogan: String, intro: String?) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Chip(text = stringResource(id = R.string.title_forum_intro))
-
-        Text(
-            text = slogan,
-            modifier = Modifier.padding(horizontal = 16.dp),
-            style = MaterialTheme.typography.bodyLarge
-        )
-
-        if (intro != null) {
-            Text(
-                text = intro,
-                modifier = Modifier.padding(horizontal = 16.dp),
-                style = MaterialTheme.typography.bodyLarge
-            )
-        }
-    }
-}
-
-@Composable
-private fun ManagerItem(
-    modifier: Modifier = Modifier,
-    manager: ForumManager,
-    onClick: () -> Unit
-) {
-    Column(
-        modifier = modifier
-            .clip(MaterialTheme.shapes.medium)
-            .semantics {
-                role = Role.Image
-                isTraversalGroup = true
-                contentDescription = manager.name
+private fun IntroItem(detail: ForumDetail, loading: Boolean, error: Throwable?, onRetry: () -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        SectionTitle(R.string.title_forum_intro)
+        SelectionContainer {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (detail.slogan.isNotBlank()) {
+                    Text(detail.slogan, style = MaterialTheme.typography.bodyLarge)
+                }
+                if (detail.introRenders.isNotEmpty()) {
+                    detail.introRenders.forEach { it.Render() }
+                } else if (!detail.intro.isNullOrBlank() && detail.intro != detail.slogan) {
+                    Text(detail.intro, style = MaterialTheme.typography.bodyLarge)
+                }
             }
-            .clickable(onClick = onClick)
-            .padding(6.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Avatar(data = manager.avatarUrl, size = Sizes.Medium)
-        Text(text = manager.name, modifier = Modifier.padding(top = 4.dp))
-    }
-}
-
-@Composable
-private fun RowScope.StatCardItem(statNum: Int, @StringRes statTitle: Int) {
-    Column(
-        modifier = Modifier.weight(1f),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(
-            text = statNum.getShortNumString(),
-            fontFamily = BebasFamily,
-        )
-        Spacer(modifier = Modifier.height(2.dp))
-        Text(text = stringResource(statTitle), fontSize = 14.sp)
-    }
-}
-
-@Preview("ForumDetailPage", backgroundColor = 0xFFFFFFFF, showBackground = true)
-@Composable
-fun PreviewForumDetailPage() {
-    TiebaLiteTheme {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+        }
+        SectionLoadState(loading, error, R.string.message_forum_intro_failed, onRetry)
+        if (!loading && error == null && detail.slogan.isBlank() &&
+            detail.intro.isNullOrBlank() && detail.introRenders.isEmpty()
         ) {
-            ForumDetailContent(
-                avatar = "",
-                name = "minecraft",
-                memberCount = 2520287,
-                threadCount = 31531580,
-                postCount = 10297773,
-            )
-            IntroItem(
-                slogan = "位于百度贴吧的像素点之家",
-                intro = "minecraft……"
-            )
+            EmptySection(R.string.message_forum_intro_empty)
         }
+    }
+}
+
+@Composable
+private fun SectionTitle(@StringRes title: Int) {
+    Text(
+        text = stringResource(title),
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.padding(top = 12.dp, bottom = 4.dp),
+    )
+}
+
+@Composable
+private fun EmptySection(@StringRes text: Int) {
+    Text(
+        text = stringResource(text),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+@Composable
+private fun SectionLoadState(
+    loading: Boolean,
+    error: Throwable?,
+    @StringRes errorText: Int,
+    onRetry: () -> Unit,
+) {
+    if (loading) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+            Text(stringResource(R.string.message_forum_section_loading))
+        }
+    } else if (error != null) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = stringResource(errorText),
+                modifier = Modifier.weight(1f),
+                color = MaterialTheme.colorScheme.error,
+            )
+            TextButton(onClick = onRetry) { Text(stringResource(R.string.button_retry)) }
+        }
+    }
+}
+
+@Composable
+private fun RowScope.StatItem(value: Long, @StringRes title: Int) {
+    Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(value.getShortNumString(), style = MaterialTheme.typography.titleLarge)
+        Text(stringResource(title), style = MaterialTheme.typography.labelMedium)
     }
 }

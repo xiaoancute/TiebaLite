@@ -8,6 +8,7 @@ import com.huanchengfly.tieba.post.api.models.protos.FrsTabInfo
 import com.huanchengfly.tieba.post.api.models.protos.ThreadInfo
 import com.huanchengfly.tieba.post.api.models.protos.frsPage.FrsPageResponseData
 import com.huanchengfly.tieba.post.api.models.protos.plainText
+import com.huanchengfly.tieba.post.api.models.protos.buildRenders
 import com.huanchengfly.tieba.post.repository.ExploreRepository.Companion.distinctById
 import com.huanchengfly.tieba.post.repository.ExploreRepository.Companion.mapUiModel
 import com.huanchengfly.tieba.post.repository.source.network.ForumNetworkDataSource
@@ -17,6 +18,8 @@ import com.huanchengfly.tieba.post.ui.models.ThreadItemList
 import com.huanchengfly.tieba.post.ui.models.forum.ForumData
 import com.huanchengfly.tieba.post.ui.models.forum.ForumDetail
 import com.huanchengfly.tieba.post.ui.models.forum.ForumManager
+import com.huanchengfly.tieba.post.ui.models.forum.ForumManagerGroup
+import com.huanchengfly.tieba.post.ui.models.forum.ForumIntroduction
 import com.huanchengfly.tieba.post.ui.models.forum.ForumRule
 import com.huanchengfly.tieba.post.ui.models.forum.GoodClassify
 import com.huanchengfly.tieba.post.ui.models.forum.Rule
@@ -105,24 +108,19 @@ class ForumRepository @Inject constructor(
     }
 
     suspend fun loadForumDetail(forumName: String): ForumDetail {
-        val start = System.currentTimeMillis()
-        val (forumData, _, managers) = frsPage(forumName, page = 1, loadType = 1, sortType = 0, null)
-        val detail = networkDataSource.loadForumDetail(forumData.id)
-        val cost = System.currentTimeMillis() - start
-        Log.i(TAG, "onLoadForumDetail: $forumName, managers: ${managers?.size}, cost ${cost}ms")
-
-        return ForumDetail(
-            avatar = forumData.avatar,
-            name = forumData.name,
-            id = forumData.id,
-            intro = detail.content.plainText,
-            slogan = detail.slogan,
-            memberCount = detail.member_count,
-            threadCount = forumData.threads,
-            postCount = forumData.posts,
-            managers = managers
-        )
+        return networkDataSource.loadForumOverview(forumName).toForumDetail(forumName)
     }
+
+    suspend fun loadForumIntroduction(forumId: Long): ForumIntroduction {
+        val info = networkDataSource.loadForumDetail(forumId)
+        val imageLoadType = habitSettings.first().imageLoadType
+        return withContext(Dispatchers.Default) {
+            ForumIntroduction(slogan = info.slogan, content = info.content.buildRenders(imageLoadType))
+        }
+    }
+
+    suspend fun loadForumManagers(forumId: Long): List<ForumManagerGroup> =
+        networkDataSource.loadForumTeam(forumId).toManagerGroups()
 
     suspend fun loadPage(forum: String, page: Int, sortType: Int, forceNew: Boolean): ThreadItemList = frsPage(
         forumName = forum,
