@@ -161,6 +161,21 @@ class ThreadStoreViewModelTest {
         assertEquals("second", handle.get<String>("collection_query"))
     }
 
+    @Test fun `deletion rebuilds page offsets so the next item is not skipped`() = runTest(dispatcher) {
+        coEvery { repo.load(page = 1) } returns page(21, 1)
+        val vm = ThreadStoreViewModel(repo, SavedStateHandle(mapOf("collection_query" to "thread")))
+        advanceUntilIdle()
+        val deleted = vm.currentState.data.first()
+        coEvery { repo.remove(deleted) } returns Result.success(Unit)
+        coEvery { repo.load(page = 0) } returns page(2)
+        coEvery { repo.load(page = 1) } returns emptyList()
+        vm.onDelete(deleted)
+        advanceUntilIdle()
+        assertEquals((2L..21L).toList(), vm.currentState.data.map { it.id })
+        assertFalse(vm.currentState.hasMore)
+        assertNull(vm.currentState.loadMoreError)
+    }
+
     @Test fun `search matches metadata literally and preserves deleted entries`() {
         val entries = listOf(
             thread(1).copy(title = "100%_[攻略]", isDeleted = true),

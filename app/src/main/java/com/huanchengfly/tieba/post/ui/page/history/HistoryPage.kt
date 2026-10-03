@@ -257,7 +257,7 @@ fun HistoryPage(
         },
         snackbarHostState = snackbarHostState,
         floatingActionButton = {
-            val visible by remember {
+            val visible by remember(pagerState, listStates) {
                 derivedStateOf { !pagerState.isScrolling && listStates[pagerState.currentPage].canScrollBackward }
             }
             DefaultBackToTopFAB(visible = visible) {
