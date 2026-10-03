@@ -37,8 +37,15 @@ interface ThreadHistoryDao {
     /**
      * Get thread history paging source.
      * */
-    @Query("SELECT * FROM thread_history ORDER BY timestamp DESC")
-    fun pagingSourceSorted(): PagingSource<Int, ThreadHistory>
+    @Query("""
+        SELECT * FROM thread_history
+        WHERE :query = '' OR instr(lower(title), lower(:query)) > 0
+            OR instr(lower(name), lower(:query)) > 0
+            OR instr(lower(forum), lower(:query)) > 0
+            OR instr(CAST(id AS TEXT), :query) > 0
+        ORDER BY timestamp DESC
+    """)
+    fun pagingSourceSorted(query: String = ""): PagingSource<Int, ThreadHistory>
 
     /**
      * Select all history from the thread history table.

@@ -49,24 +49,24 @@ class HistoryRepository @Inject constructor(
 
     fun getForumHistoryTop10(): Flow<List<ForumHistory>> = forumHistoryDao.observeTop(limit = 10)
 
-    fun getForumHistory(config: PagingConfig = defaultConfig): Flow<PagingData<ForumHistory>> {
+    fun getForumHistory(config: PagingConfig = defaultConfig, query: String = ""): Flow<PagingData<ForumHistory>> {
         return Pager(
             config = config,
-            pagingSourceFactory = { forumHistoryDao.pagingSource() }
+            pagingSourceFactory = { forumHistoryDao.pagingSource(query.trim()) }
         ).flow
     }
 
-    fun getThreadHistory(config: PagingConfig = defaultConfig): Flow<PagingData<ThreadHistory>> {
+    fun getThreadHistory(config: PagingConfig = defaultConfig, query: String = ""): Flow<PagingData<ThreadHistory>> {
         return Pager(
             config = config,
-            pagingSourceFactory = { threadHistoryDao.pagingSourceSorted() }
+            pagingSourceFactory = { threadHistoryDao.pagingSourceSorted(query.trim()) }
         ).flow
     }
 
-    fun getUserHistory(config: PagingConfig = defaultConfig): Flow<PagingData<UserHistory>> {
+    fun getUserHistory(config: PagingConfig = defaultConfig, query: String = ""): Flow<PagingData<UserHistory>> {
         return Pager(
             config = config,
-            pagingSourceFactory = { userProfileDao.pagingSourceSorted() }
+            pagingSourceFactory = { userProfileDao.pagingSourceSorted(query.trim()) }
         )
         .flow
         .map { it.map(transform = ::mapUiModel) }

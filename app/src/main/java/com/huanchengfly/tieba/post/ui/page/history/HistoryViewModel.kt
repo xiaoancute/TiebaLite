@@ -2,6 +2,7 @@ package com.huanchengfly.tieba.post.ui.page.history
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
@@ -21,28 +22,43 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
+@OptIn(ExperimentalCoroutinesApi::class)
 class HistoryViewModel @Inject constructor(
     @ApplicationContext val context: Context,
     @DefaultDispatcher val dispatcher: CoroutineDispatcher,
-    private val historyRepo: HistoryRepository
+    private val historyRepo: HistoryRepository,
+    private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    val forumHistory: Flow<PagingData<HistoryUiModel>> = historyRepo.getForumHistory()
+    val query: StateFlow<String> = savedStateHandle.getStateFlow("history_query", "")
+    private val searchQuery = query.map { it.trim() }.distinctUntilChanged()
+
+    fun onQueryChange(value: String) {
+        savedStateHandle["history_query"] = value
+    }
+
+    val forumHistory: Flow<PagingData<HistoryUiModel>> = searchQuery
+        .flatMapLatest { historyRepo.getForumHistory(query = it) }
         .mapUiModel()
         .flowOn(dispatcher)
         .cachedIn(viewModelScope)
 
-    val threadHistory: Flow<PagingData<HistoryUiModel>> = historyRepo.getThreadHistory()
+    val threadHistory: Flow<PagingData<HistoryUiModel>> = searchQuery
+        .flatMapLatest { historyRepo.getThreadHistory(query = it) }
         .mapUiModel()
         .flowOn(dispatcher)
         .cachedIn(viewModelScope)
 
-    val userHistory: Flow<PagingData<HistoryUiModel>> = historyRepo.getUserHistory()
+    val userHistory: Flow<PagingData<HistoryUiModel>> = searchQuery
+        .flatMapLatest { historyRepo.getUserHistory(query = it) }
         .mapUiModel()
         .flowOn(dispatcher)
         .cachedIn(viewModelScope)

@@ -6,12 +6,16 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -20,10 +24,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.huanchengfly.tieba.post.LocalHabitSettings
 import com.huanchengfly.tieba.post.R
 import com.huanchengfly.tieba.post.arch.CommonUiEvent
-import com.huanchengfly.tieba.post.arch.collectPartialAsState
 import com.huanchengfly.tieba.post.arch.collectUiEventWithLifecycle
 import com.huanchengfly.tieba.post.navigateDebounced
 import com.huanchengfly.tieba.post.ui.models.Author
@@ -36,6 +40,7 @@ import com.huanchengfly.tieba.post.ui.page.thread.ThreadFrom
 import com.huanchengfly.tieba.post.ui.page.thread.ThreadResult
 import com.huanchengfly.tieba.post.ui.page.thread.ThreadResultKey
 import com.huanchengfly.tieba.post.ui.page.thread.ThreadSortType
+import com.huanchengfly.tieba.post.ui.widgets.compose.RecordSearchField
 import com.huanchengfly.tieba.post.ui.widgets.compose.BackNavigationIcon
 import com.huanchengfly.tieba.post.ui.widgets.compose.LoadMoreIndicator
 import com.huanchengfly.tieba.post.ui.widgets.compose.LocalSnackbarHostState
@@ -52,40 +57,60 @@ fun ThreadStorePage(
     navigator: NavController,
     viewModel: ThreadStoreViewModel = hiltViewModel()
 ) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val query by viewModel.query.collectAsStateWithLifecycle()
+    val searching = query.isNotBlank()
+    val results = remember(state.data, query) { state.data.searchCollections(query) }
+    val listState = key(query.trim()) { rememberLazyListState() }
+
     MyScaffold(
         topBar = {
-            TitleCentredToolbar(
-                title = stringResource(id = R.string.title_my_collect),
-                navigationIcon = {
-                    BackNavigationIcon(onBackPressed = navigator::navigateUp)
-                },
-            )
+            Column {
+                TitleCentredToolbar(
+                    title = stringResource(R.string.title_my_collect),
+                    navigationIcon = { BackNavigationIcon(onBackPressed = navigator::navigateUp) },
+                )
+                RecordSearchField(
+                    query = query,
+                    onQueryChange = viewModel::onQueryChange,
+                    placeholder = stringResource(R.string.hint_search_collections),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                )
+                if (searching || state.loadMoreError != null) {
+                    val message = when {
+                        state.loadMoreError != null -> stringResource(
+                            R.string.tip_collection_search_incomplete, state.data.size, results.size
+                        )
+                        state.hasMore || state.isRefreshing -> stringResource(
+                            R.string.tip_collection_search_loading, state.data.size, results.size
+                        )
+                        else -> stringResource(
+                            R.string.tip_collection_search_complete, state.data.size, results.size
+                        )
+                    }
+                    Text(
+                        text = message,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    if (state.loadMoreError != null) {
+                        TextButton(onClick = viewModel::onRetry) {
+                            Text(stringResource(R.string.button_record_search_retry))
+                        }
+                    }
+                }
+            }
         },
     ) { contentPadding ->
         val context = LocalContext.current
         val snackbarHostState = LocalSnackbarHostState.current
 
-        val isRefreshing by viewModel.uiState.collectPartialAsState(
-            prop1 = ThreadStoreUiState::isRefreshing,
-            initial = false
-        )
-        val isEmpty by viewModel.uiState.collectPartialAsState(
-            prop1 = ThreadStoreUiState::isEmpty,
-            initial = true
-        )
-
-        val error by viewModel.uiState.collectPartialAsState(
-            prop1 = ThreadStoreUiState::error,
-            initial = null
-        )
-
         viewModel.uiEvent.collectUiEventWithLifecycle { event ->
-            val message = when(event) {
+            val message = when (event) {
                 is ThreadStoreUiEvent -> event.toMessage(context)
-
                 is CommonUiEvent.Toast -> event.message.toString()
-
-                else -> Unit
+                else -> null
             }
             if (message is String) {
                 snackbarHostState.currentSnackbarData?.dismiss()
@@ -94,33 +119,16 @@ fun ThreadStorePage(
         }
 
         StateScreen(
-            isEmpty = isEmpty,
-            isLoading = isRefreshing,
-            error = error,
+            isLoading = state.isRefreshing && state.isEmpty,
+            error = state.error,
             onReload = viewModel::onRefresh,
             screenPadding = contentPadding,
         ) {
-            val isLoadingMore by viewModel.uiState.collectPartialAsState(
-                prop1 = ThreadStoreUiState::isLoadingMore,
-                initial = false
-            )
-            val hasMore by viewModel.uiState.collectPartialAsState(
-                prop1 = ThreadStoreUiState::hasMore,
-                initial = true
-            )
-            val data by viewModel.uiState.collectPartialAsState(
-                prop1 = ThreadStoreUiState::data,
-                initial = emptyList()
-            )
-
             val habit = LocalHabitSettings.current
-
-            // Initialize click listeners now
             val onUserClicked: (Author, String) -> Unit = { author, extraKey ->
                 val route = author.run { UserProfile(id, avatarUrl, name, transitionKey = extraKey) }
                 navigator.navigateDebounced(route)
             }
-
             val onThreadClicked: (ThreadStore) -> Unit = { thread ->
                 navigator.navigateDebounced(
                     route = Thread(
@@ -132,25 +140,37 @@ fun ThreadStorePage(
                     )
                 )
             }
-
             PullToRefreshBox(
-                isRefreshing = isRefreshing,
+                isRefreshing = state.isRefreshing,
                 onRefresh = viewModel::onRefresh,
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = contentPadding,
             ) {
                 SwipeUpLazyLoadColumn(
                     modifier = Modifier.fillMaxSize(),
+                    state = listState,
                     contentPadding = contentPadding,
-                    isLoading = isLoadingMore,
+                    isLoading = state.isLoadingMore,
                     onLoad = viewModel::onLoadMore,
-                    onLazyLoad = viewModel::onLoadMore.takeIf { hasMore },
+                    onLazyLoad = viewModel::onLoadMore.takeIf {
+                        state.hasMore && state.loadMoreError == null && !searching
+                    },
                     preloadNextPage = habit.preloadNextPage,
                     bottomIndicator = {
-                        LoadMoreIndicator(noMore = !hasMore, onThreshold = it)
+                        LoadMoreIndicator(noMore = !state.hasMore, onThreshold = it)
                     }
                 ) {
-                    items(items = data, key = { it.id }) { info ->
+                    if (results.isEmpty() && !state.hasMore && !state.isRefreshing) {
+                        item {
+                            Text(
+                                text = stringResource(
+                                    if (searching) R.string.tip_record_search_empty else R.string.tip_records_empty
+                                ),
+                                modifier = Modifier.padding(24.dp),
+                            )
+                        }
+                    }
+                    items(items = results, key = { it.id }) { info ->
                         StoreItem(
                             info = info,
                             onUserClick = onUserClicked,

@@ -666,4 +666,12 @@
     <string name="welcome_custom_subtitle">个性化你的贴吧 Lite</string>
     <string name="welcome_completed">一切就绪！</string>
     <string name="welcome_completed_subtitle">接下来，登录您的百度账号，然后开始使用吧</string>
+    <string name="hint_search_history">搜索历史：标题、吧名、用户名或 ID</string>
+    <string name="hint_search_collections">搜索收藏：标题、吧名、作者或帖子 ID</string>
+    <string name="tip_record_search_empty">没有找到匹配的记录</string>
+    <string name="tip_records_empty">暂无记录</string>
+    <string name="tip_collection_search_loading">正在搜索全部收藏…已加载 %1$d 条，找到 %2$d 条</string>
+    <string name="tip_collection_search_complete">已搜索全部 %1$d 条收藏，找到 %2$d 条</string>
+    <string name="tip_collection_search_incomplete">已加载 %1$d 条，找到 %2$d 条；加载中断，结果不完整</string>
+    <string name="button_record_search_retry">重试加载</string>
 </resources>

@@ -48,8 +48,14 @@ interface UserProfileDao {
     /**
      * Get user profile paging source.
      * */
-    @Query("SELECT * FROM user ORDER BY last_visit DESC")
-    fun pagingSourceSorted(): PagingSource<Int, UserProfile>
+    @Query("""
+        SELECT * FROM user
+        WHERE :query = '' OR instr(lower(name), lower(:query)) > 0
+            OR instr(lower(nickname), lower(:query)) > 0
+            OR instr(CAST(uid AS TEXT), :query) > 0
+        ORDER BY last_visit DESC
+    """)
+    fun pagingSourceSorted(query: String = ""): PagingSource<Int, UserProfile>
 
     /**
      * Select all user profile from the user table.

@@ -36,6 +36,11 @@ interface ForumHistoryDao {
     /**
      * Get forum history paging source.
      * */
-    @Query("SELECT * FROM forum_history ORDER BY timestamp DESC")
-    fun pagingSource(): PagingSource<Int, ForumHistory>
+    @Query("""
+        SELECT * FROM forum_history
+        WHERE :query = '' OR instr(lower(name), lower(:query)) > 0
+            OR instr(CAST(id AS TEXT), :query) > 0
+        ORDER BY timestamp DESC
+    """)
+    fun pagingSource(query: String = ""): PagingSource<Int, ForumHistory>
 }

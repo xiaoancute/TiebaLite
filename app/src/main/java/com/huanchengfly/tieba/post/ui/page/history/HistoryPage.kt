@@ -40,6 +40,7 @@ import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.NonRestartableComposable
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.key
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableStateSetOf
@@ -62,6 +63,7 @@ import androidx.compose.ui.util.fastForEachIndexed
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
@@ -90,6 +92,7 @@ import com.huanchengfly.tieba.post.ui.page.thread.ThreadFrom
 import com.huanchengfly.tieba.post.ui.page.user.sharedUserAvatar
 import com.huanchengfly.tieba.post.ui.page.user.sharedUserNickname
 import com.huanchengfly.tieba.post.ui.page.user.sharedUsername
+import com.huanchengfly.tieba.post.ui.widgets.compose.RecordSearchField
 import com.huanchengfly.tieba.post.ui.widgets.compose.Avatar
 import com.huanchengfly.tieba.post.ui.widgets.compose.BackNavigationIcon
 import com.huanchengfly.tieba.post.ui.widgets.compose.ClickMenu
@@ -168,7 +171,8 @@ fun HistoryPage(
         selectedItems.clear()
     }
 
-    val listStates = rememberPagerListStates(tabs.size)
+    val query by viewModel.query.collectAsStateWithLifecycle()
+    val listStates = key(query.trim()) { rememberPagerListStates(tabs.size) }
     val pagerState = rememberPagerState { tabs.size }
 
     MyScaffold(
@@ -217,25 +221,34 @@ fun HistoryPage(
                     sharedTransitionScope?.isTransitionActive != true && listStates[pagerState.currentPage].canScrollBackward
                 },
                 content = {
-                    AnimatedVisibility(visible = !selectMode) {
-                        PrimaryTabRow(
-                            selectedTabIndex = pagerState.currentPage,
-                            indicator = {
-                                FancyAnimatedIndicatorWithModifier(pagerState.currentPage)
-                            },
-                            containerColor = Color.Transparent,
-                        ) {
-                            tabs.fastForEachIndexed { i, title ->
-                                Tab(
-                                    text = {
-                                        Text(text = stringResource(id = title), letterSpacing = 0.75.sp)
-                                    },
-                                    selected = pagerState.currentPage == i,
-                                    onClick = {
-                                        coroutineScope.launch { pagerState.animateScrollToPage(i) }
-                                    },
-                                    unselectedContentColor = MaterialTheme.colorScheme.onSurface
-                                )
+                    Column {
+                        RecordSearchField(
+                            query = query,
+                            onQueryChange = viewModel::onQueryChange,
+                            placeholder = stringResource(R.string.hint_search_history),
+                            enabled = !selectMode,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        )
+                        AnimatedVisibility(visible = !selectMode) {
+                            PrimaryTabRow(
+                                selectedTabIndex = pagerState.currentPage,
+                                indicator = {
+                                    FancyAnimatedIndicatorWithModifier(pagerState.currentPage)
+                                },
+                                containerColor = Color.Transparent,
+                            ) {
+                                tabs.fastForEachIndexed { i, title ->
+                                    Tab(
+                                        text = {
+                                            Text(text = stringResource(id = title), letterSpacing = 0.75.sp)
+                                        },
+                                        selected = pagerState.currentPage == i,
+                                        onClick = {
+                                            coroutineScope.launch { pagerState.animateScrollToPage(i) }
+                                        },
+                                        unselectedContentColor = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
                             }
                         }
                     }
@@ -282,6 +295,7 @@ fun HistoryPage(
                     contentPadding = contentPadding,
                     pagedItems = pagingData.collectAsLazyPagingItems(),
                     selectedItems = selectedItems,
+                    searching = query.isNotBlank(),
                     onClick = { it: History ->
                         if (selectMode) {
                             if (selectedItems.contains(it)) selectedItems -= it else selectedItems += it
@@ -474,6 +488,7 @@ private fun <T : HistoryUiModel> HistoryColumn(
     contentPadding: PaddingValues,
     pagedItems: LazyPagingItems<T>,
     selectedItems: SnapshotStateSet<History>,
+    searching: Boolean,
     onClick: (History) -> Unit,
     onLongClick: (History) -> Unit,
 ) {
@@ -487,6 +502,15 @@ private fun <T : HistoryUiModel> HistoryColumn(
         contentPadding = contentPadding,
         verticalArrangement = Arrangement.spacedBy(1.5.dp),
     ) {
+        if (pagedItems.itemCount == 0 && pagedItems.loadState.refresh is LoadState.NotLoading) {
+            item {
+                Text(
+                    text = stringResource(if (searching) R.string.tip_record_search_empty else R.string.tip_records_empty),
+                    modifier = Modifier.padding(vertical = 24.dp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
         items(
             count = pagedItems.itemCount,
             key = pagedItems.itemKey { if (it is HistoryUiModel.Item) it.history.id else it.toString() },
