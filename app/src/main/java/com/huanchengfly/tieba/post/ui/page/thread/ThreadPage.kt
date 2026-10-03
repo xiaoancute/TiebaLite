@@ -293,7 +293,7 @@ fun ThreadPage(
     }
 
     onGlobalEvent<GlobalEvent.ReplySuccess>(filter = { it.threadId == threadId }) { event ->
-        viewModel.requestLoadMyLatestReply(event.newPostId)
+        viewModel.requestLoadMyLatestReply(event.newPostId, event.postId)
     }
 
     if (extra != null && extra is ThreadFrom.Store && extra.maxPid != postId) {

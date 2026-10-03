@@ -330,7 +330,7 @@ class ThreadViewModel @Inject constructor(
     /**
      * 当前用户发送新的回复时，加载用户发送的回复
      */
-    fun requestLoadMyLatestReply(newPostId: Long) {
+    fun requestLoadMyLatestReply(newPostId: Long, parentPostId: Long? = null) {
         if (currentState.isLoadingLatestReply) return
 
         launchInVM(loadMoreHandler) {
@@ -343,14 +343,25 @@ class ThreadViewModel @Inject constructor(
             }
 
             val response = threadRepo.pbPage(threadId, page = 0, postId = newPostId, forumId = forumId)
+            if (parentPostId != null) {
+                // A nested reply does not add a top-level floor. Keep the loaded range and position.
+                val refreshedPost = response.posts.firstOrNull { it.id == parentPostId }
+                    ?: response.firstPost?.takeIf { it.id == parentPostId }
+                _uiState.update {
+                    it.refreshRepliedPost(refreshedPost).copy(
+                        isLoadingLatestReply = false, error = null, tbs = response.tbs
+                    )
+                }
+                return@launchInVM
+            }
             val hasNewPost: Boolean
             val newState = withContext(Dispatchers.Default) {
                 val postData = response.posts
                 val oldPostData = state.data
                 val oldPostIds = oldPostData.mapTo(HashSet()) { it.id }
                 hasNewPost = postData.any { !oldPostIds.contains(it.id) }
-                val firstLatestPost = postData.first()
-                val isContinuous = firstLatestPost.floor == curLatestPostFloor + 1
+                val firstLatestPost = postData.firstOrNull()
+                val isContinuous = firstLatestPost?.floor == curLatestPostFloor + 1
                 val continuous = isContinuous || response.page.current_page == state.pageData.current
 
                 val replacePostIndexes = oldPostData.mapIndexedNotNull { index, old ->

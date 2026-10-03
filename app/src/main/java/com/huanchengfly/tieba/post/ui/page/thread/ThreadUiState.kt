@@ -31,3 +31,13 @@ data class ThreadUiState(
     val forum: SimpleForum?
         get() = thread?.simpleForum
 }
+
+/** Refresh a replied-to floor without importing unrelated floors from the response page. */
+internal fun ThreadUiState.refreshRepliedPost(post: PostData?): ThreadUiState {
+    if (post == null) return this
+    return copy(
+        firstPost = if (firstPost?.id == post.id) post else firstPost,
+        data = data.map { if (it.id == post.id) post else it },
+        latestPosts = latestPosts?.map { if (it.id == post.id) post else it },
+    )
+}

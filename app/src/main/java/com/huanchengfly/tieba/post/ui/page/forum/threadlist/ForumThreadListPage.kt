@@ -31,7 +31,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.huanchengfly.tieba.post.R
 import com.huanchengfly.tieba.post.api.models.protos.OriginThreadInfo
 import com.huanchengfly.tieba.post.arch.collectCommonUiEventWithLifecycle
-import com.huanchengfly.tieba.post.arch.collectPartialAsState
 import com.huanchengfly.tieba.post.arch.onGlobalEvent
 import com.huanchengfly.tieba.post.navigateDebounced
 import com.huanchengfly.tieba.post.ui.models.ThreadItem
@@ -135,27 +134,17 @@ fun ForumThreadList(
 
     ConsumeThreadPageResult<Destination.Forum>(navigator, viewModel::onThreadResult)
 
-    val threadList by viewModel.uiState.collectPartialAsState(
-        prop1 = ForumThreadListUiState::threads,
-        initial = emptyList()
-    )
-    val isLoading by viewModel.uiState.collectPartialAsState(
-        prop1 = ForumThreadListUiState::isRefreshing,
-        initial = true
-    )
-    val error by viewModel.uiState.collectPartialAsState(
-        prop1 = ForumThreadListUiState::error,
-        initial = null
-    )
+    // Use the retained snapshot immediately when returning from a thread.
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val threadList = uiState.threads
 
     StateScreen(
         isEmpty = threadList.isEmpty(),
-        isLoading = isLoading,
-        error = error,
+        isLoading = uiState.isRefreshing,
+        error = uiState.error,
         screenPadding = contentPadding,
     ) {
         val hideBlocked by viewModel.hideBlocked.collectAsStateWithLifecycle()
-        val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
         Container {
             SwipeUpLazyLoadColumn(
